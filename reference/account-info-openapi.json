@@ -1,4 +1,7 @@
 {
+  "x-readme": {
+    "explorer-enabled": true
+  },
   "openapi": "3.0.0",
   "info": {
     "title": "Account and Transaction API Specification",
