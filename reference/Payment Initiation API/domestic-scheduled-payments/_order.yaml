@@ -1,0 +1,4 @@
+- createdomesticscheduledpaymentconsents
+- getdomesticscheduledpaymentconsentsconsentid
+- createdomesticscheduledpayments
+- getdomesticscheduledpaymentsdomesticscheduledpaymentid

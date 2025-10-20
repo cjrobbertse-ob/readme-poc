@@ -1,0 +1,5 @@
+- createinternationalpaymentconsents
+- getinternationalpaymentconsentsconsentid
+- getinternationalpaymentconsentsconsentidfundsconfirmation
+- createinternationalpayments
+- getinternationalpaymentsinternationalpaymentid
