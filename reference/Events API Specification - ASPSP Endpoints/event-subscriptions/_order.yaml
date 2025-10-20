@@ -1,0 +1,4 @@
+- createeventsubscriptions
+- geteventsubscriptions
+- changeeventsubscriptionseventsubscriptionid
+- deleteeventsubscriptionseventsubscriptionid
