@@ -1,6 +1,6 @@
 {
   "x-readme": {
-    "explorer-enabled": true
+    "explorer-enabled": false
   },
   "openapi": "3.0.0",
   "info": {
@@ -1904,7 +1904,7 @@
   },
   "servers": [
     {
-      "url": "/open-banking/v4.0/aisp"
+      "url": "https://www.google.com"
     }
   ],
   "components": {
