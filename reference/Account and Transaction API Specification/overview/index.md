@@ -1,7 +1,9 @@
 ---
-title: Account and Transaction API Profile - v3.1.11
+title: Account and Transaction API Profile
 deprecated: false
 hidden: false
+link:
+  new_tab: false
 metadata:
   robots: index
 ---
