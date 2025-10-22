@@ -1,5 +1,5 @@
 ---
-title: API Profile
+title: Account and Transaction API Profile
 deprecated: false
 hidden: false
 link:
