@@ -1,5 +1,5 @@
 ---
-title: Account and Transaction API Profile - v3.1.11
+title: API Profile
 deprecated: false
 hidden: false
 metadata:
