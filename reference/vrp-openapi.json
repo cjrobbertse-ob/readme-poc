@@ -1,4 +1,7 @@
 {
+  "x-readme": {
+    "explorer-enabled": false
+  },
   "openapi": "3.0.0",
   "servers": [
     {
