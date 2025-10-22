@@ -1,123 +1,125 @@
 ---
-title: Open Banking Read-Write API Profile  - v3.1.11
+title: Open Banking Read-Write API Profile
 deprecated: false
 hidden: false
+link:
+  new_tab: false
 metadata:
   robots: index
 ---
-   1. [Overview](#overview)
-      1. [Document Structure](#document-structure)
-      2. [Design Principles](#design-principles)
-         1. [RESTful APIs](#restful-apis)
-         2. [Standards](#standards)
-         3. [ISO 20022](#iso-20022)
-         4. [Extensibility](#extensibility)
-         5. [Idempotency](#idempotency)
-         6. [Message Signing](#message-signing)
-         7. [Message Encryption](#message-encryption)
-         8. [Agnostic to Payment Schemes](#agnostic-to-payment-schemes)
-         9. [Status Codes](#status-codes)
-         10. [Unique Identifiers (Id Fields)](#unique-identifiers-id-fields)
-         11. [Categorisation of Implementation Requirements](#categorisation-of-implementation-requirements)
-            1. [Mandatory](#mandatory)
-            2. [Conditional](#conditional)
-            3. [Optional](#optional)
-   2. [Basics](#basics)
-      1. [Actors](#actors)
-      2. [Character Encoding](#character-encoding)
-      3. [Date Formats](#date-formats)
-      4. [Resource URI Path Structure](#resource-uri-path-structure)
-      5. [Headers](#headers)
-         1. [Request Headers](#request-headers)
-         2. [Response Headers](#response-headers)
-      6. [HTTP Status Codes](#http-status-codes)
-         1. [400 (Bad Request) vs 404(Not Found)](#400-bad-request-v-s-404-not-found)
-         2. [403 (Forbidden)](#403-forbidden)
-         3. [401 (Unauthorized)](#401-unauthorized)
-         4. [429 (Too Many Requests)](#429-too-many-requests)
-      7. [Pre-Conditions](#pre-conditions)
-         1. [Pre-conditions for TPPs](#pre-conditions-for-tpps)
-         2. [Pre-conditions for ASPSPs](#pre-conditions-for-aspsps)
-      8. [Idempotency](#idempotency-2)
-      9. [Message Signing](#message-signing-2)
-         1. [Overview](#overview-2)
-         2. [Key Stores](#key-stores)
-         3. [Specification](#specification)
-         4. [Process for Signing a Payload](#process-for-signing-a-payload)
-            1. [Step 1: Identify the Private Key and Corresponding Signing Certificate to be Used for Signing](#step-1-identify-the-private-key-and-corresponding-signing-certificate-to-be-used-for-signing)
-            2. [Step 2: Form the JOSE Header](#step-2-form-the-jose-header)
-            3. [Step 3: Compute the JWS](#step-3-compute-the-jws)
-            4. [Step 4: Add the JWS as a HTTP Header](#step-4-add-the-jws-as-a-http-header)
-         5. [Process for Verifying a Signature](#process-for-verifying-a-signature)
-            1. [Step 1: Extract the components from the JWS](#step-1-extract-the-components-from-the-jws)
-            2. [Step 2: Validate the JOSE Header and Certificate](#step-2-validate-the-jose-header-and-certificate)
-            3. [Step 3: Verify the Signature](#step-3-verify-the-signature)
-         6. [Sample JOSE Header](#sample-jose-header)
-      10. [Message Encryption](#message-encryption-2)
-         1. [Overview](#overview-3)
-         2. [Message Signing and Encryption](#message-signing-and-encryption)
-         3. [Key Stores](#key-stores-2)
-         4. [Encrypting Non-JSON Data](#encrypting-non-json-data)
-      11. [Filtering](#filtering)
-      12. [Pagination](#pagination)
-      13. [Archiving](#archiving)
-      14. [Supplementary Data](#supplementary-data)
-   3. [Security & Access Control](#security-access-control)
-      1. [Scopes & Grant Types](#scopes-grant-types)
-      2. [Length of Authorization Code, Access Token and Refresh Token](#length-of-authorization-code-access-token-and-refresh-token)
-      3. [Consent Authorisation](#consent-authorisation)
-         1. [Error Condition](#error-condition)
-         2. [Token Expiry Time](#token-expiry-time)
-         3. [Exemptions from Strong Customer Authentication](#exemptions-from-strong-customer-authentication)
-      4. [Supported Grant Types](#supported-grant-types)
-         1. [Grant Types for identifying the TPP](#grant-types-for-identifying-the-tpp)
-            1. [Client Credentials Grant](#client-credentials-grant)
-         2. [Grant Types for identifying the TPP and PSU](#grant-types-for-identifying-the-tpp-and-psu)
-            1. [Authorization Code Grant & Hybrid Grant](#authorization-code-grant-hybrid-grant)
-            2. [id_token_hint](#id-token-hint)
-            3. [jwt_bearer](#jwt-bearer)
-         3. [CIBA](#ciba)
-            1. [Identifying the PSU](#identifying-the-psu)
-               1. [Identifying the consent to be authorised](#identifying-the-consent-to-be-authorised)
-               2. [Identifying the PSU Using a User Id](#identifying-the-psu-using-a-user-id)
-               3. [Identifying the PSU Using an Ephemeral User Id](#identifying-the-psu-using-an-ephemeral-user-id)
-               4. [Identifying the PSU Using an Intent Id](#identifying-the-psu-using-an-intent-id)
-               5. [Identifying the PSU Using a Previously Issued Id Token](#identifying-the-psu-using-a-previously-issued-id-token)
-      5. [Changes to an Intent's Authorized State](#changes-to-an-intent-s-authorized-state)
-         1. [Effect of Token Expiry on an Intent's Authorized State](#effect-of-token-expiry-on-an-intent-s-authorized-state)
-      6. [Consent Re-authentication](#consent-re-authentication)
-         1. [Ability to re-authenticate an Authorised consent at any point of time](#ability-to-re-authenticate-an-authorised-consent-at-any-point-of-time)
-         2. [Low Friction User Experience](#low-friction-user-experience)
-         3. [Use of Refresh Token](#use-of-refresh-token)
-         4. [Consent re-authentication through TPP](#consent-re-authentication-through-tpp)
-   4. [Data Model](#data-model)
-      1. [Enumerations](#enumerations)
-      2. [Common Payload Structure](#common-payload-structure)
-         1. [Request Structure](#request-structure)
-            1. [Data](#data)
-            2. [Risk](#risk)
-         2. [Response Structure](#response-structure)
-         3. [Error Response Structure](#error-response-structure)
-            1. [UML Diagram](#uml-diagram)
-            2. [Data Dictionary](#data-dictionary)
-         4. [Optional Fields](#optional-fields)
-         5. [Links](#links)
-         6. [Meta](#meta)
-   5. [Usage Examples](#usage-examples)
-      1. [Pagination Flows](#pagination-flows)
-         1. [Request](#request)
-         2. [Paginated Resource Response](#paginated-resource-response)
-         3. [Request Next Page of Results](#request-next-page-of-results)
-         4. [Paginated Resource Response](#paginated-resource-response-2)
-      2. [Error Flows](#error-flows)
-         1. [Missing or Expired Access Token](#missing-or-expired-access-token)
-         2. [Incomplete or Malformed Request Payload](#incomplete-or-malformed-request-payload)
-         3. [Missing or Invalid Access Token Scope](#missing-or-invalid-access-token-scope)
-         4. [Sudden Burst of API Requests](#sudden-burst-of-api-requests)
-         5. [Failed Authorisation Consent](#failed-authorisation-consent)
-         6. [JSON Error Response](#json-error-response)
-            1. [Request](#request-2)
-            2. [Response](#response)
+1. [Overview](#overview)
+   1. [Document Structure](#document-structure)
+   2. [Design Principles](#design-principles)
+      1. [RESTful APIs](#restful-apis)
+      2. [Standards](#standards)
+      3. [ISO 20022](#iso-20022)
+      4. [Extensibility](#extensibility)
+      5. [Idempotency](#idempotency)
+      6. [Message Signing](#message-signing)
+      7. [Message Encryption](#message-encryption)
+      8. [Agnostic to Payment Schemes](#agnostic-to-payment-schemes)
+      9. [Status Codes](#status-codes)
+      10. [Unique Identifiers (Id Fields)](#unique-identifiers-id-fields)
+      11. [Categorisation of Implementation Requirements](#categorisation-of-implementation-requirements)
+      12. [Mandatory](#mandatory)
+      13. [Conditional](#conditional)
+      14. [Optional](#optional)
+2. [Basics](#basics)
+   1. [Actors](#actors)
+   2. [Character Encoding](#character-encoding)
+   3. [Date Formats](#date-formats)
+   4. [Resource URI Path Structure](#resource-uri-path-structure)
+   5. [Headers](#headers)
+      1. [Request Headers](#request-headers)
+      2. [Response Headers](#response-headers)
+   6. [HTTP Status Codes](#http-status-codes)
+      1. [400 (Bad Request) vs 404(Not Found)](#400-bad-request-v-s-404-not-found)
+      2. [403 (Forbidden)](#403-forbidden)
+      3. [401 (Unauthorized)](#401-unauthorized)
+      4. [429 (Too Many Requests)](#429-too-many-requests)
+   7. [Pre-Conditions](#pre-conditions)
+      1. [Pre-conditions for TPPs](#pre-conditions-for-tpps)
+      2. [Pre-conditions for ASPSPs](#pre-conditions-for-aspsps)
+   8. [Idempotency](#idempotency-2)
+   9. [Message Signing](#message-signing-2)
+      1. [Overview](#overview-2)
+      2. [Key Stores](#key-stores)
+      3. [Specification](#specification)
+      4. [Process for Signing a Payload](#process-for-signing-a-payload)
+         1. [Step 1: Identify the Private Key and Corresponding Signing Certificate to be Used for Signing](#step-1-identify-the-private-key-and-corresponding-signing-certificate-to-be-used-for-signing)
+         2. [Step 2: Form the JOSE Header](#step-2-form-the-jose-header)
+         3. [Step 3: Compute the JWS](#step-3-compute-the-jws)
+         4. [Step 4: Add the JWS as a HTTP Header](#step-4-add-the-jws-as-a-http-header)
+      5. [Process for Verifying a Signature](#process-for-verifying-a-signature)
+         1. [Step 1: Extract the components from the JWS](#step-1-extract-the-components-from-the-jws)
+         2. [Step 2: Validate the JOSE Header and Certificate](#step-2-validate-the-jose-header-and-certificate)
+         3. [Step 3: Verify the Signature](#step-3-verify-the-signature)
+      6. [Sample JOSE Header](#sample-jose-header)
+   10. [Message Encryption](#message-encryption-2)
+   11. [Overview](#overview-3)
+   12. [Message Signing and Encryption](#message-signing-and-encryption)
+   13. [Key Stores](#key-stores-2)
+   14. [Encrypting Non-JSON Data](#encrypting-non-json-data)
+   15. [Filtering](#filtering)
+   16. [Pagination](#pagination)
+   17. [Archiving](#archiving)
+   18. [Supplementary Data](#supplementary-data)
+3. [Security & Access Control](#security-access-control)
+   1. [Scopes & Grant Types](#scopes-grant-types)
+   2. [Length of Authorization Code, Access Token and Refresh Token](#length-of-authorization-code-access-token-and-refresh-token)
+   3. [Consent Authorisation](#consent-authorisation)
+      1. [Error Condition](#error-condition)
+      2. [Token Expiry Time](#token-expiry-time)
+      3. [Exemptions from Strong Customer Authentication](#exemptions-from-strong-customer-authentication)
+   4. [Supported Grant Types](#supported-grant-types)
+      1. [Grant Types for identifying the TPP](#grant-types-for-identifying-the-tpp)
+         1. [Client Credentials Grant](#client-credentials-grant)
+      2. [Grant Types for identifying the TPP and PSU](#grant-types-for-identifying-the-tpp-and-psu)
+         1. [Authorization Code Grant & Hybrid Grant](#authorization-code-grant-hybrid-grant)
+         2. [id_token_hint](#id-token-hint)
+         3. [jwt_bearer](#jwt-bearer)
+      3. [CIBA](#ciba)
+         1. [Identifying the PSU](#identifying-the-psu)
+            1. [Identifying the consent to be authorised](#identifying-the-consent-to-be-authorised)
+            2. [Identifying the PSU Using a User Id](#identifying-the-psu-using-a-user-id)
+            3. [Identifying the PSU Using an Ephemeral User Id](#identifying-the-psu-using-an-ephemeral-user-id)
+            4. [Identifying the PSU Using an Intent Id](#identifying-the-psu-using-an-intent-id)
+            5. [Identifying the PSU Using a Previously Issued Id Token](#identifying-the-psu-using-a-previously-issued-id-token)
+   5. [Changes to an Intent's Authorized State](#changes-to-an-intent-s-authorized-state)
+      1. [Effect of Token Expiry on an Intent's Authorized State](#effect-of-token-expiry-on-an-intent-s-authorized-state)
+   6. [Consent Re-authentication](#consent-re-authentication)
+      1. [Ability to re-authenticate an Authorised consent at any point of time](#ability-to-re-authenticate-an-authorised-consent-at-any-point-of-time)
+      2. [Low Friction User Experience](#low-friction-user-experience)
+      3. [Use of Refresh Token](#use-of-refresh-token)
+      4. [Consent re-authentication through TPP](#consent-re-authentication-through-tpp)
+4. [Data Model](#data-model)
+   1. [Enumerations](#enumerations)
+   2. [Common Payload Structure](#common-payload-structure)
+      1. [Request Structure](#request-structure)
+         1. [Data](#data)
+         2. [Risk](#risk)
+      2. [Response Structure](#response-structure)
+      3. [Error Response Structure](#error-response-structure)
+         1. [UML Diagram](#uml-diagram)
+         2. [Data Dictionary](#data-dictionary)
+      4. [Optional Fields](#optional-fields)
+      5. [Links](#links)
+      6. [Meta](#meta)
+5. [Usage Examples](#usage-examples)
+   1. [Pagination Flows](#pagination-flows)
+      1. [Request](#request)
+      2. [Paginated Resource Response](#paginated-resource-response)
+      3. [Request Next Page of Results](#request-next-page-of-results)
+      4. [Paginated Resource Response](#paginated-resource-response-2)
+   2. [Error Flows](#error-flows)
+      1. [Missing or Expired Access Token](#missing-or-expired-access-token)
+      2. [Incomplete or Malformed Request Payload](#incomplete-or-malformed-request-payload)
+      3. [Missing or Invalid Access Token Scope](#missing-or-invalid-access-token-scope)
+      4. [Sudden Burst of API Requests](#sudden-burst-of-api-requests)
+      5. [Failed Authorisation Consent](#failed-authorisation-consent)
+      6. [JSON Error Response](#json-error-response)
+         1. [Request](#request-2)
+         2. [Response](#response)
 
 ## Overview
 
@@ -145,9 +147,9 @@ However, the priority is to have an API that is simple to understand and easy to
 
 References:
 
-* The highest level Data Description Language used is the JSON Schema : http://json-schema.org/
-* Best Practice has also been taken from the Data Description Language for APIs; JSON API : http://jsonapi.org/
-* The Interface Description Language used is the Swagger Specification version 2.0 (also known as Open API) : http://swagger.io/ https://github.com/OAI/OpenAPI-Specification
+* The highest level Data Description Language used is the JSON Schema : [http://json-schema.org/](http://json-schema.org/)
+* Best Practice has also been taken from the Data Description Language for APIs; JSON API : [http://jsonapi.org/](http://jsonapi.org/)
+* The Interface Description Language used is the Swagger Specification version 2.0 (also known as Open API) : [http://swagger.io/](http://swagger.io/) [https://github.com/OAI/OpenAPI-Specification](https://github.com/OAI/OpenAPI-Specification)
 
 #### Standards
 
@@ -232,6 +234,7 @@ ASPSPs **must** make documentation available to TPPs (e.g. on their developer
 Functionality, endpoints and fields marked as Mandatory are required in all cases for regulatory compliance and/or for the API to function and deliver essential customer outcomes.
 
 For functionalities and endpoints: 
+
 * An ASPSP **must** implement an endpoint that is marked Mandatory.
 * An ASPSP **must** implement functionality that is marked Mandatory.
 
@@ -274,15 +277,15 @@ For fields:
 
 ### Actors
 
-| Actor                                             | Abbreviation | Type         | Specialises | Description                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|---------------------------------------------------|--------------|--------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Payment Service User**                          | PSU          | Person       | N/A         | A natural or legal person making use of a payment service as a payee, payer or both (PSD2 Article 4(10)).                                                                                                                                                                                                                                                                                                                         |
-| **Payment Service Provider**                      | PSP          | Legal Entity | N/A         | A legal entity (and some natural persons) that provide payment services as defined by PSD2 Article 4(11).                                                                                                                                                                                                                                                                                                                         |
-| **Account Servicing Payment Service Provider**    | ASPSP        | Legal Entity | PSP         | An ASPSP is a PSP that provides and maintains a payment account for a payment services user (PSD 2 Article 4(15).<br/><br/>The CMA 9 are all ASPSPs.                                                                                                                                                                                                                                                                                |
-| **Third Party Providers / Trusted Third Parties** | TPP          | Legal Entity | PSP         | A party other than an ASPSP that provides payment related services.<br/><br/>The term is not actually defined in PSD2, but is generally deemed to include all payment service providers that are 3rd parties (the ASPSP and the PSU to whom the account belongs being the first two parties).<br/><br/>References to a "TPP" in the specification relate to a piece of registered software with an ASPSP (with a specific client_id). |
-| **Payment Initiation Service Provider**           | PISP         | Legal Entity | TPP         | A TPP that provides Payment Initiation Services.<br/><br/>PSD2 does not offer a formal definition. Article 4(18) quite circularly defines a PISP as a PSP that provides Payment Initiation Services.                                                                                                                                                                                                                                |
-| **Account Information Service Provider**          | AISP         | Legal Entity | TPP         | A TPP that provides Account Information Services.<br/><br/>Again, PSD2 defines AISPs in Article 4(19) circularly as a PSP that provides account information services                                                                                                                                                                                                                                                                |
-| **Card Based Payment Instrument Issuer**          | CBPII        | Legal Entity | TPP         | A TPP that issues card based payment instruments to PSUs and requires access to the Confirmation of Funds API.                                                                                                                                                                                                                                                                                                                    |
+| Actor                                             | Abbreviation | Type         | Specialises | Description                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------- | ------------ | ------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Payment Service User**                          | PSU          | Person       | N/A         | A natural or legal person making use of a payment service as a payee, payer or both (PSD2 Article 4(10)).                                                                                                                                                                                                                                                                                                                                 |
+| **Payment Service Provider**                      | PSP          | Legal Entity | N/A         | A legal entity (and some natural persons) that provide payment services as defined by PSD2 Article 4(11).                                                                                                                                                                                                                                                                                                                                 |
+| **Account Servicing Payment Service Provider**    | ASPSP        | Legal Entity | PSP         | An ASPSP is a PSP that provides and maintains a payment account for a payment services user (PSD 2 Article 4(15).<br /><br />The CMA 9 are all ASPSPs.                                                                                                                                                                                                                                                                                    |
+| **Third Party Providers / Trusted Third Parties** | TPP          | Legal Entity | PSP         | A party other than an ASPSP that provides payment related services.<br /><br />The term is not actually defined in PSD2, but is generally deemed to include all payment service providers that are 3rd parties (the ASPSP and the PSU to whom the account belongs being the first two parties).<br /><br />References to a "TPP" in the specification relate to a piece of registered software with an ASPSP (with a specific client_id). |
+| **Payment Initiation Service Provider**           | PISP         | Legal Entity | TPP         | A TPP that provides Payment Initiation Services.<br /><br />PSD2 does not offer a formal definition. Article 4(18) quite circularly defines a PISP as a PSP that provides Payment Initiation Services.                                                                                                                                                                                                                                    |
+| **Account Information Service Provider**          | AISP         | Legal Entity | TPP         | A TPP that provides Account Information Services.<br /><br />Again, PSD2 defines AISPs in Article 4(19) circularly as a PSP that provides account information services                                                                                                                                                                                                                                                                    |
+| **Card Based Payment Instrument Issuer**          | CBPII        | Legal Entity | TPP         | A TPP that issues card based payment instruments to PSUs and requires access to the Confirmation of Funds API.                                                                                                                                                                                                                                                                                                                            |
 
 ### Character Encoding
 
@@ -330,12 +333,13 @@ The path of the URI must follow the structure below (from the OB API Release Man
 * [participant-path-prefix]/open-banking/[version]/[resource-group]/[resource]/[resource-id]/[sub-resource]
 
 This consists of the following elements:
-* [participant-path-prefix]<br/>An optional ASPSP specific path prefix.
-* open-banking<br/>The constant string "open-banking".
-* [version]<br/>The version of the APIs expressed as`/v[major-version].[minor-version]/`.
-* [resource-group]<br/>The resource-group identifies the group of endpoints, according to the PSD2 role used to access the API (as "aisp", "pisp" or "cbpii").
-* [resource]/[resource-id]<br/>Details the resource.
-* [sub-resource]<br/>Details the sub-resource.
+
+* [participant-path-prefix]<br />An optional ASPSP specific path prefix.
+* open-banking<br />The constant string "open-banking".
+* [version]<br />The version of the APIs expressed as`/v[major-version].[minor-version]/`.
+* [resource-group]<br />The resource-group identifies the group of endpoints, according to the PSD2 role used to access the API (as "aisp", "pisp" or "cbpii").
+* [resource]/[resource-id]<br />Details the resource.
+* [sub-resource]<br />Details the sub-resource.
 
 An ASPSP must use the same participant-path-prefix and host name for all its resources.
 
@@ -347,18 +351,17 @@ For brevity, the APIs are referred to by their resource names in these documents
 
 #### Request Headers
 
-|Header Value              |Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |POST Requests|GET Requests|DELETE Requests|PUT Requests|
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|------------|---------------|------------|
-|x-fapi-auth-date          |The time when the PSU last logged in with the TPP.  The value is supplied as a HTTP-date as in section 7.1.1.1 of [RFC7231], e.g., `x-fapi-auth-date: Tue, 11 Sep 2012 19:43:31 GMT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |Optional     |Optional    |Optional       |Do not use  |
-|x-fapi-customer-ip-address|The PSU's IP address if the PSU is currently logged in with the TPP.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |Optional     |Optional    |Optional       |Do not use  |
-|x-fapi-interaction-id     |An RFC4122 UID used as a correlation Id.<br/><br/>If provided, the ASPSP **must** "play back" this value in the x-fapi-interaction-id response header.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |Optional     |Optional    |Optional       |Optional    |
-|Authorization             |Standard HTTP Header; Allows Credentials to be provided to the Authorisation / Resource Server depending on the type of resource being requested. For OAuth 2.0 / OIDC, this comprises of either the Basic / Bearer Authentication Schemes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |Mandatory    |Mandatory   |Mandatory      |Mandatory   |
-|Content-Type              |Standard HTTP Header; Represents the format of the payload being provided in the request.<br/><br/>This **must** be set to `application/json`, except for the endpoints that support Content-Type other than `application/json` (e.g POST `/file-payment-consents/{ConsentId}/file`), the ASPSP must specify the available options on their developer portals.<br/><br/>This **must** be set to `application/jose+jwe` for encrypted requests.<br/><br/>The TPP **may** provide additional information (e.g. a 'q' value and charset).<br/><br/>If set to any other value, the ASPSP **must** respond with a 415 Unsupported Media Type.                                                                                                                                                                                                                                                                                                                                  |Mandatory    |Do not use  |Do not use     |Mandatory   |
-|Accept                    |Standard HTTP Header; Determine the Content-Type that is required from the Server.<br/><br/>If the TPP expects an unencrypted response, it **must** indicate that the only a JSON response is accepted (e.g by setting the value to `application/json`) as a content header for all endpoints that respond with JSON.<br/><br/>If the TPP expects an encrypted response, it **must** indicate that the only a JWT response is accepted (e.g by setting the value to `application/jose+jwe`) as a content header for all endpoints that respond with JSON.<br/><br/>For endpoints that do not respond with JSON (e.g GET `../statements/{StatementId}/file`), the ASPSP must specify the available options on their developer portals.<br/><br/>The TPP **may** provide additional information (e.g. a 'q' value and charset).<br/><br/>If set to an unacceptable value the ASPSP **must** respond with a 406 (Not Acceptable).<br/><br/>If not specified, the default is application/json.|Optional     |Optional    |Do not use     |Optional    |
-|x-idempotency-key         |Custom HTTP Header; Unique request identifier to support idempotency.<br/><br/>Mandatory for POST requests to idempotent resource end-points.<br/><br/>Must not be specified for other requests.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |Optional     |Do not use  |Do not use     |Do not use  |
-|x-jws-signature           |Header containing a detached JWS signature of the body of the payload.<br/><br/>Refer to resource specific documentation on when this header must be specified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |API specific |API specific|API specific   |Mandatory   |
-|x-customer-user-agent     |The header indicates the user-agent that the PSU is using.<br/><br/>The TPP **may** populate this field with the user-agent indicated by the PSU.<br/><br/>If the PSU is using a TPP mobile app, the TPP **must** ensure that the user-agent string is different from browser based user-agent strings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |Optional     |Optional    |Optional       |Optional    |
-
+| Header Value               | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | POST Requests | GET Requests | DELETE Requests | PUT Requests |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------ | --------------- | ------------ |
+| x-fapi-auth-date           | The time when the PSU last logged in with the TPP.  The value is supplied as a HTTP-date as in section 7.1.1.1 of [RFC7231], e.g., `x-fapi-auth-date: Tue, 11 Sep 2012 19:43:31 GMT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Optional      | Optional     | Optional        | Do not use   |
+| x-fapi-customer-ip-address | The PSU's IP address if the PSU is currently logged in with the TPP.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Optional      | Optional     | Optional        | Do not use   |
+| x-fapi-interaction-id      | An RFC4122 UID used as a correlation Id.<br /><br />If provided, the ASPSP **must** "play back" this value in the x-fapi-interaction-id response header.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Optional      | Optional     | Optional        | Optional     |
+| Authorization              | Standard HTTP Header; Allows Credentials to be provided to the Authorisation / Resource Server depending on the type of resource being requested. For OAuth 2.0 / OIDC, this comprises of either the Basic / Bearer Authentication Schemes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Mandatory     | Mandatory    | Mandatory       | Mandatory    |
+| Content-Type               | Standard HTTP Header; Represents the format of the payload being provided in the request.<br /><br />This **must** be set to `application/json`, except for the endpoints that support Content-Type other than `application/json` (e.g POST `/file-payment-consents/{ConsentId}/file`), the ASPSP must specify the available options on their developer portals.<br /><br />This **must** be set to `application/jose+jwe` for encrypted requests.<br /><br />The TPP **may** provide additional information (e.g. a 'q' value and charset).<br /><br />If set to any other value, the ASPSP **must** respond with a 415 Unsupported Media Type.                                                                                                                                                                                                                                                                                                                                                       | Mandatory     | Do not use   | Do not use      | Mandatory    |
+| Accept                     | Standard HTTP Header; Determine the Content-Type that is required from the Server.<br /><br />If the TPP expects an unencrypted response, it **must** indicate that the only a JSON response is accepted (e.g by setting the value to `application/json`) as a content header for all endpoints that respond with JSON.<br /><br />If the TPP expects an encrypted response, it **must** indicate that the only a JWT response is accepted (e.g by setting the value to `application/jose+jwe`) as a content header for all endpoints that respond with JSON.<br /><br />For endpoints that do not respond with JSON (e.g GET `../statements/{StatementId}/file`), the ASPSP must specify the available options on their developer portals.<br /><br />The TPP **may** provide additional information (e.g. a 'q' value and charset).<br /><br />If set to an unacceptable value the ASPSP **must** respond with a 406 (Not Acceptable).<br /><br />If not specified, the default is application/json. | Optional      | Optional     | Do not use      | Optional     |
+| x-idempotency-key          | Custom HTTP Header; Unique request identifier to support idempotency.<br /><br />Mandatory for POST requests to idempotent resource end-points.<br /><br />Must not be specified for other requests.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Optional      | Do not use   | Do not use      | Do not use   |
+| x-jws-signature            | Header containing a detached JWS signature of the body of the payload.<br /><br />Refer to resource specific documentation on when this header must be specified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | API specific  | API specific | API specific    | Mandatory    |
+| x-customer-user-agent      | The header indicates the user-agent that the PSU is using.<br /><br />The TPP **may** populate this field with the user-agent indicated by the PSU.<br /><br />If the PSU is using a TPP mobile app, the TPP **must** ensure that the user-agent string is different from browser based user-agent strings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Optional      | Optional     | Optional        | Optional     |
 
 Whether the PSU is present or not-present is identified via the x-fapi-customer-ip-address header. If the PSU IP address is supplied, it is inferred that the PSU is present during the interaction.
 
@@ -370,33 +373,31 @@ The implications to this are:
 
 #### Response Headers
 
-|Header Value              |Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |Mandatory?  |
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-|Content-Type              |Standard HTTP Header; Represents the format of the payload returned in the response.<br/><br/>The ASPSP **must** return `Content-Type: application/json`  as a content header for all unencrypted endpoints, except the GET `../statements/{StatementId}/file` and `../file-payment-consents/{ConsentId}/file` endpoints, where it is up to the ASPSP to specify available options.<br/><br/>The ASPSP **must** return `Content-type: application/jwe` for all encrypted end-points.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |Mandatory   |
-|x-jws-signature           |Header containing a detached JWS signature of the body of the payload.<br/><br/>Refer to resource specific documentation on when this header **must** be returned. Where a signed response is indicated in the documentation this header **should** be returned for error responses where a response body is returned.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |API specific|
-|x-fapi-interaction-id     |An RFC4122 UID used as a correlation Id.<br/><br/>The ASPSP **must** set the response header `x-fapi-interaction-id` to the value received from the corresponding fapi client request header or to a [RFC4122](https://tools.ietf.org/html/rfc4122) UUID value if the request header was not provided to track the interaction. The header **must** be returned for both successful and error responses.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |Mandatory   |
-|Retry-After               |Header indicating the time (in seconds) that the TPP should wait before retrying an operation.<br/><br/>The ASPSP **should** include this header along with responses with the HTTP status code of 429 (Too Many Requests).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |Optional    |
-
+| Header Value          | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Mandatory?   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Content-Type          | Standard HTTP Header; Represents the format of the payload returned in the response.<br /><br />The ASPSP **must** return `Content-Type: application/json`  as a content header for all unencrypted endpoints, except the GET `../statements/{StatementId}/file` and `../file-payment-consents/{ConsentId}/file` endpoints, where it is up to the ASPSP to specify available options.<br /><br />The ASPSP **must** return `Content-type: application/jwe` for all encrypted end-points. | Mandatory    |
+| x-jws-signature       | Header containing a detached JWS signature of the body of the payload.<br /><br />Refer to resource specific documentation on when this header **must** be returned. Where a signed response is indicated in the documentation this header **should** be returned for error responses where a response body is returned.                                                                                                                                                                 | API specific |
+| x-fapi-interaction-id | An RFC4122 UID used as a correlation Id.<br /><br />The ASPSP **must** set the response header `x-fapi-interaction-id` to the value received from the corresponding fapi client request header or to a [RFC4122](https://tools.ietf.org/html/rfc4122) UUID value if the request header was not provided to track the interaction. The header **must** be returned for both successful and error responses.                                                                               | Mandatory    |
+| Retry-After           | Header indicating the time (in seconds) that the TPP should wait before retrying an operation.<br /><br />The ASPSP **should** include this header along with responses with the HTTP status code of 429 (Too Many Requests).                                                                                                                                                                                                                                                            | Optional     |
 
 ### HTTP Status Codes
 
 The following are the HTTP response codes for the different HTTP methods, across all Read/Write API endpoints.
 
-|Situation                 |HTTP Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |Notes       |Returned by POST|Returned by GET|Returned by DELETE|Returned by PUT|
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|----------------|---------------|------------------|---------------|
-|Request completed successfully|200 OK                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |PUT will be specified to return the updated resource. A 200 status code is therefore appropriate.|No              |Yes            |No                |Yes            |
-|Normal execution. The request has succeeded.|201 Created                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |The operation results in the creation of a new resource.|Yes             |No             |No                |No             |
-|Delete operation completed successfully|204 No Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |            |No              |No             |Yes               |No             |
-|Request has malformed, missing or non-compliant JSON body, URL parameters or header fields.|400 Bad Request                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |The requested operation will not be carried out.|Yes             |Yes            |Yes               |Yes            |
-|Authorization header missing or invalid token|401 Unauthorized                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |The operation was refused access.<br/><br/>Re-authenticating the PSU may result in an appropriate token that may be used.|Yes             |Yes            |Yes               |Yes            |
-|Token has incorrect scope or a security policy was violated.|403 Forbidden                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |The operation was refused access.<br/><br/>Re-authenticating the PSU may result in an appropriate token that may be used.|Yes             |Yes            |Yes               |Yes            |
-|The TPP tried to access the resource with a method that is not supported.|405 Method Not Allowed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |            |Yes             |Yes            |Yes               |Yes            |
-|The request contained an Accept header other than permitted media types and a character set other than UTF-8|406 Not Acceptable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |            |Yes             |Yes            |Yes               |Yes            |
-|The operation was refused because the payload is in a format not supported by this method on the target resource.|415 Unsupported Media Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |            |Yes             |No             |No                |Yes            |
-|The operation was refused as too many requests have been made within a certain timeframe.|429 Too Many Requests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |ASPSPs **may** throttle requests when they are made in excess of their fair usage policy.<br/><br/>ASPSPs **must** document their fair usage policies in their developer portals.<br/><br/>The ASPSP **must** respond with this status if it throttles the request.<br/><br/>The ASPSP **should** include a Retry-After header in the response indicating how long the TPP must wait before retrying the operation.|Yes             |Yes            |Yes               |Yes            |
-|Something went wrong on the API gateway or micro-service|500 Internal Server Error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |The operation failed.|Yes             |Yes            |Yes               |Yes            |
-|Service version deprecation|503 Service Unavailable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |Where an API is deprecated and no longer operationally supported by an ASPSP, its URI path may still be active and accept API requests. In this context it is recommended that a 503 Service Unavailable be returned so that the TPP is aware of the API version being offline.|Yes             |Yes            |Yes               |Yes            |
-
+| Situation                                                                                                         | HTTP Status                | Notes                                                                                                                                                                                                                                                                                                                                                                                                                     | Returned by POST | Returned by GET | Returned by DELETE | Returned by PUT |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------- | ------------------ | --------------- |
+| Request completed successfully                                                                                    | 200 OK                     | PUT will be specified to return the updated resource. A 200 status code is therefore appropriate.                                                                                                                                                                                                                                                                                                                         | No               | Yes             | No                 | Yes             |
+| Normal execution. The request has succeeded.                                                                      | 201 Created                | The operation results in the creation of a new resource.                                                                                                                                                                                                                                                                                                                                                                  | Yes              | No              | No                 | No              |
+| Delete operation completed successfully                                                                           | 204 No Content             |                                                                                                                                                                                                                                                                                                                                                                                                                           | No               | No              | Yes                | No              |
+| Request has malformed, missing or non-compliant JSON body, URL parameters or header fields.                       | 400 Bad Request            | The requested operation will not be carried out.                                                                                                                                                                                                                                                                                                                                                                          | Yes              | Yes             | Yes                | Yes             |
+| Authorization header missing or invalid token                                                                     | 401 Unauthorized           | The operation was refused access.<br /><br />Re-authenticating the PSU may result in an appropriate token that may be used.                                                                                                                                                                                                                                                                                               | Yes              | Yes             | Yes                | Yes             |
+| Token has incorrect scope or a security policy was violated.                                                      | 403 Forbidden              | The operation was refused access.<br /><br />Re-authenticating the PSU may result in an appropriate token that may be used.                                                                                                                                                                                                                                                                                               | Yes              | Yes             | Yes                | Yes             |
+| The TPP tried to access the resource with a method that is not supported.                                         | 405 Method Not Allowed     |                                                                                                                                                                                                                                                                                                                                                                                                                           | Yes              | Yes             | Yes                | Yes             |
+| The request contained an Accept header other than permitted media types and a character set other than UTF-8      | 406 Not Acceptable         |                                                                                                                                                                                                                                                                                                                                                                                                                           | Yes              | Yes             | Yes                | Yes             |
+| The operation was refused because the payload is in a format not supported by this method on the target resource. | 415 Unsupported Media Type |                                                                                                                                                                                                                                                                                                                                                                                                                           | Yes              | No              | No                 | Yes             |
+| The operation was refused as too many requests have been made within a certain timeframe.                         | 429 Too Many Requests      | ASPSPs **may** throttle requests when they are made in excess of their fair usage policy.<br /><br />ASPSPs **must** document their fair usage policies in their developer portals.<br /><br />The ASPSP **must** respond with this status if it throttles the request.<br /><br />The ASPSP **should** include a Retry-After header in the response indicating how long the TPP must wait before retrying the operation. | Yes              | Yes             | Yes                | Yes             |
+| Something went wrong on the API gateway or micro-service                                                          | 500 Internal Server Error  | The operation failed.                                                                                                                                                                                                                                                                                                                                                                                                     | Yes              | Yes             | Yes                | Yes             |
+| Service version deprecation                                                                                       | 503 Service Unavailable    | Where an API is deprecated and no longer operationally supported by an ASPSP, its URI path may still be active and accept API requests. In this context it is recommended that a 503 Service Unavailable be returned so that the TPP is aware of the API version being offline.                                                                                                                                           | Yes              | Yes             | Yes                | Yes             |
 
 An ASPSP **MAY** return other standard HTTP status codes (e.g. from gateways and other edge devices) as described in [RFC 7231 - Section 6](https://tools.ietf.org/html/rfc7231#section-6).
 
@@ -426,27 +427,31 @@ The table below illustrates some examples of expected behaviour:
       <th>Response</th>
     </tr>
   </thead>
+
   <tbody>
     <tr>
       <td>A TPP attempts to retrieve a payment with a DomesticPaymentId that does not exist</td>
       <td>GET /domestic-payments/1001</td>
       <td>400 (Bad Request)</td>
     </tr>
+
     <tr>
       <td>A TPP attempts to retrieve a resource that is not defined</td>
       <td>GET /bulk</td>
       <td>404 (Not Found)</td>
     </tr>
+
     <tr>
       <td>A TPP attempts to retrieve a resource that is in the specification, but not implemented by the ASPSP. e.g., an ASPSP has chosen not to implement the status API endpoint for domestic-scheduled-payments</td>
       <td>GET /domestic-scheduled-payments/1002</td>
       <td>404 (Not Found)</td>
     </tr>
+
     <tr>
       <td>A TPP attempts to retrieve standing orders for an AccountId that exists, but does not have any standing orders</td>
       <td>GET /accounts/1000/standing-orders</td>
-      <td>
 
+      <td>
         ```json
         200 OK
         {
@@ -461,13 +466,10 @@ The table below illustrates some examples of expected behaviour:
           }
         }
         ```
-
       </td>
     </tr>
   </tbody>
 </table>
-
-
 
 #### 403 (Forbidden)
 
@@ -595,29 +597,32 @@ The signing key **must** be valid at the time of creating the JWS.
 
 The JOSE header for the signature must contain the following fields
 
-| Claim                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `alg`                           | The algorithm that will be used for signing the JWS.<br/><br/>The list of valid algorithms is here https://tools.ietf.org/html/rfc7518#section-3.1.<br/><br/>This value must be `PS256`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `typ`                           | This is an optional claim.<br/><br/>If it is specified, it must be set to the value `JOSE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `cty`                           | This is an optional claim for JSON payloads<br/><br/>If it is specified, it must be set to the value `json` or `application/json` for json payloads.<br/><br/>For non-json payloads (e.g. for PDF files), the mime type of the payload must be specified in this claim.                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `kid`                           | This is a mandatory claim.<br/><br/>It must match a value that can be used to look up the key in a key store hosted by the Trust Anchor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `http://openbanking.org.uk/iat` | This **must** be a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in GMT until the date/time. <br/><br/>This is a private header parameter name. (See [RFC 7515 - Private Header Parameter Names](https://tools.ietf.org/html/rfc7515#section-4.3))                                                                                                                                                                                                                                                                                                                                                                                 |
-| `http://openbanking.org.uk/iss` | This **must** be a string that identifies the PSP.<br/><br/>If the issuer is using a certificate this value **must** match the **subject** of the signing certificate.<br/><br/>If the issuer is using a signing key lodged with a Trust Anchor, the value is defined by the Trust Anchor and should uniquely identify the PSP.<br/><br/>For example, when using the Open Banking Directory, the value must be:<br/><br/><ul><li>When issued by a TPP, of the form `{{org-id}}/{{software-statement-id}}`,</li><li>When issued by an ASPSP of the form `{{org-id}}`</li></ul><br/><br/>Where:<ul><li>org-id is the open-banking issued organization id</li><li>software-statement-id is the open-banking issued software-statement-id </li></ul>|
-| `http://openbanking.org.uk/tan` | This **must** be a string that consists of a domain name that is registered to and identifies the Trust Anchor that hosts the public counter-part of the key used for signing.<br/><br/>For example, when using the Open Banking Directory, the value must be `openbanking.org.uk`                                                                                                                                                                                                                                                                                                                                                                                     |
-| `crit`                          | This **must** be a string array consisting of the values `http://openbanking.org.uk/iat`, `http://openbanking.org.uk/iss`, `http://openbanking.org.uk/tan`<br/><br/>This indicates that the JWS signature validator must understand and process the three additional claims.                                                                                                                                                                                                                                                                                                                                                                                    |
+| Claim                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alg`                           | The algorithm that will be used for signing the JWS.<br /><br />The list of valid algorithms is here [https://tools.ietf.org/html/rfc7518#section-3.1](https://tools.ietf.org/html/rfc7518#section-3.1).<br /><br />This value must be `PS256`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `typ`                           | This is an optional claim.<br /><br />If it is specified, it must be set to the value `JOSE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `cty`                           | This is an optional claim for JSON payloads<br /><br />If it is specified, it must be set to the value `json` or `application/json` for json payloads.<br /><br />For non-json payloads (e.g. for PDF files), the mime type of the payload must be specified in this claim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `kid`                           | This is a mandatory claim.<br /><br />It must match a value that can be used to look up the key in a key store hosted by the Trust Anchor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `http://openbanking.org.uk/iat` | This **must** be a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in GMT until the date/time. <br /><br />This is a private header parameter name. (See [RFC 7515 - Private Header Parameter Names](https://tools.ietf.org/html/rfc7515#section-4.3))                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `http://openbanking.org.uk/iss` | This **must** be a string that identifies the PSP.<br /><br />If the issuer is using a certificate this value **must** match the **subject** of the signing certificate.<br /><br />If the issuer is using a signing key lodged with a Trust Anchor, the value is defined by the Trust Anchor and should uniquely identify the PSP.<br /><br />For example, when using the Open Banking Directory, the value must be:<br /><br /><ul><li>When issued by a TPP, of the form `{{org-id}}/{{software-statement-id}}`,</li><li>When issued by an ASPSP of the form `{{org-id}}`</li></ul><br /><br />Where:<ul><li>org-id is the open-banking issued organization id</li><li>software-statement-id is the open-banking issued software-statement-id </li></ul> |
+| `http://openbanking.org.uk/tan` | This **must** be a string that consists of a domain name that is registered to and identifies the Trust Anchor that hosts the public counter-part of the key used for signing.<br /><br />For example, when using the Open Banking Directory, the value must be `openbanking.org.uk`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `crit`                          | This **must** be a string array consisting of the values `http://openbanking.org.uk/iat`, `http://openbanking.org.uk/iss`, `http://openbanking.org.uk/tan`<br /><br />This indicates that the JWS signature validator must understand and process the three additional claims.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ##### Step 3: Compute the JWS
 
 The signer must compute the signature as a detached JWS as defined in [RFC 7515, Appendix F](https://tools.ietf.org/html/rfc7515)
 
 > "One way to do this is to create a JWS
-   in the normal fashion using a representation of the content as the
-   payload but then delete the payload representation from the JWS and
-   send this modified object to the recipient rather than the JWS."
-   <br/>...<br/>
-   Note that this method needs no support from JWS libraries, as
-   applications can use this method by modifying the inputs and outputs
-   of standard JWS libraries.   
+> in the normal fashion using a representation of the content as the
+> payload but then delete the payload representation from the JWS and
+> send this modified object to the recipient rather than the JWS."
+>
+> <br />...<br />
+> Note that this method needs no support from JWS libraries, as
+> applications can use this method by modifying the inputs and outputs
+> of standard JWS libraries.
+>
+> <br />
 
 ##### Step 4: Add the JWS as a HTTP Header 
 
@@ -657,12 +662,12 @@ The verifier **must** ensure that the `crit` claim does not contain additional c
 
 The verifier must verify the signature, as defined in [RFC 7515, Appendix F](https://tools.ietf.org/html/rfc7515#appendix-F).
 
->To use the modified object, the recipient
-   reconstructs the JWS by re-inserting the payload representation into
-   the modified object and uses the resulting JWS in the usual manner.
-   Note that this method needs no support from JWS libraries, as
-   applications can use this method by modifying the inputs and outputs
-   of standard JWS libraries.
+> To use the modified object, the recipient
+> reconstructs the JWS by re-inserting the payload representation into
+> the modified object and uses the resulting JWS in the usual manner.
+> Note that this method needs no support from JWS libraries, as
+> applications can use this method by modifying the inputs and outputs
+> of standard JWS libraries.
 
 #### Sample JOSE Header
 
@@ -685,7 +690,7 @@ The TPP signing the message has an organization id of `0015800001041RHAAY` and a
 
 ##### Using an EIDAS certificate that is not registered with a trust anchor
 
-This is a non-normative example and is only provided as an example. 
+This is a non-normative example and is only provided as an example.
 
 The value to be provided for the `tan` claim is determined by the ASPSP and is not outside the scope of this specification.
 
@@ -836,9 +841,9 @@ The scopes required with these access tokens and the grant type used to get the 
 
 OAuth 2.0 scopes are coarse grained and the set of available scopes are defined at the point of client registration. There is no standard method for specifying and enforcing fine grained scopes (e.g. a scope to enforce payments of a specified amount on a specified date).
 
-An *intent* is used to define the fine-grained permissions that are granted by the PSU to the TPP.
+An _intent_ is used to define the fine-grained permissions that are granted by the PSU to the TPP.
 
-The act of providing authorisation of an intent by a PSU to an ASPSP is called *consent authorisation*.
+The act of providing authorisation of an intent by a PSU to an ASPSP is called _consent authorisation_.
 
 The Open Banking Read/Write APIs use a variety of intents such as account-access-consent, funds-confirmation-consents and the payment order consents.
 
@@ -858,10 +863,10 @@ The expiry time for issued access tokens and refresh tokens must be deterministi
 
 In order to achieve this:
 
-* The ASPSP **must** indicate the lifetime in seconds of the access token in the `expires_in` field of the JSON object returned by the token end-point. (See https://tools.ietf.org/html/rfc6749#section-4.2.2)
+* The ASPSP **must** indicate the lifetime in seconds of the access token in the `expires_in` field of the JSON object returned by the token end-point. (See [https://tools.ietf.org/html/rfc6749#section-4.2.2](https://tools.ietf.org/html/rfc6749#section-4.2.2))
 * If the ASPSP does not issue a refresh token, the ASPSP **must not** populate the `http://openbanking.org.uk/refresh_token_expires_at` claim in the Id token
 * If the ASPSP issues a refresh token that does not expire, the ASPSP **must not** populate the claim named `http://openbanking.org.uk/refresh_token_expires_at` in the Id token.
-* If the ASPSP issues a refresh token that expires, the ASPSP **must** indicate the date-time at which the refresh token will expire in a claim named `http://openbanking.org.uk/refresh_token_expires_at` in the Id token (returned by the token end-point or userinfo end-point). Its value MUST be a number containing a NumericDate value, as specified in https://tools.ietf.org/html/rfc7519#section-2
+* If the ASPSP issues a refresh token that expires, the ASPSP **must** indicate the date-time at which the refresh token will expire in a claim named `http://openbanking.org.uk/refresh_token_expires_at` in the Id token (returned by the token end-point or userinfo end-point). Its value MUST be a number containing a NumericDate value, as specified in [https://tools.ietf.org/html/rfc7519#section-2](https://tools.ietf.org/html/rfc7519#section-2)
   * NumericDate is a JSON numeric value representing the number of seconds from 1970-01-01T00:00:00Z UTC until the specified UTC date-time, ignoring leap seconds.
 
 #### Exemptions from Strong Customer Authentication
@@ -900,9 +905,9 @@ The Hybrid Grant (See [Section 3.3. of the OIDC Specification](http://openid.net
 
 Earlier versions of this specification referenced the use of The Authorization Code Grant (see [Section 4.1 of the OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749#section-4.1) and [Section 3.1 of the OIDC Specification](http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth)) as  another redirect based mechanism for authenticating PSUs. The FAPI security profile states states that the hybrid flow should be used. ASPSPs should not implement this flow, but should use the Hybrid Grant instead.
 
- The [FAPI read & Write API Security Profile](https://openid.net/specs/openid-financial-api-part-2-ID2.html) specify a more stringent set of requirements that ASPSPs and TPPs must adhere to.
+The [FAPI read & Write API Security Profile](https://openid.net/specs/openid-financial-api-part-2-ID2.html) specify a more stringent set of requirements that ASPSPs and TPPs must adhere to.
 
-Earlier versions of this specification referenced the use of [The UK Open Banking Security Profile](https://bitbucket.org/openid/obuk/src/4630771db004da59992fb201641f5c4ff2c881f1/uk-openbanking-security-profile.md?at=master&fileviewer=file-view-default). It should be noted that the UK Open Banking Security Profile is no longer supported by OBL. ASPSPs should not implement this profile, but should use FAPI instead.
+Earlier versions of this specification referenced the use of [The UK Open Banking Security Profile](https://bitbucket.org/openid/obuk/src/4630771db004da59992fb201641f5c4ff2c881f1/uk-openbanking-security-profile.md?at=master\&fileviewer=file-view-default). It should be noted that the UK Open Banking Security Profile is no longer supported by OBL. ASPSPs should not implement this profile, but should use FAPI instead.
 
 ##### id_token_hint
 
@@ -910,7 +915,7 @@ When an access token is generated through an authorization code grant (or hybrid
 
 The `id_token` is a signed JWT that consists of a number of claims that identify the resource owner. In the Open Banking context, the `id_token` always identifies the `intent_id` that was authorised which can be mapped onto a single PSU.
 
-As the `id_token` is signed by the ASPSP and bound to a specific TPP (through the `aud` claim), the `id_token` could be leveraged to *identify* the PSU in subsequent authorisation requests. OIDC caters for this by allowing the `id_token` to be passed into an authorization code grant request as the `id_token_hint` query parameter (as documented [here](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest)).
+As the `id_token` is signed by the ASPSP and bound to a specific TPP (through the `aud` claim), the `id_token` could be leveraged to _identify_ the PSU in subsequent authorisation requests. OIDC caters for this by allowing the `id_token` to be passed into an authorization code grant request as the `id_token_hint` query parameter (as documented [here](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest)).
 
 ##### jwt_bearer
 
@@ -923,13 +928,14 @@ The ASPSP returns an access token directly to the TPP without any further user i
 The jwt-bearer grant type is an extension to OpenID Connect and covered in [RFC 7523](https://tools.ietf.org/html/rfc7523)
 
 #### CIBA
+
 The [Client Initiated Back-channel Authentication flow](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html) is part of the OpenID specifications.
 
 FAPI has published [Financial-grade API: Client Initiated Backchannel Authentication Profile](https://openid.net/specs/openid-financial-api-ciba-ID1.html).
 
 ASPSPs that implement CIBA **must** adhere to the profile.
 
-An ASPSP **may** optionally implement the CIBA flow to allow PSUs to authenticate themselves using a decoupled *authentication device* that is distinct from the *consumption device* on which they consume the TPP application.
+An ASPSP **may** optionally implement the CIBA flow to allow PSUs to authenticate themselves using a decoupled _authentication device_ that is distinct from the _consumption device_ on which they consume the TPP application.
 
 ##### Identifying the PSU
 
@@ -944,11 +950,12 @@ An ASPSP **must** document on their developer portal, the methods of identifying
 
 If the ASPSP does not support a specific method of identifying a PSU, the ASPSP **must** return an authentication error with the error field set to `invalid_request`.
 
-
 ###### Identifying the consent to be authorised
+
 For the OBL APIs, all authentication journeys take place in the context of a consent.
 
 CIBA does not define a standard mechanism for transmitting an identifier for the consent to the ASPSP. Additionally, FAPI-CIBA specifically states that the Authorization server:
+
 > should not use the login_hint or login_hint_token to convey "intent ids" or any other authorization metadata
 
 It goes on to suggest that additional contextual information should be passed in using one of the alternatives defined in the "Lodging Intent" pattern.
@@ -962,9 +969,10 @@ The ASPSP must allow at most one `bc_authorize` request at any time to be associ
 ###### Identifying the PSU Using a User Id
 
 To identify a PSU through a user Id, the TPP **must** issue a `login_hint_token` in the `bc_authorize` request that contain at least one of the following claims with a value identifying the end-user:
-  * sub
-  * email
-  * phone_number
+
+* sub
+* email
+* phone_number
 
 If the ASPSP support identification of the user through a static identifier, it **must** document on its developer portal the claims that it supports as a static identifier.
 
@@ -986,6 +994,7 @@ If the ASPSP support identification of the user through a static identifier, it 
 ```
 
 The following is a non-normative example shows a call to `bc-authorize` using a login name as an identifier and MTLS for authenticating the client.
+
 ```
 POST /bc-authorize HTTP/1.1
    Host: server.example.com
@@ -1017,6 +1026,7 @@ where the JWT represents the following payload:
   "openbanking-intent-id": "aac-a319ff12-fbf9-11e9-8f0b-362b9e155667"
 }
 ```
+
 where the `login_hint_token` JWT represents the following payload:
 
 ```
@@ -1031,6 +1041,7 @@ where the `login_hint_token` JWT represents the following payload:
 ```
 
 ###### Identifying the PSU Using an Ephemeral User Id
+
 To identify a PSU through an ephemeral user Id, the TPP **must** issue a `login_hint_token` in the `bc_authorize` request that contains the custom claim `ephemeral_sub` set to the ephemeral user id
 
 ```json
@@ -1056,7 +1067,6 @@ This will allow the ASPSP to identify the PSU that is authenticating the consent
 To identify a PSU through a previously issued `id_token` the TPP must issue an `id_token_hint` containing the id_token in the `bc_authorize` request.
 A `login_hint_token` **must not** be included in the request.
 
-
 ### Changes to an Intent's Authorized State
 
 A PSU may revoke any of their long-lived consents through the TPP, and only Funds Confirmation Consent through the ASPSP. This only applies to long-lived consents:
@@ -1074,7 +1084,7 @@ An ASPSP may issue an access token and refresh token for a long-lived consent. T
 
 #### Ability to re-authenticate an Authorised consent at any point of time
 
-A TPP **may** request a PSU to re-authenticate a consent at *any point of time* for a long-lived consent that is in the `Authorised` state. This includes before and after the underlying tokens have expired.
+A TPP **may** request a PSU to re-authenticate a consent at _any point of time_ for a long-lived consent that is in the `Authorised` state. This includes before and after the underlying tokens have expired.
 
 An ASPSP **must** accept a request from a TPP to re-authenticate a consent at any point of time for a long-lived consent that is in the Authorised state. This includes before and after the underlying tokens have expired.
 
@@ -1106,6 +1116,7 @@ ASPSPs that support this capability should advertise this as a supported grant_t
 The formal grant name for jwt-bearer is `urn:ietf:params:oauth:grant-type:jwt-bearer`.
 
 ##### Client registration
+
 TPPs that would like to use this capability must register their clients with `urn:ietf:params:oauth:grant-type:jwt-bearer` as a supported grant_type.
 An ASPSP may determine selective access to this grant type only to TPPs that have a contract with the ASPSP to carry out authentication on their behalf.
 An ASPSP may support the registration of such clients through dynamic client registration.
@@ -1126,15 +1137,17 @@ In order to carry out re-authentication, the TPP can take a PSU through SCA in t
 The TPP should then call the ASPSP's token end-point with a grant type of `urn:ietf:params:oauth:grant-type:jwt-bearer` as defined in RFC 7523.
 
 The TPP must follow the following additional criteria for the JWT header:
-- Set the `alg` of the JWS header to PS256
-- Specify the `kid` of the signing key in the JWS header. The `kid` be resolvable as a signing key on the client's registered JWKS.
-- Not use any other method of key resolution
+
+* Set the `alg` of the JWS header to PS256
+* Specify the `kid` of the signing key in the JWS header. The `kid` be resolvable as a signing key on the client's registered JWKS.
+* Not use any other method of key resolution
 
 The TPP must follow the following additional criteria for the JWT body:
-- set `iss` to its own client_id
-- set `sub` to the intent_id that is to be re-authorised.
-- set `aud` to the token endpoint url
-- specify all the other mandatory claims in Section 2.2 Pt 3
+
+* set `iss` to its own client_id
+* set `sub` to the intent_id that is to be re-authorised.
+* set `aud` to the token endpoint url
+* specify all the other mandatory claims in Section 2.2 Pt 3
 
 ##### Vector of Trust
 
@@ -1244,6 +1257,7 @@ The top level response structure for Open Banking Read/Write APIs:
 In line with the principle of RESTful APIs, the full resource must be replayed as part of the response.
 
 Two additional top-level sections are included in the response for:
+
 * Links
 * Meta
 
@@ -1269,22 +1283,21 @@ The error response structure for Open Banking Read/Write APIs:
 
 ##### UML Diagram
 
-![](./images/OBErrorResponse1.gif)
+<Image border={false} src="./images/OBErrorResponse1.gif" />
 
 ##### Data Dictionary
 
-|Name                      |Occurrence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |XPath       |EnhancedDefinition                                                                                                                                                      |Class                    |Codes|Pattern|
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|-----|-------|
-|OBErrorResponse1          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |OBErrorResponse1|An array of detail error codes, and messages, and URLs to documentation to help remediation.                                                                            |OBErrorResponse1         |     |       |
-|Code                      |1..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Code|High level textual error code, to help categorise the errors.                                                                                                           |Max40Text                |     |       |
-|Id                        |0..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Id|A unique reference for the error instance, for audit purposes, in case of unknown/unclassified errors.                                                                  |Max40Text                |     |       |
-|Message                   |1..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Message|Brief Error message, e.g., 'There is something wrong with the request parameters provided'                                                                              |Max500Text               |     |       |
-|Errors                    |1..n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Errors|                                                                                                                                                                        |OBError1                 |     |       |
-|ErrorCode                 |1..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Errors/ErrorCode|Low level textual error code, e.g., UK.OBIE.Field.Missing                                                                                                               |OBErrorResponseError1Code|     |       |
-|Message                   |1..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Errors/Message|A description of the error that occurred. e.g., 'A mandatory field isn't supplied' or 'RequestedExecutionDateTime must be in future'<br/><br/>OBL doesn't standardise this field|Max500Text               |     |       |
-|Path                      |0..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Errors/Path|Recommended but optional reference to the JSON Path of the field with error, e.g., Data.Initiation.InstructedAmount.Currency                                            |Max500Text               |     |       |
-|Url                       |0..1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |OBErrorResponse1/Errors/Url|URL to help remediate the problem, or provide more information, or to API Reference, or help etc                                                                        |xs:anyURI                |     |       |
-
+| Name             | Occurrence | XPath                             | EnhancedDefinition                                                                                                                                                                 | Class                     | Codes | Pattern |
+| ---------------- | ---------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----- | ------- |
+| OBErrorResponse1 |            | OBErrorResponse1                  | An array of detail error codes, and messages, and URLs to documentation to help remediation.                                                                                       | OBErrorResponse1          |       |         |
+| Code             | 1..1       | OBErrorResponse1/Code             | High level textual error code, to help categorise the errors.                                                                                                                      | Max40Text                 |       |         |
+| Id               | 0..1       | OBErrorResponse1/Id               | A unique reference for the error instance, for audit purposes, in case of unknown/unclassified errors.                                                                             | Max40Text                 |       |         |
+| Message          | 1..1       | OBErrorResponse1/Message          | Brief Error message, e.g., 'There is something wrong with the request parameters provided'                                                                                         | Max500Text                |       |         |
+| Errors           | 1..n       | OBErrorResponse1/Errors           |                                                                                                                                                                                    | OBError1                  |       |         |
+| ErrorCode        | 1..1       | OBErrorResponse1/Errors/ErrorCode | Low level textual error code, e.g., UK.OBIE.Field.Missing                                                                                                                          | OBErrorResponseError1Code |       |         |
+| Message          | 1..1       | OBErrorResponse1/Errors/Message   | A description of the error that occurred. e.g., 'A mandatory field isn't supplied' or 'RequestedExecutionDateTime must be in future'<br /><br />OBL doesn't standardise this field | Max500Text                |       |         |
+| Path             | 0..1       | OBErrorResponse1/Errors/Path      | Recommended but optional reference to the JSON Path of the field with error, e.g., Data.Initiation.InstructedAmount.Currency                                                       | Max500Text                |       |         |
+| Url              | 0..1       | OBErrorResponse1/Errors/Url       | URL to help remediate the problem, or provide more information, or to API Reference, or help etc                                                                                   | xs:anyURI                 |       |         |
 
 #### Optional Fields
 
@@ -1388,6 +1401,7 @@ Content-Type: application/json
   }
 }
 ```
+
 The TPP may follow the links provided in the Links section of the payload to navigate to the first, last, next and previous pages:
 
 #### Request Next Page of Results
@@ -1443,29 +1457,27 @@ This flow assumes that the following Steps have been completed successfully:
 
 The AISP attempts to provide an expired or missing access token to the ASPSP in an attempt to Request Data
 
-![](./images/MissingOrExpiredAccessToken.png)
-
+<Image border={false} src="./images/MissingOrExpiredAccessToken.png" />
 
 <details>
   <summary>Diagram source</summary>
 
-```
-participant PSU
-participant AISP
-participant ASPSP Authorisation Server
-participant ASPSP Resource Server
+  ```
+  participant PSU
+  participant AISP
+  participant ASPSP Authorisation Server
+  participant ASPSP Resource Server
 
-alt Request data with a missing or expired access-token
-AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
-AISP -> ASPSP Resource Server: GET /accounts
-ASPSP Resource Server -> AISP: HTTP 401 (Unauthorized)
+  alt Request data with a missing or expired access-token
+  AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
+  AISP -> ASPSP Resource Server: GET /accounts
+  ASPSP Resource Server -> AISP: HTTP 401 (Unauthorized)
 
-AISP -> ASPSP Resource Server: GET /accounts/{AccountId}/transactions
-ASPSP Resource Server -> AISP: HTTP 401 (Unauthorized)
+  AISP -> ASPSP Resource Server: GET /accounts/{AccountId}/transactions
+  ASPSP Resource Server -> AISP: HTTP 401 (Unauthorized)
 
-end alt
-```
-
+  end alt
+  ```
 </details>
 
 #### Incomplete or Malformed Request Payload
@@ -1478,28 +1490,26 @@ This flow assumes that the following Steps have been completed successfully:
 
 The AISP provides a malformed request to the ASPSP in an attempt to setup an Account Request.
 
-![](./images/IncompleteOrMalformedRequestPayload.png)
+<Image border={false} src="./images/IncompleteOrMalformedRequestPayload.png" />
 
 <details>
   <summary>Diagram source</summary>
 
-```
-participant PSU
-participant AISP
-participant ASPSP Authorisation Server
-participant ASPSP Resource Server
+  ```
+  participant PSU
+  participant AISP
+  participant ASPSP Authorisation Server
+  participant ASPSP Resource Server
 
 
-alt AISP attempts to setup an account request with a malformed payload
-AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
-AISP -> ASPSP Resource Server: POST /account-requests
-ASPSP Resource Server -> AISP: HTTP 400 (Bad Request)
+  alt AISP attempts to setup an account request with a malformed payload
+  AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
+  AISP -> ASPSP Resource Server: POST /account-requests
+  ASPSP Resource Server -> AISP: HTTP 400 (Bad Request)
 
-end alt
-```
-
+  end alt
+  ```
 </details>
-
 
 #### Missing or Invalid Access Token Scope
 
@@ -1511,31 +1521,30 @@ This flow assumes that the following Steps have been completed successfully:
 
 The AISP provides a (valid) access token which does not have a valid scope (or link to the correct Permissions) to Request Data
 
-![](./images/MissingOrInvalidAccessTokenScope.png)
+<Image border={false} src="./images/MissingOrInvalidAccessTokenScope.png" />
 
 <details>
   <summary>Diagram source</summary>
 
-```
-participant PSU
-participant AISP
-participant ASPSP Authorisation Server
-participant ASPSP Resource Server
+  ```
+  participant PSU
+  participant AISP
+  participant ASPSP Authorisation Server
+  participant ASPSP Resource Server
 
 
-alt Request data with a missing or invalid access-token scope
-AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
-AISP -> ASPSP Resource Server: GET /accounts
-ASPSP Resource Server -> AISP: HTTP 403 (Forbidden)
+  alt Request data with a missing or invalid access-token scope
+  AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
+  AISP -> ASPSP Resource Server: GET /accounts
+  ASPSP Resource Server -> AISP: HTTP 403 (Forbidden)
 
 
-AISP -> ASPSP Resource Server: GET /accounts/{AccountId}/transactions
-ASPSP Resource Server -> AISP: HTTP 403 (Forbidden)
+  AISP -> ASPSP Resource Server: GET /accounts/{AccountId}/transactions
+  ASPSP Resource Server -> AISP: HTTP 403 (Forbidden)
 
 
-end alt
-```
-
+  end alt
+  ```
 </details>
 
 #### Sudden Burst of API Requests
@@ -1550,29 +1559,28 @@ The AISP provides a (valid) access token which is used to generate a burst of mu
 
 The ASPSP may optionally choose to return a 429 Response
 
-![](./images/TooManyRequests.png)
+<Image border={false} src="./images/TooManyRequests.png" />
 
 <details>
   <summary>Diagram source</summary>
 
-```
-participant PSU
-participant AISP
-participant ASPSP Authorisation Server
-participant ASPSP Resource Server
+  ```
+  participant PSU
+  participant AISP
+  participant ASPSP Authorisation Server
+  participant ASPSP Resource Server
 
 
-alt AISP attempts to retrieve an Account Resource
-AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
-    loop Burst of multiple GET requests
-        AISP -> ASPSP Resource Server: GET /accounts/{AccountId}
-        opt
-            ASPSP Resource Server -> AISP: HTTP 429 (Too Many Requests)
-        end
-    end
-end
-```
-
+  alt AISP attempts to retrieve an Account Resource
+  AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
+      loop Burst of multiple GET requests
+          AISP -> ASPSP Resource Server: GET /accounts/{AccountId}
+          opt
+              ASPSP Resource Server -> AISP: HTTP 429 (Too Many Requests)
+          end
+      end
+  end
+  ```
 </details>
 
 #### Failed Authorisation Consent
@@ -1584,43 +1592,42 @@ This flow assumes that the following Steps have been completed successfully:
 
 The Step 3: Authorise Consent Flow fails to succeed due to the PSU providing invalid credentials to the ASPSP, resulting in no Authorization Code being generated.
 
-![](./images/FailedAuthorisationConsent.png)
+<Image border={false} src="./images/FailedAuthorisationConsent.png" />
 
 <details>
   <summary>Diagram source</summary>
 
-```
-participant PSU
-participant AISP
-participant ASPSP Authorisation Server
-participant ASPSP Resource Server
+  ```
+  participant PSU
+  participant AISP
+  participant ASPSP Authorisation Server
+  participant ASPSP Resource Server
 
-note over PSU, ASPSP Resource Server
-    Step 1: Request account information
-end note
-PSU -> AISP: Get account/transaction information
+  note over PSU, ASPSP Resource Server
+      Step 1: Request account information
+  end note
+  PSU -> AISP: Get account/transaction information
 
-note over PSU, ASPSP Resource Server
-    Step 2: Setup account request
-end note
-AISP <-> ASPSP Authorisation Server: Establish TLS 1.2 MA
-AISP -> ASPSP Authorisation Server: Initiate Client Credentials Grant
-ASPSP Authorisation Server -> AISP: access-token
-AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
-AISP -> ASPSP Resource Server: POST /account-requests
-ASPSP Resource Server -> AISP: HTTP 201 (Created), AccountRequestId
-AISP -> PSU: HTTP 302 (Found), Redirect (AccountRequestId)
+  note over PSU, ASPSP Resource Server
+      Step 2: Setup account request
+  end note
+  AISP <-> ASPSP Authorisation Server: Establish TLS 1.2 MA
+  AISP -> ASPSP Authorisation Server: Initiate Client Credentials Grant
+  ASPSP Authorisation Server -> AISP: access-token
+  AISP <-> ASPSP Resource Server: Establish TLS 1.2 MA
+  AISP -> ASPSP Resource Server: POST /account-requests
+  ASPSP Resource Server -> AISP: HTTP 201 (Created), AccountRequestId
+  AISP -> PSU: HTTP 302 (Found), Redirect (AccountRequestId)
 
-note over PSU, ASPSP Resource Server
-Step 3: Failed authorise consent
-end note
-PSU -> ASPSP Authorisation Server: Follow redirect (AccountRequestId)
-PSU -> ASPSP Authorisation Server: Invalid Credentials
-ASPSP Authorisation Server -> PSU: HTTP 302 (Found), Redirect (error)
-PSU -> AISP: Follow redirect (error)
-AISP -> PSU : Error Response
-```
-
+  note over PSU, ASPSP Resource Server
+  Step 3: Failed authorise consent
+  end note
+  PSU -> ASPSP Authorisation Server: Follow redirect (AccountRequestId)
+  PSU -> ASPSP Authorisation Server: Invalid Credentials
+  ASPSP Authorisation Server -> PSU: HTTP 302 (Found), Redirect (error)
+  PSU -> AISP: Follow redirect (error)
+  AISP -> PSU : Error Response
+  ```
 </details>
 
 #### JSON Error Response
