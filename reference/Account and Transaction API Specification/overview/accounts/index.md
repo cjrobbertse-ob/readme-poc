@@ -2,8 +2,6 @@
 title: Accounts
 hidden: false
 ---
-# Accounts - v3.1.11
-
 - [Overview](#overview)
 - [Endpoints](#endpoints)
   - [GET /accounts](#get-accounts)
