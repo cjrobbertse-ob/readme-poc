@@ -1,42 +1,40 @@
 ---
-title: Account Access
+title: Account Access Consents
 hidden: false
 ---
-# Account Access Consents - v3.1.11
-
-- [Overview](#overview)
-- [Endpoints](#endpoints)
-  - [POST /account-access-consents](#post-account-access-consents)
-    - [Account Access Consent Status](#account-access-consent-status)
-    - [Status Flow](#status-flow)
-  - [GET /account-access-consents/`{ConsentId}`](#get-account-access-consentsconsentid)
-    - [Account Access Consent Status](#account-access-consent-status-1)
-  - [DELETE /account-access-consents/`{ConsentId}`](#delete-account-access-consentsconsentid)
-- [Data Model](#data-model)
-  - [Account Access Consents - Request](#account-access-consents---request)
-    - [UML Diagram](#uml-diagram)
-    - [Notes](#notes)
-    - [Data Dictionary](#data-dictionary)
-  - [Account Access Consents - Response](#account-access-consents---response)
-    - [UML Diagram](#uml-diagram-1)
-    - [Notes](#notes-1)
-    - [Data Dictionary](#data-dictionary-1)
-- [Usage Examples](#usage-examples)
-  - [Setup Account Access Consent - All Permissions Granted](#setup-account-access-consent---all-permissions-granted)
-    - [Post Account Access Consents Request](#post-account-access-consents-request)
-    - [Post Account Access Consents Response](#post-account-access-consents-response)
-  - [Status - AwaitingAuthorisation](#status---awaitingauthorisation)
-    - [Get Account Access Consents Request](#get-account-access-consents-request)
-    - [Get Account Access Consents Response](#get-account-access-consents-response)
-  - [Status - Authorised](#status---authorised)
-    - [Get Account Access Consents Request](#get-account-access-consents-request-1)
-    - [Get Account Access Consents Response](#get-account-access-consents-response-1)
-  - [Delete Account Access Consent](#delete-account-access-consent)
-    - [Delete Account Access Consents Request](#delete-account-access-consents-request)
-    - [Delete Account Access Consents Response](#delete-account-access-consents-response)
-  - [Setup Account Access Consent with Limited Permissions](#setup-account-access-consent-with-limited-permissions)
-    - [Post Account Access Consent Request](#post-account-access-consent-request)
-    - [Post Account Access Consent Response](#post-account-access-consent-response)
+* [Overview](#overview)
+* [Endpoints](#endpoints)
+  * [POST /account-access-consents](#post-account-access-consents)
+    * [Account Access Consent Status](#account-access-consent-status)
+    * [Status Flow](#status-flow)
+  * [GET /account-access-consents/`{ConsentId}`](#get-account-access-consentsconsentid)
+    * [Account Access Consent Status](#account-access-consent-status-1)
+  * [DELETE /account-access-consents/`{ConsentId}`](#delete-account-access-consentsconsentid)
+* [Data Model](#data-model)
+  * [Account Access Consents - Request](#account-access-consents---request)
+    * [UML Diagram](#uml-diagram)
+    * [Notes](#notes)
+    * [Data Dictionary](#data-dictionary)
+  * [Account Access Consents - Response](#account-access-consents---response)
+    * [UML Diagram](#uml-diagram-1)
+    * [Notes](#notes-1)
+    * [Data Dictionary](#data-dictionary-1)
+* [Usage Examples](#usage-examples)
+  * [Setup Account Access Consent - All Permissions Granted](#setup-account-access-consent---all-permissions-granted)
+    * [Post Account Access Consents Request](#post-account-access-consents-request)
+    * [Post Account Access Consents Response](#post-account-access-consents-response)
+  * [Status - AwaitingAuthorisation](#status---awaitingauthorisation)
+    * [Get Account Access Consents Request](#get-account-access-consents-request)
+    * [Get Account Access Consents Response](#get-account-access-consents-response)
+  * [Status - Authorised](#status---authorised)
+    * [Get Account Access Consents Request](#get-account-access-consents-request-1)
+    * [Get Account Access Consents Response](#get-account-access-consents-response-1)
+  * [Delete Account Access Consent](#delete-account-access-consent)
+    * [Delete Account Access Consents Request](#delete-account-access-consents-request)
+    * [Delete Account Access Consents Response](#delete-account-access-consents-response)
+  * [Setup Account Access Consent with Limited Permissions](#setup-account-access-consent-with-limited-permissions)
+    * [Post Account Access Consent Request](#post-account-access-consent-request)
+    * [Post Account Access Consent Response](#post-account-access-consent-response)
 
 ## Overview
 
@@ -46,11 +44,11 @@ This resource description should be read in conjunction with a compatible Accoun
 
 ## Endpoints
 
-|  |Resource |HTTP Operation |Endpoint |Mandatory? |Scope |Grant Type |Idempotency Key |Parameters |Request Object |Response Object |
-| --- |--- |--- |--- |--- |--- |--- |--- |--- |--- |--- |
-| 1 |account-access-consents |POST |POST /account-access-consents |Mandatory |accounts |Client Credentials |No | |OBReadConsent1 |OBReadConsentResponse1 |
-| 2 |account-access-consents |GET |GET /account-access-consents/`{ConsentId}` |Mandatory |accounts |Client Credentials |No | | |OBReadConsentResponse1 |
-| 3 |account-access-consents |DELETE |DELETE /account-access-consents/`{ConsentId}` |Mandatory |accounts |Client Credentials |No | | | |
+|   | Resource                | HTTP Operation | Endpoint                                      | Mandatory? | Scope    | Grant Type         | Idempotency Key | Parameters | Request Object | Response Object        |
+| - | ----------------------- | -------------- | --------------------------------------------- | ---------- | -------- | ------------------ | --------------- | ---------- | -------------- | ---------------------- |
+| 1 | account-access-consents | POST           | POST /account-access-consents                 | Mandatory  | accounts | Client Credentials | No              |            | OBReadConsent1 | OBReadConsentResponse1 |
+| 2 | account-access-consents | GET            | GET /account-access-consents/`{ConsentId}`    | Mandatory  | accounts | Client Credentials | No              |            |                | OBReadConsentResponse1 |
+| 3 | account-access-consents | DELETE         | DELETE /account-access-consents/`{ConsentId}` | Mandatory  | accounts | Client Credentials | No              |            |                |                        |
 
 ### POST /account-access-consents
 
@@ -66,23 +64,23 @@ The API allows the AISP to ask an ASPSP to create a new account-access-consent r
 The PSU  **must**  authenticate with the ASPSP and authorise the account-access-consent for the account-access-consent to be successfully setup.
 The account-access-consent resource that is created successfully must have the following Status code-list enumeration:
 
-|  |Status |Status Description |
-| --- |--- |--- |
-| 1 |AwaitingAuthorisation |The account access consent is awaiting authorisation. |
+|   | Status                | Status Description                                    |
+| - | --------------------- | ----------------------------------------------------- |
+| 1 | AwaitingAuthorisation | The account access consent is awaiting authorisation. |
 
 After authorisation has taken place the account-access-consent resource may have these following statuses.
 
-|  |Status |Status Description |
-| --- |--- |--- |
-| 1 |Rejected |The account access consent has been rejected. |
-| 2 |Authorised |The account access consent has been successfully authorised. |
-| 3 |Revoked |The account access consent has been revoked via the ASPSP interface. This status is not applicable for the resource created after Ver 3.1.4. |
+|   | Status     | Status Description                                                                                                                           |
+| - | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Rejected   | The account access consent has been rejected.                                                                                                |
+| 2 | Authorised | The account access consent has been successfully authorised.                                                                                 |
+| 3 | Revoked    | The account access consent has been revoked via the ASPSP interface. This status is not applicable for the resource created after Ver 3.1.4. |
 
 #### Status Flow
 
 This is the state diagram for the Status.
 
-![ Consent Authorisation.jpg ](./images/AccountAccessConsents/ConsentAuthorisation.jpg )
+<Image alt=" Consent Authorisation.jpg " border={false} src="./images/AccountAccessConsents/ConsentAuthorisation.jpg" />
 
 ### GET /account-access-consents/`{ConsentId}`
 
@@ -98,13 +96,12 @@ Once the PSU authorises the account-access-consent resource - the Status of the 
 
 The available Status code-list enumerations for the account-access-consent resource are:
 
-|  |Status |Status Description |
-| --- |--- |--- |
-| 1 |Rejected |The account access consent has been rejected. |
-| 2 |AwaitingAuthorisation |The account access consent is awaiting authorisation. |
-| 3 |Authorised |The account access consent has been successfully authorised. |
-| 4 |Revoked |The account access consent has been revoked via the ASPSP interface. This status is not applicable for the resource created after Ver 3.1.4. |
-
+|   | Status                | Status Description                                                                                                                           |
+| - | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Rejected              | The account access consent has been rejected.                                                                                                |
+| 2 | AwaitingAuthorisation | The account access consent is awaiting authorisation.                                                                                        |
+| 3 | Authorised            | The account access consent has been successfully authorised.                                                                                 |
+| 4 | Revoked               | The account access consent has been revoked via the ASPSP interface. This status is not applicable for the resource created after Ver 3.1.4. |
 
 ### DELETE /account-access-consents/`{ConsentId}`
 
@@ -114,6 +111,7 @@ If the PSU revokes consent to data access with the AISP, the AISP  **must**  del
 * Prior to calling the API, the AISP must have an access token issued by the ASPSP using a client credentials grant.
 
 TPP should also clear the Account Access Consent resources, from ASPSP's system, which are:
+
 * Expired, i.e. ExpirationDateTime is lapsed, or ExpirationDateTime is not lapsed, but PSU doesn't want to refresh/re-authenticate it, and
 * Consent Resource may never be referenced by the PSU in AISP or ASPSP domain.
 
@@ -127,7 +125,7 @@ The OBReadConsent1 object will be used for the call to:
 
 #### UML Diagram
 
-![ OBReadConsent1 ](./images/OBReadConsent1.svg )
+<Image alt=" OBReadConsent1 " border={false} src="./images/OBReadConsent1.svg" />
 
 #### Notes
 
@@ -136,15 +134,15 @@ The OBReadConsent1 object will be used for the call to:
 
 #### Data Dictionary
 
-| Name |Occurrence |XPath |EnhancedDefinition |Class |Codes |
-| --- |--- |--- |--- |--- |--- |
-| OBReadConsent1 | |OBReadConsent1 | |OBReadConsent1 | |
-| Data |1..1 |OBReadConsent1/Data | |OBReadData1 | |
-| Permissions |1..n |OBReadConsent1/Data/Permissions |Specifies the Open Banking account access data types. This is a list of the data clusters being consented by the PSU, and requested for authorisation with the ASPSP. |OBExternalPermissions1Code |ReadAccountsBasic ReadAccountsDetail ReadBalances ReadBeneficiariesBasic ReadBeneficiariesDetail ReadDirectDebits ReadOffers ReadPAN ReadParty ReadPartyPSU ReadProducts ReadScheduledPaymentsBasic ReadScheduledPaymentsDetail ReadStandingOrdersBasic ReadStandingOrdersDetail ReadStatementsBasic ReadStatementsDetail ReadTransactionsBasic ReadTransactionsCredits ReadTransactionsDebits ReadTransactionsDetail |
-| ExpirationDateTime |0..1 |OBReadConsent1/Data/ExpirationDateTime |Specified date and time the permissions will expire. If this is not populated, the permissions will be open ended. |ISODateTime | |
-| TransactionFromDateTime |0..1 |OBReadConsent1/Data/TransactionFromDateTime |Specified start date and time for the transaction query period. If this is not populated, the start date will be open ended, and data will be returned from the earliest available transaction. |ISODateTime | |
-| TransactionToDateTime |0..1 |OBReadConsent1/Data/TransactionToDateTime |Specified end date and time for the transaction query period. If this is not populated, the end date will be open ended, and data will be returned to the latest available transaction. |ISODateTime | |
-| Risk |1..1 |OBReadConsent1/Risk |The Risk section is sent by the initiating party to the ASPSP. It is used to specify additional details for risk scoring for Account Info. |OBRisk2 | |
+| Name                    | Occurrence | XPath                                       | EnhancedDefinition                                                                                                                                                                              | Class                      | Codes                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | ---------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OBReadConsent1          |            | OBReadConsent1                              |                                                                                                                                                                                                 | OBReadConsent1             |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Data                    | 1..1       | OBReadConsent1/Data                         |                                                                                                                                                                                                 | OBReadData1                |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Permissions             | 1..n       | OBReadConsent1/Data/Permissions             | Specifies the Open Banking account access data types. This is a list of the data clusters being consented by the PSU, and requested for authorisation with the ASPSP.                           | OBExternalPermissions1Code | ReadAccountsBasic ReadAccountsDetail ReadBalances ReadBeneficiariesBasic ReadBeneficiariesDetail ReadDirectDebits ReadOffers ReadPAN ReadParty ReadPartyPSU ReadProducts ReadScheduledPaymentsBasic ReadScheduledPaymentsDetail ReadStandingOrdersBasic ReadStandingOrdersDetail ReadStatementsBasic ReadStatementsDetail ReadTransactionsBasic ReadTransactionsCredits ReadTransactionsDebits ReadTransactionsDetail |
+| ExpirationDateTime      | 0..1       | OBReadConsent1/Data/ExpirationDateTime      | Specified date and time the permissions will expire. If this is not populated, the permissions will be open ended.                                                                              | ISODateTime                |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| TransactionFromDateTime | 0..1       | OBReadConsent1/Data/TransactionFromDateTime | Specified start date and time for the transaction query period. If this is not populated, the start date will be open ended, and data will be returned from the earliest available transaction. | ISODateTime                |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| TransactionToDateTime   | 0..1       | OBReadConsent1/Data/TransactionToDateTime   | Specified end date and time for the transaction query period. If this is not populated, the end date will be open ended, and data will be returned to the latest available transaction.         | ISODateTime                |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Risk                    | 1..1       | OBReadConsent1/Risk                         | The Risk section is sent by the initiating party to the ASPSP. It is used to specify additional details for risk scoring for Account Info.                                                      | OBRisk2                    |                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ### Account Access Consents - Response
 
@@ -158,32 +156,32 @@ And response to:
 
 #### UML Diagram
 
-![ OBReadConsentResponse1 ](./images/OBReadConsentResponse1.svg )
+<Image alt=" OBReadConsentResponse1 " border={false} src="./images/OBReadConsentResponse1.svg" />
 
 #### Notes
 
 * The OBReadConsentResponse1 object contains the same information as the OBReadConsent1, but with additional fields:
-    * ConsentId - to uniquely identify the account-access-consent resource.
-    * Status.
-    * CreationDateTime.
-    * StatusUpdateDateTime.
+  * ConsentId - to uniquely identify the account-access-consent resource.
+  * Status.
+  * CreationDateTime.
+  * StatusUpdateDateTime.
 * No fields have been identified for the Risk section.
 
 #### Data Dictionary
 
-| Name |Occurrence |XPath |EnhancedDefinition |Class |Codes |
-| --- |--- |--- |--- |--- |--- |
-| OBReadConsentResponse1 | |OBReadConsentResponse1 | |OBReadConsentResponse1 | |
-| Data |1..1 |OBReadConsentResponse1/Data | |OBReadDataConsentResponse1 | |
-| ConsentId |1..1 |OBReadConsentResponse1/Data/ConsentId |Unique identification as assigned to identify the account access consent resource. |Max128Text | |
-| CreationDateTime |1..1 |OBReadConsentResponse1/Data/CreationDateTime |Date and time at which the resource was created. |ISODateTime | |
-| Status |1..1 |OBReadConsentResponse1/Data/Status |Specifies the status of consent resource in code form. |OBExternalRequestStatus1Code |Authorised AwaitingAuthorisation Rejected Revoked |
-| StatusUpdateDateTime |1..1 |OBReadConsentResponse1/Data/StatusUpdateDateTime |Date and time at which the resource status was updated. |ISODateTime | |
-| Permissions |1..n |OBReadConsentResponse1/Data/Permissions |Specifies the Open Banking account access data types. This is a list of the data clusters being consented by the PSU, and requested for authorisation with the ASPSP. |OBExternalPermissions1Code |ReadAccountsBasic ReadAccountsDetail ReadBalances ReadBeneficiariesBasic ReadBeneficiariesDetail ReadDirectDebits ReadOffers ReadPAN ReadParty ReadPartyPSU ReadProducts ReadScheduledPaymentsBasic ReadScheduledPaymentsDetail ReadStandingOrdersBasic ReadStandingOrdersDetail ReadStatementsBasic ReadStatementsDetail ReadTransactionsBasic ReadTransactionsCredits ReadTransactionsDebits ReadTransactionsDetail |
-| ExpirationDateTime |0..1 |OBReadConsentResponse1/Data/ExpirationDateTime |Specified date and time the permissions will expire. If this is not populated, the permissions will be open ended. |ISODateTime | |
-| TransactionFromDateTime |0..1 |OBReadConsentResponse1/Data/TransactionFromDateTime |Specified start date and time for the transaction query period. If this is not populated, the start date will be open ended, and data will be returned from the earliest available transaction. |ISODateTime | |
-| TransactionToDateTime |0..1 |OBReadConsentResponse1/Data/TransactionToDateTime |Specified end date and time for the transaction query period. If this is not populated, the end date will be open ended, and data will be returned to the latest available transaction. |ISODateTime | |
-| Risk |1..1 |OBReadConsentResponse1/Risk |The Risk section is sent by the initiating party to the ASPSP. It is used to specify additional details for risk scoring for Account Info. |OBRisk2 | |
+| Name                    | Occurrence | XPath                                               | EnhancedDefinition                                                                                                                                                                              | Class                        | Codes                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | ---------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OBReadConsentResponse1  |            | OBReadConsentResponse1                              |                                                                                                                                                                                                 | OBReadConsentResponse1       |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Data                    | 1..1       | OBReadConsentResponse1/Data                         |                                                                                                                                                                                                 | OBReadDataConsentResponse1   |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ConsentId               | 1..1       | OBReadConsentResponse1/Data/ConsentId               | Unique identification as assigned to identify the account access consent resource.                                                                                                              | Max128Text                   |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| CreationDateTime        | 1..1       | OBReadConsentResponse1/Data/CreationDateTime        | Date and time at which the resource was created.                                                                                                                                                | ISODateTime                  |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Status                  | 1..1       | OBReadConsentResponse1/Data/Status                  | Specifies the status of consent resource in code form.                                                                                                                                          | OBExternalRequestStatus1Code | Authorised AwaitingAuthorisation Rejected Revoked                                                                                                                                                                                                                                                                                                                                                                     |
+| StatusUpdateDateTime    | 1..1       | OBReadConsentResponse1/Data/StatusUpdateDateTime    | Date and time at which the resource status was updated.                                                                                                                                         | ISODateTime                  |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Permissions             | 1..n       | OBReadConsentResponse1/Data/Permissions             | Specifies the Open Banking account access data types. This is a list of the data clusters being consented by the PSU, and requested for authorisation with the ASPSP.                           | OBExternalPermissions1Code   | ReadAccountsBasic ReadAccountsDetail ReadBalances ReadBeneficiariesBasic ReadBeneficiariesDetail ReadDirectDebits ReadOffers ReadPAN ReadParty ReadPartyPSU ReadProducts ReadScheduledPaymentsBasic ReadScheduledPaymentsDetail ReadStandingOrdersBasic ReadStandingOrdersDetail ReadStatementsBasic ReadStatementsDetail ReadTransactionsBasic ReadTransactionsCredits ReadTransactionsDebits ReadTransactionsDetail |
+| ExpirationDateTime      | 0..1       | OBReadConsentResponse1/Data/ExpirationDateTime      | Specified date and time the permissions will expire. If this is not populated, the permissions will be open ended.                                                                              | ISODateTime                  |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| TransactionFromDateTime | 0..1       | OBReadConsentResponse1/Data/TransactionFromDateTime | Specified start date and time for the transaction query period. If this is not populated, the start date will be open ended, and data will be returned from the earliest available transaction. | ISODateTime                  |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| TransactionToDateTime   | 0..1       | OBReadConsentResponse1/Data/TransactionToDateTime   | Specified end date and time for the transaction query period. If this is not populated, the end date will be open ended, and data will be returned to the latest available transaction.         | ISODateTime                  |                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Risk                    | 1..1       | OBReadConsentResponse1/Risk                         | The Risk section is sent by the initiating party to the ASPSP. It is used to specify additional details for risk scoring for Account Info.                                                      | OBRisk2                      |                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ## Usage Examples
 
