@@ -6,4 +6,4 @@ api:
   operationId: domesticVrpConsentsPost
 hidden: false
 ---
-Before initiating VRP transactions, the PSU needs to provide consent to their ASPSP.  This API provides the parameters of the consent to the ASPSP 
+Before initiating VRP transactions, the PSU needs to provide consent to an ASPSP.  This API provides the parameters of the consent to the ASPSP
