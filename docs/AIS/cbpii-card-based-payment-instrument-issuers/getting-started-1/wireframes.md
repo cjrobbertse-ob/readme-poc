@@ -12,7 +12,7 @@ metadata:
 
 <br />
 
-<Accordion title="1-Minimum Set of Parameters">
+<Accordion title="1 - Minimum Set of Parameters">
   CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
 
   **Note 1:** In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
@@ -24,10 +24,15 @@ metadata:
   <br />
 </Accordion>
 
-<Accordion title="1">
-  In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
+<Accordion title="2 - PSU Consent to CBPII">
+  CBPIIs must provide PSUs sufficient information to enable them to make an informed decision about whether to consent to the CBPII making CoF requests to their ASPSP accounts. For example, the CBPII should provide details on the purpose for which the funds checks will be used (including whether any other parties will have access to the information) and clear and reassuring messages about what information will be made available from the ASPSPs. This should include information such as the following:
 
-  CBPIIs could also choose to allow PSUs to enter their payment account name.
+Prior to making Confirmation of funds requests to their ASPSPs, CBPIIs must have been given explicit consent by PSUs.
+CBPIIs will only received a ‘yes/no’ answer about the availability of funds at PSUs’ account, sufficient to cover a specific amount of a CBPII transaction.
+The Confirmation of Funds Response will not be stored by CBPIIs.
+Confirmation received by CBPIIs cannot be used for any other purpose than the execution of the transaction for which the request is made.
+The period over which CoF consent is requested and the reasons why.
+How PSUs will be able to revoke their consent through the CBPII environment.
 </Accordion>
 
 <Accordion title="2">
