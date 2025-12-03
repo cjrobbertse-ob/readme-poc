@@ -4,6 +4,8 @@ deprecated: false
 hidden: false
 metadata:
   robots: index
+next:
+  description: Read on for Wireframes
 ---
 <br />
 
