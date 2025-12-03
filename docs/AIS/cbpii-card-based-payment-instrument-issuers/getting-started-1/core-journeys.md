@@ -21,20 +21,16 @@ Please note that the consent given to ASPSPs and CBPIIs can be “until further 
 
 <Image border={false} src="https://files.readme.io/af45fa87b42ded80dc610d141d7350400121a31f4d0e5f9229595887ea3df41d-image.png" />
 
-<Cards columns={4}>
+<Cards columns={3}>
   <Card title="First Card" href="https://readme.com" icon="fa-home" target="_blank">
-    Regulation 68(3)(a) of the PSRs, requires that the CBPIIs must have the explicit consent of the PSU prior to making Confirmation of Funds requests to the PSUs ASPSPs.
+    The above journey illustrates the consent given by PSUs for CoF purposes.
   </Card>
 
   <Card title="Second Card" icon="fa-user">
-    Regulation 68(5)(b) of the PSRs requires that the ASPSPs must have the explicit consent of the PSU prior to responding to the first CBPII Confirmation of Funds request. This applies to each specific CBPII and each PSU payment account, that is accessible online.
+    Regulation 68(3)(a) of the PSRs, requires that the CBPIIs must have the explicit consent of the PSU prior to making Confirmation of Funds requests to the PSUs ASPSPs.
   </Card>
 
   <Card title="Third Card" icon="fa-star">
-    > Ut enim ad minim veniam, quis nostrud ullamco
-  </Card>
-
-  <Card title="Fourth Card" icon="fa-question">
-    **Excepteur sint occaecat cupidatat non proident**
+   Regulation 68(5)(b) of the PSRs requires that the ASPSPs must have the explicit consent of the PSU prior to responding to the first CBPII Confirmation of Funds request. This applies to each specific CBPII and each PSU payment account, that is accessible online.
   </Card>
 </Cards>
