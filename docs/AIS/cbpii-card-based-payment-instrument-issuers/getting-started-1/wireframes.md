@@ -14,6 +14,14 @@ metadata:
 
 <Accordion title="Minimum Set of Parameters">
   CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
+**Note 1:** In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
+
+CBPIIs could also choose to allow PSUs to enter their payment account name.
+
+**Note 2:** The use of IBAN as an identification of the payer account for UK ASPSPs is not expected to be heavily used as account and sortcode are the main account identifiers used in the UK. IBAN however will be used by non UK ASPSPs implementing OBL standards and offering their services in the UK. 
+
+<br />
+
 </Accordion>
 
 <Accordion title="1">
@@ -56,7 +64,7 @@ metadata:
   occaecat cupidatat non proident!
 </Accordion>
 
-Note 2: 
+Note 2:
 
 34
 
