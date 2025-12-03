@@ -53,23 +53,26 @@ metadata:
 
 <Accordion title="4 - Generic CBPII to ASPSP redirection Screen and message">
   Please refer to Section Effective use of redirection screens.**We will need to link this when we add the other pages**
-
 </Accordion>
 
 <Accordion title="5 - Authentication">
   ASPSPs must apply SCA. The ASPSP authentication must have no more than the number of steps that the PSU would experience when directly authenticating via the ASPSP channel.
 </Accordion>
 
-<Accordion title="My Accordion Title" icon="fa-info-circle">
-  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
-  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
-  occaecat cupidatat non proident!
+<Accordion title="6 - Authentication">
+  ASPSPs could display a message to prompt PSUs to authenticate to continue with setting up Funds Check.
 </Accordion>
 
-<Accordion title="My Accordion Title" icon="fa-info-circle">
-  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
-  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
-  occaecat cupidatat non proident!
+<Accordion title="7 - ASPSP Consent">
+  Prior to receiving the first request from each CBPII, ASPSPs must obtain explicit consent from the PSU to provide confirmation of funds to CBPII requests. 
+  
+ASPSPs must be able to introduce an additional screen to display Information associated with the Confirmation of Funds consent. ASPSPs must display to PSUs all the information related to the CoF consent. This information includes the following:
+
+CBPII requesting CoF to the PSU account.
+PSU payment Account Name.
+PSU payment Account Identification.
+Consent Expiration Date & Time: (this could also be on-going).
+Note: PSU’s payment account details may be shown in account number and sort-code format in cases when PSU in item 1 provided account identification details in other formats such as a PAN, IBAN, Paym mobile number, etc., subject to CBPII and ASPSPs offering these options.
 </Accordion>
 
 <Accordion title="My Accordion Title" icon="fa-info-circle">
@@ -83,20 +86,10 @@ metadata:
 <br />
 
 <br />
-
-5
-
-Authentication 
-
-1
-
-6
-
-Authentication ASPSPs could display a message to prompt PSUs to authenticate to continue with setting up Funds Check.
 
 7
 
-ASPSP Consent Prior to receiving the first request from each CBPII, ASPSPs must obtain explicit consent from the PSU to provide confirmation of funds to CBPII requests. ASPSPs must be able to introduce an additional screen to display Information associated with the Confirmation of Funds consent. ASPSPs must display to PSUs all the information related to the CoF consent. This information includes the following:
+ Prior to receiving the first request from each CBPII, ASPSPs must obtain explicit consent from the PSU to provide confirmation of funds to CBPII requests. ASPSPs must be able to introduce an additional screen to display Information associated with the Confirmation of Funds consent. ASPSPs must display to PSUs all the information related to the CoF consent. This information includes the following:
 
 CBPII requesting CoF to the PSU account.
 PSU payment Account Name.
