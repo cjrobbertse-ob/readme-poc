@@ -22,11 +22,41 @@ metadata:
   CBPIIs could also choose to allow PSUs to enter their payment account name.
 </Accordion>
 
-Note 1: In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
+<Accordion title="2">
+  The use of IBAN as an identification of the payer account for UK ASPSPs is not expected to be heavily used as account and sortcode are the main account identifiers used in the UK. IBAN however will be used by non UK ASPSPs implementing OBL standards and offering their services in the UK.
+</Accordion>
 
-CBPIIs could also choose to allow PSUs to enter their payment account name.
+<Accordion title="3">
+  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
+  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
+  occaecat cupidatat non proident!
+</Accordion>
 
-Note 2: The use of IBAN as an identification of the payer account for UK ASPSPs is not expected to be heavily used as account and sortcode are the main account identifiers used in the UK. IBAN however will be used by non UK ASPSPs implementing OBL standards and offering their services in the UK.
+<Accordion title="4">
+  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
+  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
+  occaecat cupidatat non proident!
+</Accordion>
+
+<Accordion title="My Accordion Title" icon="fa-info-circle">
+  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
+  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
+  occaecat cupidatat non proident!
+</Accordion>
+
+<Accordion title="My Accordion Title" icon="fa-info-circle">
+  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
+  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
+  occaecat cupidatat non proident!
+</Accordion>
+
+<Accordion title="My Accordion Title" icon="fa-info-circle">
+  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
+  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
+  occaecat cupidatat non proident!
+</Accordion>
+
+Note 2: 
 
 34
 
