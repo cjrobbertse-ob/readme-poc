@@ -13,55 +13,51 @@ metadata:
 <br />
 
 <Accordion title="1 - Minimum Set of Parameters">
-CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
+  CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
 
- **Note 1:** In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
+  **Note 1:** In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
 
-CBPIIs could also choose to allow PSUs to enter their payment account name.
+  CBPIIs could also choose to allow PSUs to enter their payment account name.
 
-**Note 2:** The use of IBAN as an identification of the payer account for UK ASPSPs is not expected to be heavily used as account and sortcode are the main account identifiers used in the UK. IBAN however will be used by non UK ASPSPs implementing OBL standards and offering their services in the UK.
+  **Note 2:** The use of IBAN as an identification of the payer account for UK ASPSPs is not expected to be heavily used as account and sortcode are the main account identifiers used in the UK. IBAN however will be used by non UK ASPSPs implementing OBL standards and offering their services in the UK.
 
   <br />
 </Accordion>
 
 <Accordion title="2 - PSU Consent to CBPII">
-CBPIIs must provide PSUs sufficient information to enable them to make an informed decision about whether to consent to the CBPII making CoF requests to their ASPSP accounts. For example, the CBPII should provide details on the purpose for which the funds checks will be used (including whether any other parties will have access to the information) and clear and reassuring messages about what information will be made available from the ASPSPs. This should include information such as the following:
+  CBPIIs must provide PSUs sufficient information to enable them to make an informed decision about whether to consent to the CBPII making CoF requests to their ASPSP accounts. For example, the CBPII should provide details on the purpose for which the funds checks will be used (including whether any other parties will have access to the information) and clear and reassuring messages about what information will be made available from the ASPSPs. This should include information such as the following:
 
-Prior to making Confirmation of funds requests to their ASPSPs, CBPIIs must have been given explicit consent by PSUs.
-  
-CBPIIs will only received a ‘yes/no’ answer about the availability of funds at PSUs’ account, sufficient to cover a specific amount of a CBPII transaction.
-  
-The Confirmation of Funds Response will not be stored by CBPIIs.
-  
-Confirmation received by CBPIIs cannot be used for any other purpose than the execution of the transaction for which the request is made.
-  
-The period over which CoF consent is requested and the reasons why.
-  
-How PSUs will be able to revoke their consent through the CBPII environment.
+  Prior to making Confirmation of funds requests to their ASPSPs, CBPIIs must have been given explicit consent by PSUs.
+
+  CBPIIs will only received a ‘yes/no’ answer about the availability of funds at PSUs’ account, sufficient to cover a specific amount of a CBPII transaction.
+
+  The Confirmation of Funds Response will not be stored by CBPIIs.
+
+  Confirmation received by CBPIIs cannot be used for any other purpose than the execution of the transaction for which the request is made.
+
+  The period over which CoF consent is requested and the reasons why.
+
+  How PSUs will be able to revoke their consent through the CBPII environment.
 </Accordion>
 
 <Accordion title="3 - PSU Consent to CBPII">
-CBPIIs must request for the PSUs’ consent to in a clear and specific manner. CBPIIs must display the following information in the consent screen:
+  CBPIIs must request for the PSUs’ consent to in a clear and specific manner. CBPIIs must display the following information in the consent screen:
 
-**Note 1:** if PSU payment Account identification is selected in item 1, CBPIIs should mask the PSU payment Account details on the consent screen. Otherwise, if the PSU payment Account identification has been input by PSUs in item #1, CBPIIs should not mask these details to allow PSUs to check and verify correctness.PSU payment Account Identification and/or the selected ASPSP (based on item 1 options).
+  **Note 1:** if PSU payment Account identification is selected in item 1, CBPIIs should mask the PSU payment Account details on the consent screen. Otherwise, if the PSU payment Account identification has been input by PSUs in item #1, CBPIIs should not mask these details to allow PSUs to check and verify correctness.PSU payment Account Identification and/or the selected ASPSP (based on item 1 options).
 
-**Note 2:** if PSU payment Account identification is provided by PSUs in item #1, CBPIIs could use this to identify and display the ASPSP without having to ask PSUs.
+  **Note 2:** if PSU payment Account identification is provided by PSUs in item #1, CBPIIs could use this to identify and display the ASPSP without having to ask PSUs.
 
-Expiration Date & Time: Consent could be on-going or for set period of time. If this parameter is provided by CBPIIs, the consent will have limited life span and will expire on the specified date. CBPIIs could choose to align this expiry date with the expiration date of the card based instrument issued to PSUs. Alternatively, they could choose a different period for security or business reasons, or they could also allow PSUs to select their desired expiry date explaining however the implications this may have on the usage of their issued card.
+  Expiration Date & Time: Consent could be on-going or for set period of time. If this parameter is provided by CBPIIs, the consent will have limited life span and will expire on the specified date. CBPIIs could choose to align this expiry date with the expiration date of the card based instrument issued to PSUs. Alternatively, they could choose a different period for security or business reasons, or they could also allow PSUs to select their desired expiry date explaining however the implications this may have on the usage of their issued card.
   PSU payment Account name, if provided by PSUs in item 1.
+</Accordion>
+
+<Accordion title="4 - Generic CBPII to ASPSP redirection Screen and message">
+  Please refer to Section Effective use of redirection screens.**We will need to link this when we add the other pages**
 
 </Accordion>
 
-<Accordion title="3">
-  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
-  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
-  occaecat cupidatat non proident!
-</Accordion>
-
-<Accordion title="4">
-  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
-  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
-  occaecat cupidatat non proident!
+<Accordion title="5 - Authentication">
+  ASPSPs must apply SCA. The ASPSP authentication must have no more than the number of steps that the PSU would experience when directly authenticating via the ASPSP channel.
 </Accordion>
 
 <Accordion title="My Accordion Title" icon="fa-info-circle">
@@ -86,18 +82,11 @@ Expiration Date & Time: Consent could be on-going or for set period of time. If 
 
 <br />
 
-3
-
-.
-8 32
-
-4
-
-Generic CBPII to ASPSP redirection Screen and message. Please refer to Section Effective use of redirection screens.
+<br />
 
 5
 
-Authentication ASPSPs must apply SCA. The ASPSP authentication must have no more than the number of steps that the PSU would experience when directly authenticating via the ASPSP channel.
+Authentication 
 
 1
 
