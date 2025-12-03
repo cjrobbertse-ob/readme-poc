@@ -14,6 +14,10 @@ next:
   description: >-
     Read on to understand exactly how the Open Banking standards support
     confirmation of funds for CBPIIs
+  pages:
+    - slug: getting-started
+      title: Getting Started
+      type: basic
 ---
 ## Overview
 
