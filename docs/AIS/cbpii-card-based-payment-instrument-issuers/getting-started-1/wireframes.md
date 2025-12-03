@@ -12,9 +12,7 @@ metadata:
 
 <br />
 
-
-
-<Accordion title="Minimum Set of Parameters" icon="fa-info-circle">
+<Accordion title="Minimum Set of Parameters" icon="fa-star">
   CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
 </Accordion>
 
@@ -98,4 +96,4 @@ Generic ASPSP to CBPII redirection screen and message. Please refer to section E
 CBPII Confirmation  CBPIIs should confirm to PSUs the successful completion of the Confirmation of Funds account access request. CBPIIs could also choose to display again:
 
 The PSU payment account identification details (this can now be in masked form).
-The expiration date of the Confirmation of Funds consent., 
+The expiration date of the Confirmation of Funds consent.,
