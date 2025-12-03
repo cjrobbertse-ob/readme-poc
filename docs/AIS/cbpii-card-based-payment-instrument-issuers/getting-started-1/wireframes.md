@@ -68,45 +68,28 @@ metadata:
   
 ASPSPs must be able to introduce an additional screen to display Information associated with the Confirmation of Funds consent. ASPSPs must display to PSUs all the information related to the CoF consent. This information includes the following:
 
-CBPII requesting CoF to the PSU account.
-PSU payment Account Name.
-PSU payment Account Identification.
-Consent Expiration Date & Time: (this could also be on-going).
-Note: PSU’s payment account details may be shown in account number and sort-code format in cases when PSU in item 1 provided account identification details in other formats such as a PAN, IBAN, Paym mobile number, etc., subject to CBPII and ASPSPs offering these options.
+- CBPII requesting CoF to the PSU account.
+- PSU payment Account Name.
+- PSU payment Account Identification.
+  - Consent Expiration Date & Time: (this could also be on-going).
+
+**Note:** PSU’s payment account details may be shown in account number and sort-code format in cases when PSU in item 1 provided account identification details in other formats such as a PAN, IBAN, Paym mobile number, etc., subject to CBPII and ASPSPs offering these options.
 </Accordion>
 
-<Accordion title="My Accordion Title" icon="fa-info-circle">
-  Lorem ipsum dolor sit amet, **consectetur adipiscing elit.** Ut enim
-  ad minim veniam, quis nostrud exercitation ullamco. Excepteur sint
-  occaecat cupidatat non proident!
+<Accordion title="8 - ASPSP Supplementary Information">
+  ASPSPs should provide some supplementary information in relation to their obligations for CoF requests and how these will be handled. This may include but not limited to the following:
+
+- ASPSPs will only respond with a ‘yes/no’ answer about the availability of funds at the PSUs’ account, sufficient to cover a specific amount of a CBPII transaction.
+- ASPSPs are not permitted to provide additional account information (such as the account balance) or block funds on the PSU’s account for the CBPII transaction.
+- PSUs may be able to view their history of Confirmation of Funds requests including the identity of CBPIIs which made CoF requests and the provided response, using their Access Dashboard at their ASPSPs.
+- How PSUs will be able to revoke their consent from the ASPSP Access Dashboard.
 </Accordion>
 
 <br />
 
 <br />
 
-<br />
 
-7
-
- Prior to receiving the first request from each CBPII, ASPSPs must obtain explicit consent from the PSU to provide confirmation of funds to CBPII requests. ASPSPs must be able to introduce an additional screen to display Information associated with the Confirmation of Funds consent. ASPSPs must display to PSUs all the information related to the CoF consent. This information includes the following:
-
-CBPII requesting CoF to the PSU account.
-PSU payment Account Name.
-PSU payment Account Identification.
-Consent Expiration Date & Time: (this could also be on-going).
-Note: PSU’s payment account details may be shown in account number and sort-code format in cases when PSU in item 1 provided account identification details in other formats such as a PAN, IBAN, Paym mobile number, etc., subject to CBPII and ASPSPs offering these options.
-
-31
-
-8
-
-ASPSP Supplementary Information ASPSPs should provide some supplementary information in relation to their obligations for CoF requests and how these will be handled. This may include but not limited to the following:
-
-ASPSPs will only respond with a ‘yes/no’ answer about the availability of funds at the PSUs’ account, sufficient to cover a specific amount of a CBPII transaction.
-ASPSPs are not permitted to provide additional account information (such as the account balance) or block funds on the PSU’s account for the CBPII transaction.
-PSUs may be able to view their history of Confirmation of Funds requests including the identity of CBPIIs which made CoF requests and the provided response, using their Access Dashboard at their ASPSPs.
-How PSUs will be able to revoke their consent from the ASPSP Access Dashboard.
 9
 
 ASPSPs should allow PSUs to review,as a part of the authentication process, all the information related to the CoF. PSUs can either proceed with the CoF consent or cancel it, on the same screen with items 7 & 8, using ‘equal weight’ options.
