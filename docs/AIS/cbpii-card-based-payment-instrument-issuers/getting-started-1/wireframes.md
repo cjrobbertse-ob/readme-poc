@@ -12,7 +12,7 @@ metadata:
 
 <br />
 
-<Accordion title="Minimum Set of Parameters">
+<Accordion title="1-Minimum Set of Parameters">
   CBPIIs must allow PSUs to enter their payment Account Identification details in at least one of the ways specified in the OBL V3 Read/Write API Specifications (e.g. account number and sort code – with additional roll number if required, IBAN, PAN, Paym and other formats).
 
   **Note 1:** In some of the above cases, CBPIIs may also need PSUs to provide their ASPSP name so that CBPIIs can check whether ASPSPs will be able to match the account identifier to the underlying PSU payment account.
