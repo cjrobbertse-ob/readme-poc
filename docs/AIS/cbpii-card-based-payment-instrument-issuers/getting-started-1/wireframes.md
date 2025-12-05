@@ -102,16 +102,3 @@ metadata:
 
 <br />
 
-<Columns layout="auto">
-  <Column>
-    Wayne
-  </Column>
-eee
-  <Column>
-    *is
-  </Column>
-  eeee
-  <Column>
-    > a 
-  </Column>
-</Columns>
