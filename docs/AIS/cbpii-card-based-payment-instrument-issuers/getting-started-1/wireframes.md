@@ -93,14 +93,25 @@ metadata:
   Please refer to Section Effective use of redirection screens.**We will need to link this when we add the other pages**
 </Accordion>
 
-
 <Accordion title="11 - CBPII Confirmation">
   CBPIIs should confirm to PSUs the successful completion of the Confirmation of Funds account access request. CBPIIs could also choose to display again:
 
-The PSU payment account identification details (this can now be in masked form).
-The expiration date of the Confirmation of Funds consent.
+  The PSU payment account identification details (this can now be in masked form).
+  The expiration date of the Confirmation of Funds consent.
 </Accordion>
 
 <br />
 
-<br />
+<Columns layout="auto">
+  <Column>
+    Wayne
+  </Column>
+
+  <Column>
+    *is
+  </Column>
+  
+  <Column>
+    > a 
+  </Column>
+</Columns>
