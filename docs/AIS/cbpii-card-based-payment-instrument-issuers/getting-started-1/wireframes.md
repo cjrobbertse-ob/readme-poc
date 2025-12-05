@@ -102,6 +102,4 @@ metadata:
 
 <br />
 
-<Demo />
-
 <br />
