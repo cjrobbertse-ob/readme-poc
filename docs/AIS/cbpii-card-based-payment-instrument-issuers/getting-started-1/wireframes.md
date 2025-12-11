@@ -102,68 +102,21 @@ metadata:
 
 <br />
 
-CEG Guidelines
+CEG Checklist
 
-Explicit consent
+<br />
 
-ASPSP	
+| Topic                                     | Participant Type | Question                                                                                                                                                         | Notes                                                                                                              | OBL Requirement | CMA Order | PSD2/RTS/FCA AD | Regulatory Reference                                                                           |
+| :---------------------------------------- | :--------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- | :-------------- | :-------- | :-------------- | :--------------------------------------------------------------------------------------------- |
+| Explicit consent                          | ASPSP            | Do you, prior to receiving the 1st request from each CBPII, obtain explicit consent from the PSU to provide confirmation of funds in response to CBPII requests? | Answer must be "Yes"                                                                                               | Required        | N/A       | Mandatory       | PSRs Reg. 68(5)(b)               FCA Approach Document 17.18                                   |
+| Explicit consent                          | CBPII            | Do you obtain explicit consent from the customer to request the confirmation of funds?                                                                           | Answer must be "Yes”  Minimum set of parameters are defined in the Section 5 of the Customer Experience Guidelines | Required        | N/A       | Mandatory       | PSRs Reg. 68(3)(a)  FCA Approach Document 17.52,17.54                                          |
+| Functionality                             | CBPII            | Do you only request confirmation of funds when the PSU has initiated a payment transaction for the amount in question using the card based instrument?           | Answer must be "Yes"                                                                                               | Required        | N/A       | Mandatory       | PSRs Reg. 68(3)(b)                                                                             |
+| Confirmation of funds ("yes/no" response) | ASPSP            | Do you provide immediate confirmation of funds in the form of a ‘yes’ or ‘no’ answer to a CBPII request where the payment account is accessible online?          | Answer must be "Yes"                                                                                               | Required        | N/A       | Mandatory       | PSRs Reg. 68(4) RTS Art. 36(1)(c) EBA Opinion paragraph 22  FCA Approach Document 17.21, 17.22 |
 
-Do you, prior to receiving the first request from each CBPII, obtain explicit consent from the PSU to provide confirmation of funds in response to CBPII requests (as shown under the Customer Experience Guidelines Section Card Based Payment Instrument Issuers (CBPIIs) )?	
+<br />
 
-Answer must be "Yes"	
+<br />
 
-Required	
+<br />
 
-n/a	
-
-Mandatory	
-
-PSRs Reg. 68(5)(b) FCA Approach Document 17.18
-
-Explicit consent	
-
-CBPII	
-
-Do you obtain explicit consent from the customer to request the confirmation of funds?	
-
-Answer must be "Yes”  Minimum set of parameters are defined in the Section 5 of the Customer Experience Guidelines"	
-
-Required	
-
-n/a	
-
-Mandatory	
-
-PSRs Reg. 68(3)(a)  FCA Approach Document 17.52,17.54"
-
-Functionality 	
-
-CBPII	
-
-Do you only request confirmation of funds when the PSU has initiated a payment transaction for the amount in question using the card based instrument? 	
-
-Answer must be "Yes"	
-
-Required	
-
-n/a	
-
-Mandatory	
-
-PSRs Reg. 68(3)(b)
-
-Confirmation of funds ("yes/no" response)	
-
-ASPSP	
-
-Do you provide immediate confirmation of funds in the form of a ‘yes’ or ‘no’ answer to a CBPII request where the payment account is accessible online?	
-
-Answer must be "Yes"	
-
-Required	
-
-n/a	
-
-Mandatory	
-
-PSRs Reg. 68(4) RTS Art. 36(1)(c) EBA Opinion paragraph 22  FCA Approach Document 17.21, 17.22"
+<br />
