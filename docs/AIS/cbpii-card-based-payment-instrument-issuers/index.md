@@ -18,6 +18,9 @@ next:
     - slug: getting-started
       title: Getting Started
       type: basic
+    - slug: getting-started
+      title: Getting Started
+      type: basic
 ---
 ## Overview
 
