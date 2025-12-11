@@ -33,10 +33,10 @@ metadata:
 
 * Scopes
 * Grants Types
-*  Consent Authorisation
-  * Consent Elements
-  * Funds Confirmation Consent Status
-  * Consent Re-authentication
+* Consent Authorisation
+* Consent Elements
+* Funds Confirmation Consent Status
+* Consent Re-authentication
 * Consent Revocation
 
 **Data Model**
@@ -48,3 +48,21 @@ metadata:
 **Swagger**
 
 **Usage Examples**
+
+<Cards columns={4}>
+  <Card title="First Card" href="https://readme.com" icon="info-circle" target="_blank">
+    Neque porro quisquam est qui dolorem ipsum quia
+  </Card>
+
+  <Card title="Second Card" icon="fa-user">
+    *Lorem ipsum dolor sit amet, consectetur adipiscing elit*
+  </Card>
+
+  <Card title="Third Card" icon="fa-star">
+    > Ut enim ad minim veniam, quis nostrud ullamco
+  </Card>
+
+  <Card title="Fourth Card" icon="fa-question">
+    **Excepteur sint occaecat cupidatat non proident**
+  </Card>
+</Cards>
