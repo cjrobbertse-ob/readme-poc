@@ -10,8 +10,6 @@ metadata:
 ---
 Open Banking API specifications support CoF services for Card Based Payment Instrument Issuers (CBPIIs). These services allow PSUs to provide explicit consent to an ASPSP, so that they can respond to confirmation of funds requests from CBPIIs, limited to a yes or no.
 
-<br />
-
 <Accordion title="Legal Background - Regulation 68 of the PSRs" icon="exclamation-triangle">
   Regulation 68 of the PSRs provides a mechanism whereby payment service providers (PSPs) issue a card based instrument which is linked to an account or accounts held at one or more different ASPSPs (provided those accounts are accessible online) and request a confirmation on the availability of funds.
 </Accordion>
