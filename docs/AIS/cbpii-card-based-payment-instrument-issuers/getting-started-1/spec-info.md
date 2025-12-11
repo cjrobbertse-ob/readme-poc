@@ -5,6 +5,8 @@ excerpt: >-
   either Recipes or API Reference sections
 deprecated: false
 hidden: false
+link:
+  new_tab: false
 metadata:
   robots: index
 ---
@@ -31,7 +33,7 @@ metadata:
 
 * Scopes
 * Grants Types
-*  Consent Authorisation
+*  Consent Authorisation
   * Consent Elements
   * Funds Confirmation Consent Status
   * Consent Re-authentication
@@ -42,6 +44,10 @@ metadata:
 * Reused Classes
   * OBProxy1
     * Data Dictionary
+
+<Accordion title="Data Dictionary" icon="info-circle">
+  The Data Dictionary provides detailed information about data elements, their definitions, formats, and constraints used throughout the API specification.
+</Accordion>
 
 **Swagger**
 
