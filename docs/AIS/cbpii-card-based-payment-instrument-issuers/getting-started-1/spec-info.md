@@ -50,19 +50,19 @@ metadata:
 **Usage Examples**
 
 <Cards columns={4}>
-  <Card title="First Card" href="https://readme.com" icon="fa-info-circle" target="_blank">
+  <Card title="First Card" href="https://readme.com" icon="fa-exclamation-triangle" target="_blank">
     Neque porro quisquam est qui dolorem ipsum quia
   </Card>
 
-  <Card title="Second Card" icon="fa-user">
+  <Card title="Second Card" icon="fa-info-circle">
     *Lorem ipsum dolor sit amet, consectetur adipiscing elit*
   </Card>
 
-  <Card title="Third Card" icon="fa-star">
+  <Card title="Third Card" icon="fa-lightbulb">
     > Ut enim ad minim veniam, quis nostrud ullamco
   </Card>
 
-  <Card title="Fourth Card" icon="fa-question">
+  <Card title="Fourth Card" icon="fa-question-circle">
     **Excepteur sint occaecat cupidatat non proident**
   </Card>
 </Cards>
