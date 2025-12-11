@@ -50,19 +50,19 @@ metadata:
 **Usage Examples**
 
 <Cards columns={4}>
-  <Card title="First Card" href="https://readme.com" icon="fa-exclamation-triangle" target="_blank">
-    Neque porro quisquam est qui dolorem ipsum quia
+  <Card title="Warning" href="https://readme.com" icon="fa-exclamation-triangle" target="_blank">
+    You must ensure API credentials are stored securely
   </Card>
 
-  <Card title="Second Card" icon="fa-info-circle">
-    *Lorem ipsum dolor sit amet, consectetur adipiscing elit*
+  <Card title="Useful Info" icon="fa-info-circle">
+    **ASPSP Developer portals will contain details of any additional statuses the ASPSP supports**
   </Card>
 
-  <Card title="Third Card" icon="fa-lightbulb">
-    > Ut enim ad minim veniam, quis nostrud ullamco
+  <Card title="Tip" icon="fa-lightbulb">
+    > Including TRIs in the Risk component will reduce the risk of false positive checks that slow down/reject payments
   </Card>
 
-  <Card title="Fourth Card" icon="fa-question-circle">
-    **Excepteur sint occaecat cupidatat non proident**
+  <Card title="Find out more" icon="fa-question-circle">
+    **Check the CodeSet repository for the full range of options**
   </Card>
 </Cards>
