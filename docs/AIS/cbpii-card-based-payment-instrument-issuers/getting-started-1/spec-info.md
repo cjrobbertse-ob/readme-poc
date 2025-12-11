@@ -45,10 +45,6 @@ metadata:
   * OBProxy1
     * Data Dictionary
 
-<Accordion title="Data Dictionary" icon="info-circle">
-  The Data Dictionary provides detailed information about data elements, their definitions, formats, and constraints used throughout the API specification.
-</Accordion>
-
 **Swagger**
 
 **Usage Examples**
