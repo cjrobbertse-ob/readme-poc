@@ -5,3 +5,6 @@ api:
   operationId: CreateFundsConfirmationConsents
 hidden: false
 ---
+<NoticeProfileReadInConjunction />
+
+<br />
