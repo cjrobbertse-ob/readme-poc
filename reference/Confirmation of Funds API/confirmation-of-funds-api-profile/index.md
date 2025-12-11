@@ -10,11 +10,7 @@ link:
 metadata:
   robots: index
 ---
-<Cards columns={1}>
-  <Card title="Warning" icon="exclamation-triangle">
-    This profile should be read in conjunction with a compatible Read/Write Data API Profile which provides a description of the elements that are common across all the Read/Write Data APIs, and compatible individual resources.
-  </Card>
-</Cards>
+
 
 The Confirmation of Funds API Profile describes the flows and common functionality for the Confirmation of Funds API, which allows a Card Based Payment Instrument Issuer ('CBPII') to:
 
