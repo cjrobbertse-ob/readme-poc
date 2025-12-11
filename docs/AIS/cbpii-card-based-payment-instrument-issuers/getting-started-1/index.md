@@ -7,6 +7,11 @@ link:
   new_tab: false
 metadata:
   robots: index
+next:
+  pages:
+    - slug: core-journeys
+      title: Core Journeys
+      type: basic
 ---
 Open Banking API specifications support CoF services for Card Based Payment Instrument Issuers (CBPIIs). These services allow PSUs to provide explicit consent to an ASPSP, so that they can respond to confirmation of funds requests from CBPIIs, limited to a yes or no.
 
