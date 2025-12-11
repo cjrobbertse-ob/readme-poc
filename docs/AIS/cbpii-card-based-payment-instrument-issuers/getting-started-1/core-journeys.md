@@ -5,7 +5,11 @@ hidden: false
 metadata:
   robots: index
 next:
-  description: Read on for Wireframes
+  description: Review the wireframes for inspiration & guidance
+  pages:
+    - slug: wireframes
+      title: Wireframes
+      type: basic
 ---
 <br />
 
