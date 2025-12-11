@@ -1,5 +1,8 @@
 ---
 title: Spec info
+excerpt: >-
+  Placeholder, with existing section headings.  More likely this will go into
+  either Recipes or API Reference sections
 deprecated: false
 hidden: false
 metadata:
