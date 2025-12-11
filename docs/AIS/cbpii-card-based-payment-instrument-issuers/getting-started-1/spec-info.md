@@ -50,7 +50,7 @@ metadata:
 **Usage Examples**
 
 <Cards columns={4}>
-  <Card title="First Card" href="https://readme.com" icon="info-circle" target="_blank">
+  <Card title="First Card" href="https://readme.com" icon="fa-info-circle" target="_blank">
     Neque porro quisquam est qui dolorem ipsum quia
   </Card>
 
