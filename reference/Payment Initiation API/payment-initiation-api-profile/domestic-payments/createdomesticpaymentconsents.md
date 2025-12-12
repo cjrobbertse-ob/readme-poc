@@ -7,8 +7,6 @@ hidden: false
 ---
 <NoticeProfileReadInConjunction />
 
-<Accordion title="My Accordion Title" icon="fa-info-circle">
-/
-</Accordion>
+<NoticeProfileReadInConjunction />
 
 <br />
