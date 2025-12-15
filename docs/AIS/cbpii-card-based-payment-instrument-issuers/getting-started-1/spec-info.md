@@ -12,7 +12,7 @@ metadata:
 ---
 **Overview**
 
-* Document Structure
+* Document Structure - shouldn't need this if layout is sufficiently intuitive
 * Resources
 
 **Basics**
