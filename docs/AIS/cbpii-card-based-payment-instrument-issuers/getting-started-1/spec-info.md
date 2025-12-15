@@ -39,7 +39,7 @@ metadata:
 * Consent Re-authentication
 * Consent Revocation
 
-**Data Model**
+**Data Model** - Don't need this as a separate section, as all classes etc are included in swagger
 
 * Reused Classes
   * OBProxy1
