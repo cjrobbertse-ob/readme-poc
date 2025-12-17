@@ -8,8 +8,6 @@ hidden: false
 metadata:
   robots: index
 ---
-<Image align="center" border={false} src="https://files.readme.io/3af7c73bd1f01496cd5f11bacfa9f7ac9653ad60487e993149a4f84905bcc91f-Z-5.1.1.-Consent-For-Confirmation-Of-Funds.png" />
-
 <br />
 
 <Accordion title="1 - Minimum Set of Parameters">
@@ -115,8 +113,6 @@ CEG Checklist
 
 <br />
 
-<br />
 
-<br />
 
 <br />
