@@ -111,11 +111,6 @@ CEG Checklist
 | Functionality                             | CBPII            | Do you only request confirmation of funds when the PSU has initiated a payment transaction for the amount in question using the card based instrument?           | Answer must be "Yes"                                                                                               | Required        | N/A       | Mandatory       | PSRs Reg. 68(3)(b)                                                                             |
 | Confirmation of funds ("yes/no" response) | ASPSP            | Do you provide immediate confirmation of funds in the form of a ‘yes’ or ‘no’ answer to a CBPII request where the payment account is accessible online?          | Answer must be "Yes"                                                                                               | Required        | N/A       | Mandatory       | PSRs Reg. 68(4) RTS Art. 36(1)(c) EBA Opinion paragraph 22  FCA Approach Document 17.21, 17.22 |
 
-| Topic | Participant Type | Question | Notes | OBL Requirement | CMA Order | PSD2/RTS/FCA AD | Regulatory Reference |
-| :---- | :--------------- | :------- | :---- | :-------------- | :-------- | :-------------- | :------------------- |
-|       |                  |          |       |                 |           |                 |                      |
-|       |                  |          |       |                 |           |                 |                      |
-
 <br />
 
 <br />
