@@ -33,14 +33,12 @@ Please note that the consent given to ASPSPs and CBPIIs can be “until further 
   </Card>
 </Cards>
 
-<Accordion title="Regulatory Driver" icon="fa-info-circle">
+<Accordion title="Regulatory Driver" icon="fa-exclamation-triangle">
   Regulation 68(3)(a) of the PSRs, requires that the CBPIIs must have the explicit consent of the PSU prior to making Confirmation of Funds requests to the PSUs ASPSPs.
 </Accordion>
 
-<Accordion title="Regulatory Driver" icon="fa-info-circle">
+<Accordion title="Regulatory Driver" icon="fa-exclamation-triangle">
   Regulation 68(5)(b) of the PSRs requires that the ASPSPs must have the explicit consent of the PSU prior to responding to the first CBPII Confirmation of Funds request. This applies to each specific CBPII and each PSU payment account, that is accessible online.
 </Accordion>
-
-
 
 <br />
