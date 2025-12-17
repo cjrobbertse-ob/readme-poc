@@ -17,7 +17,7 @@ Open Banking API specifications support CoF services for Card Based Payment Inst
 
 This section describes how each of the Participants (CBPIIs and ASPSPs) in the delivery of these services can optimise the customer experience for these. Furthermore, it provides some clarifications to these Participants on the usage of the APIs, which are not covered by the technical specifications and some best practice guidelines for implementation of the customer journeys.
 
-<Demo />
+Please note that the consent given to ASPSPs and CBPIIs can be “until further notice” and does not expire after 90 days. Thus, authentication does not need to occur after the initial set up for the specific CBPII has been completed. The consent to CBPIIs access will generally be ongoing or setup for a set period of time, after which PSUs will need to set up a new consent if they want the CBPII to still make CoF requests.
 
 <br />
 
@@ -31,12 +31,16 @@ This section describes how each of the Participants (CBPIIs and ASPSPs) in the d
   <Card title="Note:" href="https://readme.com" icon="fa-info" target="_blank">
     The above journey illustrates the consent given by PSUs for CoF purposes.
   </Card>
-
-  <Card title="Regulatory Driver" icon="fa-book">
-    Regulation 68(3)(a) of the PSRs, requires that the CBPIIs must have the explicit consent of the PSU prior to making Confirmation of Funds requests to the PSUs ASPSPs.
-  </Card>
-
-  <Card title="Regulatory Driver" icon="fa-book">
-    Regulation 68(5)(b) of the PSRs requires that the ASPSPs must have the explicit consent of the PSU prior to responding to the first CBPII Confirmation of Funds request. This applies to each specific CBPII and each PSU payment account, that is accessible online.
-  </Card>
 </Cards>
+
+<Accordion title="Regulatory Driver" icon="fa-info-circle">
+  Regulation 68(3)(a) of the PSRs, requires that the CBPIIs must have the explicit consent of the PSU prior to making Confirmation of Funds requests to the PSUs ASPSPs.
+</Accordion>
+
+<Accordion title="Regulatory Driver" icon="fa-info-circle">
+  Regulation 68(5)(b) of the PSRs requires that the ASPSPs must have the explicit consent of the PSU prior to responding to the first CBPII Confirmation of Funds request. This applies to each specific CBPII and each PSU payment account, that is accessible online.
+</Accordion>
+
+
+
+<br />
