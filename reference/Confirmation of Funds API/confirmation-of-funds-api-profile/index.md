@@ -23,6 +23,80 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 3. **Authorization:** Transaction is authorized based on fund availability and authentication.
 4. **Processing:** Payment is processed through the appropriate payment networks.
 
+The diagram below provides a general outline of a confirmation of funds request and flow using the Confirmation of Funds APIs. It assumes a CBPII has issued a card to a PSU, and the PSU would like to use a PSD2 in-scope account as a funding mechanism for that card.
+
+<Image border={false} src="https://files.readme.io/7e880fd49d256bc7cc4803e06d3d73c1325d4ecdecd9bcbd1bf0d56a62fb5483-image.png" />
+
+<br />
+
+### Steps
+
+
+The Consent model for the Confirmation of Funds API differs to the Payments API and the Account and Transactions API, as the consent is held between the PSU and the ASPSP, rather than between the PSU and the TPP. Whilst the flow follows the same process, the context for each step has a different meaning and is detailed below.
+
+**Step 1: Agree Funds Confirmation**
+
+* This flow begins with a PSU committing to give explicit consent, to their ASPSP to respond to confirmation of funds requests from the CBPII.
+
+
+**Step 2: Setup Funds Confirmation Consent**
+
+* The CBPII connects to the ASPSP that services the PSU's account(s) and creates a **funds-confirmation-consent** resource. This informs the ASPSP that one of its PSUs would like to grant access to confirm the availability of funds to a CBPII. The ASPSP responds with an identifier for the resource (the ConsentId - which is the intent identifier).
+* This step is carried out by making a **POST** request to the /funds-confirmation-consents endpoint, under a client credentials grant.
+* The setup payload will include these fields:
+  * Debtor Account - mandatory debtor account details to capture the account from which the availability of funds will be confirmed.
+  * Expiration Date Time - an optional expiration for when the CBPII will no longer have access to confirm funds on a PSU's account.
+
+
+**Step 3: Agree Funds Confirmation Consent**
+
+* The CBPII requests the PSU to agree the consent. The ASPSP may carry this out by using a *redirection flow* or a *decoupled flow*.
+  * In a redirection flow, the CBPII redirects the PSU to the ASPSP.
+    * The redirect includes the ConsentId generated in the previous step.
+    * This allows the ASPSP to correlate the **funds-confirmation-consent** that was setup.
+    * The ASPSP authenticates the PSU.
+    * The PSU gives explicit consent to the ASPSP to respond to confirmation of funds requests from the CBPII.
+    * The ASPSP updates the state of the **funds-confirmation-consent** resource internally to indicate that the resource has been authorised.
+    Once the consent has been authorised, the PSU is redirected back to the CBPII.
+
+* In a decoupled flow, the ASPSP requests the PSU to authorise consent on an _authentication device_ that is separate from the _consumption device_ on which the PSU is interacting with the CBPII.
+
+* The decoupled flow is initiated by the CBPII calling a back-channel authorisation request.
+* The request contains a 'hint' that identifies the PSU paired with the consent to be authorised.
+* The ASPSP authenticates the PSU.
+* The PSU gives explicit consent to the ASPSP to respond to confirmation of funds requests from the CBPII.
+* The ASPSP updates the state of the **funds-confirmation-consent**  resource internally to indicate that the resource has been authorised.
+
+Once the consent has been authorised, the ASPSP can make a callback to the PISP to provide an access token.
+
+**Step 4: Initiate Card Payment**
+
+A card payment is initiated by the PSU (directly or indirectly). This process is outside the scope of the Confirmation of Funds API.
+
+
+**Step 5: Confirm Funds**
+
+The CBPII connects to the ASPSP that services the PSU's account(s) and creates a **funds-confirmation resource**. This informs the ASPSP that the CBPII would like to confirm funds are available in the specific payment account.
+The ASPSP responds with a yes/no (boolean) for the resource.
+
+
+This step is carried out by making a **POST** request to the /funds-confirmations endpoint, under an authorization code grant.
+
+
+The setup payload will include these fields - which describe the data that the PSU has consented with the CBPII:
+Amount - the amount to be confirmed available.
+
+
+ConsentId - an ID that relates the request to a **funds-confirmation-consent**, and specific account with the ASPSP. This ID must match the intent identifier.
+
+
+**Step 6: Get Funds Confirmation Consent Status**
+
+The CBPII may check the status of the **funds-confirmation-consent** resource (with the ConsentId).
+
+
+This step is carried out by making a **GET** request to the /funds-confirmation-consents endpoint, under a client credentials grant.
+
 CBPIIs offer several advantages for businesses looking to modernize their payment infrastructure:
 
 ## Use Cases
@@ -50,15 +124,15 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
 <br />
 
 <Cards columns={2}>
-  <Card title="Speed & Efficiency" icon="fa-bolt">
+  <Card title="Speed & Efficiency" icon="bolt">
     Instant confirmation of funds availability and faster payment processing compared to traditional methods.
   </Card>
 
-  <Card title="Cost Savings" icon="fa-dollar-sign">
+  <Card title="Cost Savings" icon="dollar-sign">
     Reduced processing fees and operational costs compared to traditional card processing systems.
   </Card>
 
-  <Card title="Enhanced Security" icon="fa-shield-alt">
+  <Card title="Enhanced Security" icon="shield-alt">
     Advanced security features including tokenization, encryption, and multi-factor authentication.
   </Card>
 
