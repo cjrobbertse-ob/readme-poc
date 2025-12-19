@@ -50,19 +50,19 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
 <br />
 
 <Cards columns={2}>
-  <Card title="Speed & Efficiency" icon="fa-bolt">
+  <Card title="Speed & Efficiency" icon="bolt">
     Instant confirmation of funds availability and faster payment processing compared to traditional methods.
   </Card>
 
-  <Card title="Cost Savings" icon="fa-dollar-sign">
+  <Card title="Cost Savings" icon="dollar-sign">
     Reduced processing fees and operational costs compared to traditional card processing systems.
   </Card>
 
-  <Card title="Enhanced Security" icon="fa-shield-alt">
+  <Card title="Enhanced Security" icon="shield-alt">
     Advanced security features including tokenization, encryption, and multi-factor authentication.
   </Card>
 
-  <Card title="Global Reach" icon="FA-globe">
+  <Card title="Global Reach" icon="fa-globe">
     Access to international payment networks and cross-border payment capabilities.
   </Card>
 </Cards>
