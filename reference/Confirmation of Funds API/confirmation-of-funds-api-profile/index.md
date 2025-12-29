@@ -83,8 +83,7 @@ The Confirmation of Funds API Profile describes the flows and common functionali
 * Subsequently make a request to confirm funds are available.
   Funds can only be confirmed against the currency of the account.
 * The Consent model for the Confirmation of Funds API differs to the Payments API and the Account and Transactions API, as the consent is held between the PSU and the ASPSP, rather than between the PSU and the TPP. Whilst the flow follows the same process, the context for each step has a different meaning and is detailed in the text accompanying each API.
-* <br />
 
-<NoticeProfileReadInConjunction />
+<br />
 
 <br />
