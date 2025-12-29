@@ -9,6 +9,8 @@ link:
   new_tab: false
 metadata:
   robots: index
+next:
+  description: Check out the APIs below
 ---
 ## Overview
 
@@ -26,16 +28,6 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 The diagram below provides a general outline of a confirmation of funds request and flow using the Confirmation of Funds APIs. It assumes a CBPII has issued a card to a PSU, and the PSU would like to use a PSD2 in-scope account as a funding mechanism for that card.
 
 <Image border={false} src="https://files.readme.io/7e880fd49d256bc7cc4803e06d3d73c1325d4ecdecd9bcbd1bf0d56a62fb5483-image.png" />
-
-<br />
-
-### Steps
-
-The Consent model for the Confirmation of Funds API differs to the Payments API and the Account and Transactions API, as the consent is held between the PSU and the ASPSP, rather than between the PSU and the TPP. Whilst the flow follows the same process, the context for each step has a different meaning and is detailed below.
-
-<br />
-
-<br />
 
 <br />
 
@@ -90,6 +82,8 @@ The Confirmation of Funds API Profile describes the flows and common functionali
 * Register an intent to confirm funds by creating a "funds confirmation consent" resource with an ASPSP, for agreement between the PSU and ASPSP. This consent is a long lived consent, and contains the length of time (expiration date) the customer (PSU) would like to provide to the CBPII; and
 * Subsequently make a request to confirm funds are available.
   Funds can only be confirmed against the currency of the account.
+* The Consent model for the Confirmation of Funds API differs to the Payments API and the Account and Transactions API, as the consent is held between the PSU and the ASPSP, rather than between the PSU and the TPP. Whilst the flow follows the same process, the context for each step has a different meaning and is detailed in the text accompanying each API.
+* <br />
 
 <NoticeProfileReadInConjunction />
 
