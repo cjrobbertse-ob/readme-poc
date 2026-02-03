@@ -1,5 +1,8 @@
 ---
 title: Create Funds Confirmation
+excerpt: >-
+  This explains how the CBPII performs an individual funds availability check
+  with the ASPSP.
 api:
   file: confirmation-funds-openapi.json
   operationId: CreateFundsConfirmations
