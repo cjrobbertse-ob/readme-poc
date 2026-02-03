@@ -1,5 +1,8 @@
 ---
 title: Delete Funds Confirmation Consent
+excerpt: >-
+  This explains how the CBPII cancels the Consent with the ASPSP, when requested
+  to do so by the PSU.
 api:
   file: confirmation-funds-openapi.json
   operationId: DeleteFundsConfirmationConsentsConsentId
