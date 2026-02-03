@@ -21,7 +21,7 @@ This step is carried out by making a POST request to the /funds-confirmation-con
 
 The setup payload will include these fields:
 
-* Expiration Date Time - an optional expiration for when the CBPII will no longer have access to confirm funds on a PSU's account.
-* Debtor Account - mandatory debtor account details to capture the account from which the availability of funds will be confirmed.
+* Expiration Date Time - an optional expiration for when the CBPII will no longer have access to confirm funds on a PSU's account.  If no DateTime is present, the consent will only end if the PSU explicitly cancels it with either the ASPSP or the CBPII.
+* Debtor Account - **mandatory** debtor account details to capture the account from which the availability of funds will be confirmed.
 
 <br />
