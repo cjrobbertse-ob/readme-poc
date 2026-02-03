@@ -1,5 +1,8 @@
 ---
 title: Get Funds Confirmation Consent
+excerpt: >-
+  This explains the PSU granting Consent and the CBPII obtaining the necessary
+  token to perform funds availability checks.
 api:
   file: confirmation-funds-openapi.json
   operationId: GetFundsConfirmationConsentsConsentId
