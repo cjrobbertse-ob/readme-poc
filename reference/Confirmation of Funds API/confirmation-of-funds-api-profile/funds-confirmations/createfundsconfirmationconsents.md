@@ -1,5 +1,8 @@
 ---
 title: Create Funds Confirmation Consent
+excerpt: >-
+  This step creates the Consent (between PSU, the ASPSP and the CBPII) that will
+  allow the CBPII to perform funds availability checks with the PSU's ASPSP.
 api:
   file: confirmation-funds-openapi.json
   operationId: CreateFundsConfirmationConsents
