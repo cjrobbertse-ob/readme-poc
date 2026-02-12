@@ -25,38 +25,34 @@ A **Card Based Payment Instrument Issuer (CBPII)** is a specialized payment serv
 
 ## How CBPIIs Work
 
-CBPIIs enable customers to use payment instruments such as virtual cards and e-wallets that are connected to their existing bank accounts without requiring separate account opening.
-
-<Accordion title="Payment Processing Flow" icon="fa-sync">
-The process is streamlined for better user experience:
+CBPIIs enable customers to use payment instruments such as virtual cards and e-wallets that are connected to their existing bank accounts without requiring separate account opening. The process is streamlined for better user experience:
 
 1. **Transaction Initiation**: Customer uses the virtual card or e-wallet to make a payment.
-2. **Funds Confirmation**: CBPII requests confirmation of available funds from the account provider. **This is the capability that utilises Open Banking standards.**
+2. **Funds Confirmation**: CBPII requests confirmation of available funds from the account provider.   **This is the capability that utilises Open Banking standards.**
 3. **Authorization**: Transaction is authorized based on fund availability and authentication.
 4. **Processing**: Payment is processed through the appropriate payment networks.
-</Accordion>
+
+CBPIIs offer several advantages for businesses looking to modernize their payment infrastructure:
 
 ## Use Cases
 
-<Tabs>
-  <Tab title="Consumer Applications">
-    * **E-commerce Integration**: One-click payments for online shopping.
-    * **Mobile Payments**: In-app purchases and contactless transactions.
-    * **Subscription Management**: Recurring payment handling with enhanced security.
-  </Tab>
+### Consumer Applications
 
-  <Tab title="Corporate Payments">
-    * **Virtual Corporate Cards**: Streamlined expense management and procurement.
-    * **B2B Transactions**: Secure business-to-business payment processing.
-    * **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
-  </Tab>
+* **E-commerce Integration**: One-click payments for online shopping.
+* **Mobile Payments**: In-app purchases and contactless transactions.
+* **Subscription Management**: Recurring payment handling with enhanced security.
 
-  <Tab title="Financial Services">
-    * **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
-    * **Marketplace Payments**: Multi-party transaction facilitation.
-    * **Cross-Border Transfers**: International payment processing with competitive rates.
-  </Tab>
-</Tabs>
+### Corporate Payments
+
+* **Virtual Corporate Cards**: Streamlined expense management and procurement.
+* **B2B Transactions**: Secure business-to-business payment processing.
+* **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
+
+### Financial Services
+
+* **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
+* **Marketplace Payments**: Multi-party transaction facilitation.
+* **Cross-Border Transfers**: International payment processing with competitive rates.
 
 ## Benefits for Businesses
 
