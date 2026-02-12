@@ -16,6 +16,12 @@ next:
 
 A **Card Based Payment Instrument Issuer (CBPII)** is a specialized payment service provider that issues modern payment instruments, including virtual cards and e-wallets, which can be linked to customer accounts held at different financial institutions. CBPIIs enable seamless digital payments while providing enhanced security and convenience.
 
+<br />
+
+<Callout icon="🚧">
+  I wonder if having some obvious 'who this applies to' wording near the top would be useful. Should include the PSd2 role they need to access in UK, e.g. AISP for AIS etc
+</Callout>
+
 ## How CBPIIs Work
 
 CBPIIs enable customers to use payment instruments such as virtual cards and e-wallets that are connected to their existing bank accounts without requiring separate account opening. The process is streamlined for better user experience:
@@ -27,9 +33,11 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 
 The diagram below provides a general outline of a confirmation of funds request and flow using the Confirmation of Funds APIs. It assumes a CBPII has issued a card to a PSU, and the PSU would like to use a PSD2 in-scope account as a funding mechanism for that card.
 
-<Image border={false} src="https://files.readme.io/7e880fd49d256bc7cc4803e06d3d73c1325d4ecdecd9bcbd1bf0d56a62fb5483-image.png" />
+![](https://files.readme.io/7e880fd49d256bc7cc4803e06d3d73c1325d4ecdecd9bcbd1bf0d56a62fb5483-image.png)
 
-<br />
+<Callout icon="🚧">
+  I like having the 'triangle' diagram on this page.  Having the sequence diagram in an accordion would also be useful, somewhere near the "what's in this PAI profile" below.
+</Callout>
 
 CBPIIs offer several advantages for businesses looking to modernize their payment infrastructure:
 
@@ -55,7 +63,9 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
 
 ## Benefits for Businesses
 
-<br />
+<Callout icon="🚧">
+  Is this for us to call out in the spec?
+</Callout>
 
 <Cards columns={2}>
   <Card title="Speed & Efficiency" icon="bolt">
