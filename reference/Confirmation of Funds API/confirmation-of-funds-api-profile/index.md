@@ -18,8 +18,8 @@ A **Card Based Payment Instrument Issuer (CBPII)** is a specialized payment serv
 
 <br />
 
-<Callout icon="🚧">
-  I wonder if having some obvious 'who this applies to' wording near the top would be useful. Should include the PSd2 role they need to access in UK, e.g. AISP for AIS etc
+<Callout icon="🚧" theme="warn">
+  I wonder if having some obvious 'who this applies to' wording near the top would be useful. Should include the PSD2 role they need to access in UK, e.g. AISP for AIS etc
 </Callout>
 
 ## How CBPIIs Work
@@ -35,7 +35,7 @@ The diagram below provides a general outline of a confirmation of funds request 
 
 ![](https://files.readme.io/7e880fd49d256bc7cc4803e06d3d73c1325d4ecdecd9bcbd1bf0d56a62fb5483-image.png)
 
-<Callout icon="🚧">
+<Callout icon="🚧" theme="warn">
   I like having the 'triangle' diagram on this page.  Having the sequence diagram in an accordion would also be useful, somewhere near the "what's in this PAI profile" below.
 </Callout>
 
@@ -63,7 +63,7 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
 
 ## Benefits for Businesses
 
-<Callout icon="🚧">
+<Callout icon="🚧" theme="warn">
   Is this for us to call out in the spec?
 </Callout>
 
