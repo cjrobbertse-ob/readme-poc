@@ -7,7 +7,7 @@ metadata:
 ---
 <br />
 
-<pre>
+<div>
   200 OK
 
   <br />
@@ -54,4 +54,4 @@ metadata:
   <br />
 
   {`}`}
-</pre>
+</div>
