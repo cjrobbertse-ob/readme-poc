@@ -8,5 +8,24 @@ metadata:
 <br />
 
 <pre>
-  {`  200 OK{"{"} "Data": {"{"}  {"     "}"StandingOrder": []{"   "}  {"}"},{"   "}"Links": {"{"}  {"     "}"Self":  "https://api.alphabank.com/open-banking/v4.0/aisp/accounts/1000/standing-orders/"  {"   "}  {"}"},{"   "}"Meta": {"{"}  {"     "}"TotalPages": 1{"   "}  {"}"}  {"}"}`}
+  200 OK
+
+  <br />
+
+  {"{"} "Data": {"{"}
+  {"     "}"StandingOrder": \[]{"   "}
+  {"}"},{"   "}"Links": {"{"}
+  {"     "}"Self":
+  "[https://api.alphabank.com/open-banking/v4.0/aisp/accounts/1000/standing-orders/](https://api.alphabank.com/open-banking/v4.0/aisp/accounts/1000/standing-orders/)"
+
+  {"   "}
+
+  {"}"},{"   "}"Meta": {"{"}
+  {"     "}"TotalPages": 1{"   "}
+
+  {"}"}
+
+  <br />
+
+  {"}"}
 </pre>
