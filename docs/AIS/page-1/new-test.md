@@ -7,51 +7,19 @@ metadata:
 ---
 <br />
 
-<div>
-  200 OK
-
-  <br />
-
-  {`{`}
-
-  <br />
-
-  {` "Data": {`}
-
-  <br />
-
-  "StandingOrder": \[]
-
-  <br />
-
-  {`   },`}
-
-  <br />
-
-  {`   "Links": {`}
-
-  <br />
-
-  "Self":
+<pre>
+  200 OK{"{"} "Data": {"{"}
+  {"     "}"StandingOrder": \[]{"   "}
+  {"}"},{"   "}"Links": {"{"}
+  {"     "}"Self":
   "[https://api.alphabank.com/open-banking/v4.0/aisp/accounts/1000/standing-orders/](https://api.alphabank.com/open-banking/v4.0/aisp/accounts/1000/standing-orders/)"
 
-  <br />
+  {"   "}
 
-  {`   },`}
+  {"}"},{"   "}"Meta": {"{"}
+  {"     "}"TotalPages": 1{"   "}
 
-  <br />
+  {"}"}
 
-  {`   "Meta": {`}
-
-  <br />
-
-  "TotalPages": 1
-
-  <br />
-
-  {`   }`}
-
-  <br />
-
-  {`}`}
-</div>
+  {"}"}
+</pre>
