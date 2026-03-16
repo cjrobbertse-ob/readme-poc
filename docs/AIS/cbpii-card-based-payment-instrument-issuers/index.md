@@ -70,6 +70,6 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
   </Card>
 
   <Card title="Global Reach" icon="globe">
-    Access to international payment networks and cross-border payment capabilities.
+    Access to international payment networks and croUnderstanding CBPII services, virtual cards, and e-wallets. Learn about payment instrument issuance, confirmation of funds, and modern digital payment solutions.ss-border payment capabilities.
   </Card>
 </Cards>
