@@ -29,30 +29,39 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 
 1. **Transaction Initiation**: Customer uses the virtual card or e-wallet to make a payment.
 2. **Funds Confirmation**: CBPII requests confirmation of available funds from the account provider.   **This is the capability that utilises Open Banking standards.**
+
+<Callout icon="🏦" theme="info">
+Step 2 — Funds Confirmation — is the capability that utilises Open Banking standards. The CBPII queries the customer's account provider to verify sufficient funds before authorising the transaction.
+</Callout>
+
 3. **Authorization**: Transaction is authorized based on fund availability and authentication.
 4. **Processing**: Payment is processed through the appropriate payment networks.
 
-CBPIIs offer several advantages for businesses looking to modernize their payment infrastructure:
-
 ## Use Cases
 
-### Consumer Applications
+<Tabs>
+  <Tab title="Consumer Applications">
 
-* **E-commerce Integration**: One-click payments for online shopping.
-* **Mobile Payments**: In-app purchases and contactless transactions.
-* **Subscription Management**: Recurring payment handling with enhanced security.
+  * **E-commerce Integration**: One-click payments for online shopping.
+  * **Mobile Payments**: In-app purchases and contactless transactions.
+  * **Subscription Management**: Recurring payment handling with enhanced security.
 
-### Corporate Payments
+  </Tab>
+  <Tab title="Corporate Payments">
 
-* **Virtual Corporate Cards**: Streamlined expense management and procurement.
-* **B2B Transactions**: Secure business-to-business payment processing.
-* **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
+  * **Virtual Corporate Cards**: Streamlined expense management and procurement.
+  * **B2B Transactions**: Secure business-to-business payment processing.
+  * **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
 
-### Financial Services
+  </Tab>
+  <Tab title="Financial Services">
 
-* **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
-* **Marketplace Payments**: Multi-party transaction facilitation.
-* **Cross-Border Transfers**: International payment processing with competitive rates.
+  * **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
+  * **Marketplace Payments**: Multi-party transaction facilitation.
+  * **Cross-Border Transfers**: International payment processing with competitive rates.
+
+  </Tab>
+</Tabs>
 
 ## Benefits for Businesses
 
@@ -70,6 +79,6 @@ CBPIIs offer several advantages for businesses looking to modernize their paymen
   </Card>
 
   <Card title="Global Reach" icon="globe">
-    Access to international payment networks and croUnderstanding CBPII services, virtual cards, and e-wallets. Learn about payment instrument issuance, confirmation of funds, and modern digital payment solutions.ss-border payment capabilities.
+    Access to international payment networks and cross-border payment capabilities.
   </Card>
 </Cards>
