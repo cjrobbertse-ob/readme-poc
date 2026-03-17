@@ -7,48 +7,6 @@ link:
 metadata:
   robots: index
 ---
-* [Overview](#overview)
-  * [Document Structure](#document-structure)
-  * [Resources](#resources)
-* [Basics](#basics)
-  * [Overview](#overview-2)
-    * [Steps](#steps)
-    * [Sequence Diagram](#sequence-diagram)
-  * [Idempotency](#idempotency)
-  * [Release Management](#release-management)
-    * [Account Access Consent](#account-access-consent)
-      * [POST](#post)
-      * [GET](#get)
-      * [DELETE](#delete)
-    * [Account Information Resources](#account-information-resources)
-      * [GET](#get-2)
-* [Security & Access Control](#security-access-control)
-  * [Scopes](#scopes)
-  * [Grants Types](#grants-types)
-  * [Consent Authorisation](#consent-authorisation)
-    * [Consent Elements](#consent-elements)
-      * [Permissions](#permissions)
-        * [Detail Permissions](#detail-permissions)
-        * [Reversing Entries](#reversing-entries)
-      * [Expiration Date Time](#expiration-date-time)
-      * [Transaction To/From Date Time](#transaction-to-from-date-time)
-    * [Account Access Consent Status](#account-access-consent-status)
-    * [Consent Re-authentication](#consent-re-authentication)
-  * [Consent Revocation](#consent-revocation)
-  * [Access Revocation](#access-revocation)
-  * [Changes to Selected Account(s)](#changes-to-selected-account-s)
-  * [Account Switching](#account-switching)
-  * [Risk Scoring Information](#risk-scoring-information)
-* [Data Model](#data-model)
-  * [Using Meta to identify Available Transaction Period](#using-meta-to-identify-available-transaction-period)
-  * [Mapping to Schemes & Standards](#mapping-to-schemes-standards)
-  * [Enumerations](#enumerations)
-    * [Static Enumerations](#static-enumerations)
-    * [ISO Enumerations](#iso-enumerations)
-    * [Namespaced Enumerations](#namespaced-enumerations)
-* [Alternative Flows](#alternative-flows)
-  * [Multi-Authorisation Consent for Corporate Accounts](#multi-authorisation-consent-for-corporate-accounts)
-
 ## Overview
 
 The Account and Transaction API Profile describes the flows and common functionality for the Accounts and Transaction API, which allows an Account Information Service Provider ('AISP') to:
@@ -110,18 +68,28 @@ Step 2: Setup Account Access Consent
 
 Step 3: Authorise Consent
 
-* The AISP requests the PSU to authorise the consent. The ASPSP may carry this out by using a  _redirection flow_  or a  _decoupled flow_ .
-  * In a redirection flow, the AISP redirects the PSU to the ASPSP.
-    * The redirect includes the ConsentId generated in the previous step.
-    * This allows the ASPSP to correlate the account-access-consent that was setup.
-    * The ASPSP authenticates the PSU.
-    * The ASPSP updates the state of the account-access-consent resource internally to indicate that the account access consent has been authorised.
-    * Once the consent has been authorised, the PSU is redirected back to the AISP.
-  * In a decoupled flow, the ASPSP requests the PSU to authorise consent on an  _authentication device_ that is separate from the  _consumption device_  on which the PSU is interacting with the AISP.
-    * The decoupled flow is initiated by the AISP calling a back-channel authorisation request.
-    * The request contains a 'hint' that identifies the PSU, paired with the consent to be authorised.
-    * The ASPSP authenticates the PSU and updates the state of the account-access-consent resource internally to indicate that the account access consent has been authorised.
-    * Once the consent has been authorised, the ASPSP can make a callback to the AISP to provide an access token.
+The AISP requests the PSU to authorise the consent. The ASPSP may carry this out by using a _redirection flow_ or a _decoupled flow_.
+
+<Tabs>
+<Tab title="Redirection Flow">
+The AISP redirects the PSU to the ASPSP:
+
+* The redirect includes the ConsentId generated in the previous step.
+* This allows the ASPSP to correlate the account-access-consent that was setup.
+* The ASPSP authenticates the PSU.
+* The ASPSP updates the state of the account-access-consent resource internally to indicate that the account access consent has been authorised.
+* Once the consent has been authorised, the PSU is redirected back to the AISP.
+</Tab>
+<Tab title="Decoupled Flow">
+The ASPSP requests the PSU to authorise consent on an _authentication device_ that is separate from the _consumption device_ on which the PSU is interacting with the AISP:
+
+* The decoupled flow is initiated by the AISP calling a back-channel authorisation request.
+* The request contains a 'hint' that identifies the PSU, paired with the consent to be authorised.
+* The ASPSP authenticates the PSU and updates the state of the account-access-consent resource internally to indicate that the account access consent has been authorised.
+* Once the consent has been authorised, the ASPSP can make a callback to the AISP to provide an access token.
+</Tab>
+</Tabs>
+
 * The principle we have agreed is that consent is managed between the PSU and the AISP - so the account-access-consent details must not be changed (with the ASPSP) in this step. The PSU will only be able to authorise or reject the account-access-consent details in its entirety.
 * During authorisation, the PSU selects accounts that are authorised for the AISP request (in the ASPSP's banking interface).
 
@@ -134,8 +102,7 @@ Step 4: Request Data
 
 <Image border={false} src="./images/AccountsOverviewwithCIBA.png" />
 
-<details>
-  <summary>Diagram source</summary>
+<Accordion title="Diagram source" icon="code">
 
   ```
   participant PSU
@@ -211,7 +178,7 @@ Step 4: Request Data
   option footer=bar
 
   ```
-</details>
+</Accordion>
 
 ### Idempotency
 
@@ -269,6 +236,8 @@ The account-access-consent resource is referred to as an account-request resourc
 
 ## Security & Access Control
 
+This section covers authentication scopes, consent lifecycle management, and access control for the Account Info APIs.
+
 ### Scopes
 
 The access tokens required for accessing the Account Info APIs must have at least the following scope:
@@ -314,8 +283,11 @@ When a permission is granted for a "Detail" permission code (e.g., ReadAccountsD
 
 While it is duplication for a TPP to request a "Basic" permission code and the corresponding "Detail" permission code, it is not a malformed request, and the ASPSP must not reject solely on the basis of duplication.
 
+<Callout icon="⚠️" theme="warning">
 The permissions array **must** contain at least **ReadAccountsBasic** or **ReadAccountsDetail**.
+</Callout>
 
+<Callout icon="🚫" theme="danger">
 The following combinations of permissions are not allowed, and the ASPSP **must** reject these account-access-consents with a 400 response code:
 
 * Account Access Consents with an empty Permissions array.
@@ -324,6 +296,9 @@ The following combinations of permissions are not allowed, and the ASPSP **must*
 * Account Access Consents with a Permissions array that contains **ReadTransactionsDetail** but does not contain at least one of **ReadTransactionsCredits** and **ReadTransactionsDebits**.
 * Account Access Consents with a Permissions array that contains **ReadTransactionsCredits** but does not contain at least one of **ReadTransactionsBasic** and **ReadTransactionsDetail**
 * Account Access Consents with a Permissions array that contains **ReadTransactionsDebits** but does not contain at least one of **ReadTransactionsBasic** and **ReadTransactionsDetail**.
+</Callout>
+
+<Accordion title="Permissions Reference Table" icon="table">
 
 | Permissions                     | Endpoints                                                                                                                    | Business Logic                                                                                                                                                                            | Data Cluster Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -347,11 +322,15 @@ The following combinations of permissions are not allowed, and the ASPSP **must*
 | ReadScheduledPayments**Detail** | /scheduled-payments<br />/accounts/`{AccountId}`/scheduled-payments                                                          | Access to additional elements in the payload                                                                                                                                              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ReadPAN                         | All API endpoints where PAN is available as a structured field                                                               | Request to access to PAN in the clear                                                                                                                                                     | Request to access **PAN** in the clear across the available endpoints.<br /><br />If this permission code is not in the account-access-consent, the AISP will receive a masked PAN.<br /><br />While an AISP may request to access PAN in the clear, an ASPSP may still respond with a masked PAN if:<br /><br /><li>The ASPSP does not display PAN in the clear in existing online channels</li><li>The ASPSP takes a legal view to respond with only the masked PAN</li><li> ASPSP should return last 4 digits unmasked, **or** </li><li>ASPSP should return at max first 6 and last 4 digits unmasked. e.g. 5555 **** **** 4444, **** **** **** 4444 etc</li> |
 
+</Accordion>
+
 ###### Detail Permissions
 
 The additional elements that are granted for "Detail" permissions are listed in this section.
 
 All other fields (other than these fields listed) are available with the "Basic" Permission access.
+
+<Accordion title="Detail Permissions Reference Table" icon="table">
 
 | Permission - Detail Codes   | Data Element Name      | Occurrence | XPath                                                         |
 | --------------------------- | ---------------------- | ---------- | ------------------------------------------------------------- |
@@ -371,6 +350,8 @@ All other fields (other than these fields listed) are available with the "Basic"
 | ReadStatementsDetail        | StatementAmount        | 0..*       | OBReadStatement1/Data/Statement/StatementAmount               |
 | ReadScheduledPaymentsDetail | CreditorAgent          | 0..1       | OBReadScheduledPayment2/Data/ScheduledPayment/CreditorAgent   |
 | ReadScheduledPaymentsDetail | CreditorAccount        | 0..1       | OBReadScheduledPayment2/Data/ScheduledPayment/CreditorAccount |
+
+</Accordion>
 
 In addition the ReadStatementsDetail is required to access the statement file download via: /accounts/`{AccountId}`/statements/`{StatementId}`/file
 
@@ -478,6 +459,8 @@ No fields for business logic security concerns have been identified for the Acco
 
 ## Data Model
 
+This section documents data mappings, metadata conventions, and enumeration values used across all Account and Transaction API endpoints.
+
 ### Using Meta to identify Available Transaction Period
 
 For Accounts & Transaction APIs, the `Meta` section in API responses may contain two additional fields to indicate the date range for which data has been returned.
@@ -535,6 +518,8 @@ Deviations from the camt.052 XML standard are:
 ### Enumerations
 
 #### Static Enumerations
+
+<Accordion title="Static Enumerations Reference" icon="list">
 
 | Code Class                           | Name                   | Definition                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -611,9 +596,13 @@ Deviations from the camt.052 XML standard are:
 | OBExternalStatementType1Code         | Interim                | Adhoc or customised statement period.                                                                                                                                                                                                                                                                                                                                                                   |
 | OBExternalStatementType1Code         | RegularPeriodic        | Regular pre-agreed reporting statement.                                                                                                                                                                                                                                                                                                                                                                 |
 
+</Accordion>
+
 #### ISO Enumerations
 
 These following ISO Enumerations are used in the Accounts APIs.
+
+<Accordion title="ISO Enumerations Reference" icon="list">
 
 | ISO Data Type                         | Fields                      | ISO Enumeration Values URL                                                                                                                                               |
 | ------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -623,11 +612,15 @@ These following ISO Enumerations are used in the Accounts APIs.
 | ExternalBankTransactionFamily1Code    | BankTransactionCode/Code    | [https://www.iso20022.org/external_code_list.page](https://www.iso20022.org/external_code_list.page)                                                                     |
 | ExternalBankTransactionSubFamily1Code | BankTransactionCode/SubCode | [https://www.iso20022.org/external_code_list.page](https://www.iso20022.org/external_code_list.page)                                                                     |
 
+</Accordion>
+
 #### Namespaced Enumerations
 
 The enumerated values specified by Open Banking are documented in Swagger specification and Namespaced Enumerations page.
 
 ## Alternative Flows
+
+This section documents alternative consent flows that fall outside the standard single-authoriser model.
 
 ### Multi-Authorisation Consent for Corporate Accounts
 
