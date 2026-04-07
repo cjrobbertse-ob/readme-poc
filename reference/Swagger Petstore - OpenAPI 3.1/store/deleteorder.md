@@ -1,0 +1,10 @@
+---
+title: Delete purchase order by identifier.
+excerpt: >-
+  For valid response try integer IDs with value < 1000. Anything above 1000 or
+  non-integers will generate API errors.
+api:
+  file: penguin.yaml
+  operationId: deleteOrder
+hidden: false
+---

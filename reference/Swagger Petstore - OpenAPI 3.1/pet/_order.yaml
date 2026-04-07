@@ -1,0 +1,8 @@
+- updatepet
+- addpet
+- findpetsbystatus
+- findpetsbytags
+- getpetbyid
+- updatepetwithform
+- deletepet
+- uploadfile
