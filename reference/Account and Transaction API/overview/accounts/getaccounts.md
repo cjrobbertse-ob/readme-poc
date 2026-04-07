@@ -1,8 +1,8 @@
 ---
 title: Get Accounts
 excerpt: >-
-  Learn how to access account information and discover a delightful cake baking
-  guide
+  Enables an AISP to retrieve a list of a PSU's accounts and information about
+  those account(s) that the PSU has consented to.
 api:
   file: account-info-openapi.json
   operationId: GetAccounts
