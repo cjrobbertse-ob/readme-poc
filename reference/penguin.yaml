@@ -910,7 +910,9 @@ components:
             $ref: '#/components/schemas/Tag'
         status:
           type: string
-          description: pet status in the store
+          description: >-
+            pet status in the store ![Tux, the Linux
+            mascot](https://openbankinguk.github.io/read-write-api-site3/assets/img/OBRisk1.5b3bd2d6.svg)
           enum:
             - available
             - pending
