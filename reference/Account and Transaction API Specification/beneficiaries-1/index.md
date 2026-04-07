@@ -1,4 +1,0 @@
----
-title: Beneficiaries
-hidden: false
----
