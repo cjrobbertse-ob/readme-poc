@@ -1,0 +1,532 @@
+---
+name: MermaidPopoutV2
+---
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+export const MermaidExistingBlockPopoutV2 = function (props) {
+  var v2DefaultMinZoom = 0.5;
+  var v2DefaultMaxZoom = 4;
+  var v2DefaultInitialZoom = 1;
+
+  function v2Clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function v2SvgToDataUrl(svg) {
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg || '');
+  }
+
+  function v2LooksLikeMermaidSvg(svgElement) {
+    if (!svgElement || svgElement.tagName !== 'svg') return false;
+
+    var hasMermaidId = !!(svgElement.id && svgElement.id.indexOf('mermaid') !== -1);
+    var mermaidAncestor = svgElement.closest('.mermaid');
+    var hasMermaidClassAncestor = !!mermaidAncestor;
+
+    var hasMermaidShape =
+      !!svgElement.querySelector('g.node, g.edgePath, g.edgeLabel, .messageLine0, .messageLine1');
+
+    return hasMermaidId || hasMermaidClassAncestor || hasMermaidShape;
+  }
+
+  function v2GetCandidateSvgs(rootElement, targetSelector) {
+    if (targetSelector) {
+      var explicitNode = document.querySelector(targetSelector);
+      if (!explicitNode) return [];
+      if (explicitNode.tagName === 'svg') return [explicitNode];
+      return Array.prototype.slice.call(explicitNode.querySelectorAll('svg'));
+    }
+
+    var rootCandidates = [];
+    if (rootElement) {
+      rootCandidates = Array.prototype.slice.call(rootElement.querySelectorAll('.mermaid svg, svg'));
+    }
+
+    var pageCandidates = Array.prototype.slice.call(document.querySelectorAll('.mermaid svg, svg[id^="mermaid-"]'));
+
+    var merged = rootCandidates.concat(pageCandidates);
+    var seen = [];
+    return merged.filter(function (el) {
+      if (seen.indexOf(el) !== -1) return false;
+      seen.push(el);
+      return true;
+    });
+  }
+
+  function v2FindNearestMermaidSvg(hostElement, targetSelector, targetIndex) {
+    var candidates = v2GetCandidateSvgs(document, targetSelector).filter(v2LooksLikeMermaidSvg);
+
+    if (!candidates.length) return null;
+
+    if (typeof targetIndex === 'number' && targetIndex >= 0 && targetIndex < candidates.length) {
+      return candidates[targetIndex];
+    }
+
+    if (!hostElement) return candidates[0];
+
+    var hostRect = hostElement.getBoundingClientRect();
+    var hostX = hostRect.left + hostRect.width / 2;
+    var hostY = hostRect.top + hostRect.height / 2;
+
+    var ranked = candidates
+      .map(function (el) {
+        var rect = el.getBoundingClientRect();
+        var x = rect.left + rect.width / 2;
+        var y = rect.top + rect.height / 2;
+        var dx = hostX - x;
+        var dy = hostY - y;
+        return { el: el, distance: Math.sqrt(dx * dx + dy * dy) };
+      })
+      .sort(function (a, b) {
+        return a.distance - b.distance;
+      });
+
+    return ranked.length ? ranked[0].el : null;
+  }
+
+  var title = props && props.title ? props.title : 'Mermaid diagram';
+  var openLabel = props && props.openLabel ? props.openLabel : 'Open diagram';
+  var targetSelector = props && props.targetSelector ? props.targetSelector : '';
+  var targetIndex = props && typeof props.targetIndex === 'number' ? props.targetIndex : null;
+  var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : v2DefaultMinZoom;
+  var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : v2DefaultMaxZoom;
+  var initialZoom =
+    props && typeof props.initialZoom === 'number' ? props.initialZoom : v2DefaultInitialZoom;
+  var showEditorMarker = !(props && props.showEditorMarker === false);
+
+  var v2HostRef = useRef(null);
+  var v2OverlayRef = useRef(null);
+  var v2ModalRef = useRef(null);
+  var v2ViewerRef = useRef(null);
+  var v2TriggerRef = useRef(null);
+  var v2CloseButtonRef = useRef(null);
+  var v2DragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
+  var v2ObserverRef = useRef(null);
+  var v2RetryTimerRef = useRef(null);
+
+  var _v2UseStateTarget = useState(null);
+  var v2TargetSvg = _v2UseStateTarget[0];
+  var v2SetTargetSvg = _v2UseStateTarget[1];
+
+  var _v2UseStateStatus = useState('Searching for Mermaid diagram...');
+  var v2Status = _v2UseStateStatus[0];
+  var v2SetStatus = _v2UseStateStatus[1];
+
+  var _v2UseStateOpen = useState(false);
+  var v2IsOpen = _v2UseStateOpen[0];
+  var v2SetIsOpen = _v2UseStateOpen[1];
+
+  var _v2UseStateError = useState('');
+  var v2Error = _v2UseStateError[0];
+  var v2SetError = _v2UseStateError[1];
+
+  var _v2UseStateImage = useState('');
+  var v2ModalImgSrc = _v2UseStateImage[0];
+  var v2SetModalImgSrc = _v2UseStateImage[1];
+
+  var _v2UseStateZoom = useState(v2Clamp(initialZoom, minZoom, maxZoom));
+  var v2Zoom = _v2UseStateZoom[0];
+  var v2SetZoom = _v2UseStateZoom[1];
+
+  var _v2UseStatePan = useState({ x: 0, y: 0 });
+  var v2Pan = _v2UseStatePan[0];
+  var v2SetPan = _v2UseStatePan[1];
+
+  var _v2UseStateDrag = useState(false);
+  var v2IsDragging = _v2UseStateDrag[0];
+  var v2SetIsDragging = _v2UseStateDrag[1];
+
+  var v2ResolveTarget = useCallback(
+    function () {
+      var host = v2HostRef.current;
+      var found = v2FindNearestMermaidSvg(host, targetSelector, targetIndex);
+
+      if (found) {
+        v2SetTargetSvg(found);
+        v2SetStatus('Mermaid diagram found.');
+        return true;
+      }
+
+      v2SetTargetSvg(null);
+      v2SetStatus('No Mermaid diagram found nearby yet.');
+      return false;
+    },
+    [targetSelector, targetIndex]
+  );
+
+  useEffect(
+    function () {
+      var cancelled = false;
+      var retries = 0;
+      var maxRetries = 40;
+
+      function resolveWithRetry() {
+        if (cancelled) return;
+
+        var found = v2ResolveTarget();
+        if (found || retries >= maxRetries) return;
+
+        retries += 1;
+        v2RetryTimerRef.current = window.setTimeout(resolveWithRetry, 300);
+      }
+
+      resolveWithRetry();
+
+      if (typeof MutationObserver !== 'undefined') {
+        v2ObserverRef.current = new MutationObserver(function () {
+          v2ResolveTarget();
+        });
+
+        v2ObserverRef.current.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      return function () {
+        cancelled = true;
+        if (v2RetryTimerRef.current) {
+          window.clearTimeout(v2RetryTimerRef.current);
+          v2RetryTimerRef.current = null;
+        }
+        if (v2ObserverRef.current) {
+          v2ObserverRef.current.disconnect();
+          v2ObserverRef.current = null;
+        }
+      };
+    },
+    [v2ResolveTarget]
+  );
+
+  useEffect(
+    function () {
+      if (!v2IsOpen) return undefined;
+
+      var previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      return function () {
+        document.body.style.overflow = previousOverflow;
+      };
+    },
+    [v2IsOpen]
+  );
+
+  useEffect(
+    function () {
+      if (!v2IsOpen) {
+        if (v2TriggerRef.current && v2TriggerRef.current.focus) v2TriggerRef.current.focus();
+        return undefined;
+      }
+
+      if (v2CloseButtonRef.current && v2CloseButtonRef.current.focus) {
+        v2CloseButtonRef.current.focus();
+      }
+
+      function onKeyDown(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          v2SetIsOpen(false);
+          return;
+        }
+
+        if (event.key === '+' || event.key === '=') {
+          event.preventDefault();
+          v2SetZoom(function (z) {
+            return v2Clamp(Number((z + 0.2).toFixed(2)), minZoom, maxZoom);
+          });
+          return;
+        }
+
+        if (event.key === '-') {
+          event.preventDefault();
+          v2SetZoom(function (z) {
+            return v2Clamp(Number((z - 0.2).toFixed(2)), minZoom, maxZoom);
+          });
+          return;
+        }
+
+        if (event.key === '0') {
+          event.preventDefault();
+          v2SetZoom(v2Clamp(initialZoom, minZoom, maxZoom));
+          v2SetPan({ x: 0, y: 0 });
+        }
+      }
+
+      window.addEventListener('keydown', onKeyDown);
+      return function () {
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    },
+    [v2IsOpen, initialZoom, minZoom, maxZoom]
+  );
+
+  var v2OpenModal = useCallback(
+    function () {
+      v2SetError('');
+
+      var target = v2TargetSvg || v2FindNearestMermaidSvg(v2HostRef.current, targetSelector, targetIndex);
+      if (!target) {
+        v2SetError('Could not find a Mermaid diagram to wrap.');
+        v2SetIsOpen(true);
+        return;
+      }
+
+      try {
+        var serialized = new XMLSerializer().serializeToString(target);
+        var src = v2SvgToDataUrl(serialized);
+
+        v2SetModalImgSrc(src);
+        v2SetZoom(v2Clamp(initialZoom, minZoom, maxZoom));
+        v2SetPan({ x: 0, y: 0 });
+        v2SetIsOpen(true);
+      } catch (error) {
+        v2SetError((error && error.message) || 'Failed to extract Mermaid diagram.');
+        v2SetIsOpen(true);
+      }
+    },
+    [v2TargetSvg, targetSelector, targetIndex, initialZoom, minZoom, maxZoom]
+  );
+
+  var v2CloseModal = useCallback(function () {
+    v2SetIsOpen(false);
+    v2SetIsDragging(false);
+  }, []);
+
+  var v2OnOverlayMouseDown = useCallback(
+    function (event) {
+      if (event.target === v2OverlayRef.current) v2CloseModal();
+    },
+    [v2CloseModal]
+  );
+
+  var v2OnWheel = useCallback(
+    function (event) {
+      event.preventDefault();
+
+      var viewerEl = v2ViewerRef.current;
+      if (!viewerEl) return;
+
+      var rect = viewerEl.getBoundingClientRect();
+      var pointX = event.clientX - rect.left;
+      var pointY = event.clientY - rect.top;
+
+      var delta = event.deltaY > 0 ? -0.15 : 0.15;
+      var nextZoom = v2Clamp(Number((v2Zoom + delta).toFixed(2)), minZoom, maxZoom);
+      if (nextZoom === v2Zoom) return;
+
+      var scaleRatio = nextZoom / v2Zoom;
+      var nextX = pointX - (pointX - v2Pan.x) * scaleRatio;
+      var nextY = pointY - (pointY - v2Pan.y) * scaleRatio;
+
+      v2SetZoom(nextZoom);
+      v2SetPan({ x: nextX, y: nextY });
+    },
+    [v2Zoom, v2Pan.x, v2Pan.y, minZoom, maxZoom]
+  );
+
+  var v2OnPointerDown = useCallback(
+    function (event) {
+      event.preventDefault();
+      v2SetIsDragging(true);
+      v2DragStartRef.current = {
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        x: v2Pan.x,
+        y: v2Pan.y,
+      };
+    },
+    [v2Pan.x, v2Pan.y]
+  );
+
+  var v2OnPointerMove = useCallback(
+    function (event) {
+      if (!v2IsDragging) return;
+
+      var dx = event.clientX - v2DragStartRef.current.pointerX;
+      var dy = event.clientY - v2DragStartRef.current.pointerY;
+
+      v2SetPan({
+        x: v2DragStartRef.current.x + dx,
+        y: v2DragStartRef.current.y + dy,
+      });
+    },
+    [v2IsDragging]
+  );
+
+  var v2OnPointerUp = useCallback(function () {
+    v2SetIsDragging(false);
+  }, []);
+
+  var v2ZoomIn = useCallback(
+    function () {
+      v2SetZoom(function (z) {
+        return v2Clamp(Number((z + 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var v2ZoomOut = useCallback(
+    function () {
+      v2SetZoom(function (z) {
+        return v2Clamp(Number((z - 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var v2ResetView = useCallback(
+    function () {
+      v2SetZoom(v2Clamp(initialZoom, minZoom, maxZoom));
+      v2SetPan({ x: 0, y: 0 });
+    },
+    [initialZoom, minZoom, maxZoom]
+  );
+
+  return (
+    <div ref={v2HostRef} className="my-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
+      {showEditorMarker ? (
+        <div
+          style={{
+            marginBottom: '10px',
+            borderRadius: '8px',
+            border: '1px dashed #94a3b8',
+            background: '#f8fafc',
+            color: '#334155',
+            padding: '8px 10px',
+            fontSize: '12px',
+          }}
+        >
+          Mermaid Wrapper V2 marker: delete this component block in ReadMe editor to remove popup behavior.
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-slate-600 dark:text-slate-300">{v2Status}</p>
+        <button
+          ref={v2TriggerRef}
+          type="button"
+          onClick={v2OpenModal}
+          disabled={!v2TargetSvg}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {openLabel}
+        </button>
+      </div>
+
+      {v2IsOpen ? (
+        <div
+          ref={v2OverlayRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title + ' zoom viewer'}
+          style={{
+            position: 'fixed',
+            zIndex: 2147483647,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px',
+            background: 'rgba(0, 0, 0, 0.75)',
+          }}
+          onMouseDown={v2OnOverlayMouseDown}
+        >
+          <div
+            ref={v2ModalRef}
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+              maxWidth: '1200px',
+              height: '90vh',
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                borderBottom: '1px solid #e2e8f0',
+                padding: '10px 12px',
+              }}
+            >
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>{title}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button type="button" onClick={v2ZoomOut}>
+                  -
+                </button>
+                <button type="button" onClick={v2ZoomIn}>
+                  +
+                </button>
+                <button type="button" onClick={v2ResetView}>
+                  Reset
+                </button>
+                <button ref={v2CloseButtonRef} type="button" onClick={v2CloseModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={v2ViewerRef}
+              style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#f1f5f9' }}
+              onWheel={v2OnWheel}
+              onPointerMove={v2OnPointerMove}
+              onPointerUp={v2OnPointerUp}
+              onPointerLeave={v2OnPointerUp}
+            >
+              {v2Error ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '16px',
+                    color: '#be123c',
+                    fontSize: '14px',
+                  }}
+                >
+                  {v2Error}
+                </div>
+              ) : null}
+
+              {v2ModalImgSrc ? (
+                <img
+                  src={v2ModalImgSrc}
+                  alt={title}
+                  draggable={false}
+                  onPointerDown={v2OnPointerDown}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    userSelect: 'none',
+                    maxWidth: 'none',
+                    cursor: v2IsDragging ? 'grabbing' : 'grab',
+                    transform: 'translate(' + v2Pan.x + 'px, ' + v2Pan.y + 'px) scale(' + v2Zoom + ')',
+                    transformOrigin: 'top left',
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export const MermaidExistingBlockPopout = MermaidExistingBlockPopoutV2;
