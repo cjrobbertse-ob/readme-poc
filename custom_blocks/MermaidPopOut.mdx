@@ -1,0 +1,491 @@
+---
+name: MermaidPopOut
+---
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+export const MermaidSequencePopout = function (props) {
+  var DEFAULT_MIN_ZOOM = 0.5;
+  var DEFAULT_MAX_ZOOM = 4;
+  var DEFAULT_INITIAL_ZOOM = 1;
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function svgToDataUrl(svg) {
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg || '');
+  }
+
+  function normalizeSequenceCode(input) {
+    var text = (input || '').trim();
+    if (!text) return '';
+    if (text.indexOf('sequenceDiagram') === 0) return text;
+    return 'sequenceDiagram\n' + text;
+  }
+
+  function getMermaidPromise() {
+    if (typeof window === 'undefined') return null;
+    if (!window.__readmeMermaidPromise) {
+      window.__readmeMermaidPromise = null;
+    }
+    return window.__readmeMermaidPromise;
+  }
+
+  function setMermaidPromise(value) {
+    if (typeof window !== 'undefined') {
+      window.__readmeMermaidPromise = value;
+    }
+  }
+
+  function loadMermaidRuntime() {
+    if (typeof window !== 'undefined' && window.mermaid && window.mermaid.render) {
+      return Promise.resolve(window.mermaid);
+    }
+
+    var existingPromise = getMermaidPromise();
+    if (existingPromise) {
+      return existingPromise;
+    }
+
+    var promise = new Promise(function (resolve, reject) {
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        reject(new Error('Mermaid can only load in a browser.'));
+        return;
+      }
+
+      if (window.mermaid && window.mermaid.render) {
+        resolve(window.mermaid);
+        return;
+      }
+
+      var existing = document.getElementById('readme-mermaid-runtime');
+      if (existing) {
+        existing.addEventListener('load', function () {
+          if (window.mermaid && window.mermaid.render) {
+            resolve(window.mermaid);
+          } else {
+            reject(new Error('Mermaid script loaded but API not found.'));
+          }
+        });
+        existing.addEventListener('error', function () {
+          reject(new Error('Failed to load Mermaid runtime script.'));
+        });
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.id = 'readme-mermaid-runtime';
+      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+      script.async = true;
+      script.onload = function () {
+        if (window.mermaid && window.mermaid.render) {
+          resolve(window.mermaid);
+        } else {
+          reject(new Error('Mermaid script loaded but API not found.'));
+        }
+      };
+      script.onerror = function () {
+        reject(new Error('Failed to load Mermaid runtime script.'));
+      };
+      document.head.appendChild(script);
+    }).catch(function (error) {
+      setMermaidPromise(null);
+      throw error;
+    });
+
+    setMermaidPromise(promise);
+    return promise;
+  }
+
+  var code = props && props.code ? props.code : '';
+  var title = props && props.title ? props.title : 'Sequence diagram';
+  var openLabel = props && props.openLabel ? props.openLabel : 'Open diagram';
+  var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : DEFAULT_MIN_ZOOM;
+  var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : DEFAULT_MAX_ZOOM;
+  var initialZoom =
+    props && typeof props.initialZoom === 'number' ? props.initialZoom : DEFAULT_INITIAL_ZOOM;
+  var maxInlineHeight =
+    props && typeof props.maxInlineHeight === 'number' ? props.maxInlineHeight : 320;
+
+  var _useStateSvg = useState('');
+  var svg = _useStateSvg[0];
+  var setSvg = _useStateSvg[1];
+
+  var _useStateError = useState('');
+  var error = _useStateError[0];
+  var setError = _useStateError[1];
+
+  var _useStateOpen = useState(false);
+  var isOpen = _useStateOpen[0];
+  var setIsOpen = _useStateOpen[1];
+
+  var _useStateZoom = useState(clamp(initialZoom, minZoom, maxZoom));
+  var zoom = _useStateZoom[0];
+  var setZoom = _useStateZoom[1];
+
+  var _useStatePan = useState({ x: 0, y: 0 });
+  var pan = _useStatePan[0];
+  var setPan = _useStatePan[1];
+
+  var _useStateDrag = useState(false);
+  var isDragging = _useStateDrag[0];
+  var setIsDragging = _useStateDrag[1];
+
+  var overlayRef = useRef(null);
+  var modalRef = useRef(null);
+  var triggerRef = useRef(null);
+  var closeButtonRef = useRef(null);
+  var viewerRef = useRef(null);
+  var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
+
+  var sequenceCode = normalizeSequenceCode(code);
+  var modalImgSrc = svg ? svgToDataUrl(svg) : '';
+
+  useEffect(
+    function () {
+      var cancelled = false;
+
+      setError('');
+      setSvg('');
+
+      if (!sequenceCode) {
+        setError('No Mermaid sequence diagram code provided.');
+        return function () {
+          cancelled = true;
+        };
+      }
+
+      loadMermaidRuntime()
+        .then(function (mermaid) {
+          mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: 'strict',
+            theme: 'default',
+          });
+
+          var renderId = 'mermaid-seq-' + Math.random().toString(36).slice(2);
+          return mermaid.render(renderId, sequenceCode);
+        })
+        .then(function (result) {
+          if (!cancelled) {
+            setSvg(result && result.svg ? result.svg : '');
+          }
+        })
+        .catch(function (err) {
+          if (!cancelled) {
+            setError(
+              (err && err.message) ||
+                'Failed to render Mermaid diagram. Check your code or runtime script access.'
+            );
+          }
+        });
+
+      return function () {
+        cancelled = true;
+      };
+    },
+    [sequenceCode]
+  );
+
+  useEffect(
+    function () {
+      if (!isOpen) return undefined;
+      var previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return function () {
+        document.body.style.overflow = previousOverflow;
+      };
+    },
+    [isOpen]
+  );
+
+  useEffect(
+    function () {
+      if (!isOpen) {
+        if (triggerRef.current && triggerRef.current.focus) triggerRef.current.focus();
+        return undefined;
+      }
+
+      if (closeButtonRef.current && closeButtonRef.current.focus) closeButtonRef.current.focus();
+
+      function onKeyDown(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          setIsOpen(false);
+          return;
+        }
+
+        if (event.key === 'Tab') {
+          var modalEl = modalRef.current;
+          if (!modalEl) return;
+
+          var focusable = modalEl.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+
+          if (!focusable.length) {
+            event.preventDefault();
+            return;
+          }
+
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+          var active = document.activeElement;
+
+          if (event.shiftKey && active === first) {
+            event.preventDefault();
+            last.focus();
+            return;
+          }
+
+          if (!event.shiftKey && active === last) {
+            event.preventDefault();
+            first.focus();
+            return;
+          }
+        }
+
+        if (event.key === '+' || event.key === '=') {
+          event.preventDefault();
+          setZoom(function (z) {
+            return clamp(Number((z + 0.2).toFixed(2)), minZoom, maxZoom);
+          });
+          return;
+        }
+
+        if (event.key === '-') {
+          event.preventDefault();
+          setZoom(function (z) {
+            return clamp(Number((z - 0.2).toFixed(2)), minZoom, maxZoom);
+          });
+          return;
+        }
+
+        if (event.key === '0') {
+          event.preventDefault();
+          setZoom(clamp(initialZoom, minZoom, maxZoom));
+          setPan({ x: 0, y: 0 });
+        }
+      }
+
+      window.addEventListener('keydown', onKeyDown);
+      return function () {
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    },
+    [isOpen, initialZoom, minZoom, maxZoom]
+  );
+
+  var openModal = useCallback(
+    function () {
+      if (!svg) return;
+      setZoom(clamp(initialZoom, minZoom, maxZoom));
+      setPan({ x: 0, y: 0 });
+      setIsOpen(true);
+    },
+    [svg, initialZoom, minZoom, maxZoom]
+  );
+
+  var closeModal = useCallback(function () {
+    setIsOpen(false);
+    setIsDragging(false);
+  }, []);
+
+  var onOverlayMouseDown = useCallback(
+    function (event) {
+      if (event.target === overlayRef.current) closeModal();
+    },
+    [closeModal]
+  );
+
+  var onWheel = useCallback(
+    function (event) {
+      event.preventDefault();
+      var viewerEl = viewerRef.current;
+      if (!viewerEl) return;
+
+      var rect = viewerEl.getBoundingClientRect();
+      var pointX = event.clientX - rect.left;
+      var pointY = event.clientY - rect.top;
+
+      var delta = event.deltaY > 0 ? -0.15 : 0.15;
+      var nextZoom = clamp(Number((zoom + delta).toFixed(2)), minZoom, maxZoom);
+      if (nextZoom === zoom) return;
+
+      var scaleRatio = nextZoom / zoom;
+      var nextX = pointX - (pointX - pan.x) * scaleRatio;
+      var nextY = pointY - (pointY - pan.y) * scaleRatio;
+
+      setZoom(nextZoom);
+      setPan({ x: nextX, y: nextY });
+    },
+    [zoom, pan.x, pan.y, minZoom, maxZoom]
+  );
+
+  var onPointerDown = useCallback(
+    function (event) {
+      if (zoom <= 1) return;
+      event.preventDefault();
+      setIsDragging(true);
+      dragStartRef.current = {
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        x: pan.x,
+        y: pan.y,
+      };
+    },
+    [zoom, pan.x, pan.y]
+  );
+
+  var onPointerMove = useCallback(
+    function (event) {
+      if (!isDragging) return;
+      var dx = event.clientX - dragStartRef.current.pointerX;
+      var dy = event.clientY - dragStartRef.current.pointerY;
+      setPan({
+        x: dragStartRef.current.x + dx,
+        y: dragStartRef.current.y + dy,
+      });
+    },
+    [isDragging]
+  );
+
+  var onPointerUp = useCallback(function () {
+    setIsDragging(false);
+  }, []);
+
+  var zoomIn = useCallback(
+    function () {
+      setZoom(function (z) {
+        return clamp(Number((z + 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var zoomOut = useCallback(
+    function () {
+      setZoom(function (z) {
+        return clamp(Number((z - 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var resetView = useCallback(
+    function () {
+      setZoom(clamp(initialZoom, minZoom, maxZoom));
+      setPan({ x: 0, y: 0 });
+    },
+    [initialZoom, minZoom, maxZoom]
+  );
+
+  return (
+    <div className="my-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">Mermaid sequence diagram</p>
+        </div>
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={openModal}
+          disabled={!svg}
+          className="rounded-md border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+        >
+          {openLabel}
+        </button>
+      </div>
+
+      {error ? (
+        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-100">
+          {error}
+        </div>
+      ) : (
+        <div
+          className="relative overflow-auto rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950"
+          style={{ maxHeight: maxInlineHeight + 'px' }}
+          dangerouslySetInnerHTML={{ __html: svg || '' }}
+        />
+      )}
+
+      {isOpen ? (
+        <div
+          ref={overlayRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title + ' zoom viewer'}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 p-3"
+          onMouseDown={onOverlayMouseDown}
+        >
+          <div
+            ref={modalRef}
+            className="relative flex h-[90vh] w-full max-w-6xl flex-col rounded-xl bg-white shadow-2xl dark:bg-slate-950"
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={zoomOut}
+                  className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  onClick={zoomIn}
+                  className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={resetView}
+                  className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  Reset
+                </button>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={viewerRef}
+              className="relative flex-1 overflow-hidden bg-slate-100 dark:bg-slate-900"
+              onWheel={onWheel}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+            >
+              {modalImgSrc ? (
+                <img
+                  src={modalImgSrc}
+                  alt={title}
+                  draggable={false}
+                  onPointerDown={onPointerDown}
+                  className={
+                    'absolute left-0 top-0 max-w-none select-none ' +
+                    (isDragging ? 'cursor-grabbing' : zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                  }
+                  style={{
+                    transform: 'translate(' + pan.x + 'px, ' + pan.y + 'px) scale(' + zoom + ')',
+                    transformOrigin: 'top left',
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
