@@ -39,32 +39,28 @@ The API returns a **boolean response** (`FundsAvailable: true` or `false`) for a
 6. **CBPII monitors consent** — `GET /funds-confirmation-consents/{ConsentId}` to check the consent status at any time.
 
 <Accordion title="API Endpoints" icon="code">
+  | Method   | Endpoint                                   | Description                         | Grant Type         |
+  | -------- | ------------------------------------------ | ----------------------------------- | ------------------ |
+  | `POST`   | `/funds-confirmation-consents`             | Create a funds confirmation consent | Client Credentials |
+  | `GET`    | `/funds-confirmation-consents/{ConsentId}` | Retrieve a consent                  | Client Credentials |
+  | `DELETE` | `/funds-confirmation-consents/{ConsentId}` | Delete a consent                    | Client Credentials |
+  | `POST`   | `/funds-confirmations`                     | Check funds availability            | Authorization Code |
 
-| Method | Endpoint | Description | Grant Type |
-|--------|----------|-------------|------------|
-| `POST` | `/funds-confirmation-consents` | Create a funds confirmation consent | Client Credentials |
-| `GET` | `/funds-confirmation-consents/{ConsentId}` | Retrieve a consent | Client Credentials |
-| `DELETE` | `/funds-confirmation-consents/{ConsentId}` | Delete a consent | Client Credentials |
-| `POST` | `/funds-confirmations` | Check funds availability | Authorization Code |
-
-All endpoints use the `fundsconfirmations` scope. None require message signing or an idempotency key.
-
+  All endpoints use the `fundsconfirmations` scope. None require message signing or an idempotency key.
 </Accordion>
 
 <Accordion title="Consent Lifecycle" icon="rotate">
+  Consents are **long-lived** — if no `ExpirationDateTime` is set, the consent remains valid indefinitely. The consent moves through these statuses:
 
-Consents are **long-lived** — if no `ExpirationDateTime` is set, the consent remains valid indefinitely. The consent moves through these statuses:
+  | Status                 | Code   | Description                                               |
+  | ---------------------- | ------ | --------------------------------------------------------- |
+  | Awaiting Authorisation | `AWAU` | Created by the CBPII, waiting for PSU to authorise        |
+  | Authorised             | `AUTH` | PSU has authorised the consent — funds checks can proceed |
+  | Rejected               | `RJCT` | Consent was rejected                                      |
+  | Cancelled              | `CANC` | Consent was revoked by the PSU or deleted by the CBPII    |
+  | Expired                | `EXPD` | Consent has passed its expiration date                    |
 
-| Status | Code | Description |
-|--------|------|-------------|
-| Awaiting Authorisation | `AWAU` | Created by the CBPII, waiting for PSU to authorise |
-| Authorised | `AUTH` | PSU has authorised the consent — funds checks can proceed |
-| Rejected | `RJCT` | Consent was rejected |
-| Cancelled | `CANC` | Consent was revoked by the PSU or deleted by the CBPII |
-| Expired | `EXPD` | Consent has passed its expiration date |
-
-A PSU can revoke consent at any time through the ASPSP's banking interface. If revoked via the CBPII, the CBPII must call `DELETE` on the consent resource and cease API access.
-
+  A PSU can revoke consent at any time through the ASPSP's banking interface. If revoked via the CBPII, the CBPII must call `DELETE` on the consent resource and cease API access.
 </Accordion>
 
 ## How CBPIIs Work
@@ -75,7 +71,7 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 2. **Funds Confirmation**: CBPII requests confirmation of available funds from the account provider.   **This is the capability that utilises Open Banking standards.**
 
 <Callout icon="🏦" theme="info">
-Step 2 — Funds Confirmation — is the capability that utilises Open Banking standards. The CBPII queries the customer's account provider to verify sufficient funds before authorising the transaction.
+  Step 2 — Funds Confirmation — is the capability that utilises Open Banking standards. The CBPII queries the customer's account provider to verify sufficient funds before authorising the transaction.
 </Callout>
 
 3. **Authorization**: Transaction is authorized based on fund availability and authentication.
@@ -85,25 +81,21 @@ Step 2 — Funds Confirmation — is the capability that utilises Open Banking s
 
 <Tabs>
   <Tab title="Consumer Applications">
-
-  * **E-commerce Integration**: One-click payments for online shopping.
-  * **Mobile Payments**: In-app purchases and contactless transactions.
-  * **Subscription Management**: Recurring payment handling with enhanced security.
-
+    * **E-commerce Integration**: One-click payments for online shopping.
+    * **Mobile Payments**: In-app purchases and contactless transactions.
+    * **Subscription Management**: Recurring payment handling with enhanced security.
   </Tab>
+
   <Tab title="Corporate Payments">
-
-  * **Virtual Corporate Cards**: Streamlined expense management and procurement.
-  * **B2B Transactions**: Secure business-to-business payment processing.
-  * **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
-
+    * **Virtual Corporate Cards**: Streamlined expense management and procurement.
+    * **B2B Transactions**: Secure business-to-business payment processing.
+    * **Travel & Entertainment**: Dynamic spending controls and real-time approvals.
   </Tab>
+
   <Tab title="Financial Services">
-
-  * **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
-  * **Marketplace Payments**: Multi-party transaction facilitation.
-  * **Cross-Border Transfers**: International payment processing with competitive rates.
-
+    * **Embedded Finance**: Payment capabilities integrated into non-financial platforms.
+    * **Marketplace Payments**: Multi-party transaction facilitation.
+    * **Cross-Border Transfers**: International payment processing with competitive rates.
   </Tab>
 </Tabs>
 
@@ -126,3 +118,88 @@ Step 2 — Funds Confirmation — is the capability that utilises Open Banking s
     Access to international payment networks and cross-border payment capabilities.
   </Card>
 </Cards>
+
+<br />
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant PSU
+    participant CBPII
+    participant AS as ASPSP Authorisation Server
+    participant RS as ASPSP Resource Server
+
+    Note over PSU,RS: Step 1: Onboard with CBPII (Outside scope of CoF API)
+    PSU->>CBPII: Onboard with CBPII and consent to Confirmation of Funds
+
+    Note over PSU,RS: Step 2: Setup Funds Confirmation Consent
+
+    Note right of CBPII: Retrieve an access-token under the Client Credentials Flow.
+    CBPII->>AS: Initiate Client Credentials Grant
+    AS-->>CBPII: access-token
+
+    Note right of CBPII: Create a funds-confirmation-consent with Status=AwaitingAuthorisation.\nInclude access-token retrieved in [3].
+    CBPII->>RS: POST /funds-confirmation-consents
+    Note over RS: Consent Status: AwaitingAuthorisation
+    RS-->>CBPII: HTTP 201 (Created), ConsentId
+
+    Note right of CBPII: Respond to PSU with redirection to initiate\nauthorisation of the funds-confirmation-consent.
+
+    Note over PSU,RS: Step 3: Agree Funds Confirmation Consent
+
+    alt Redirection (Using Authorization Code Grant)
+        CBPII-->>PSU: HTTP 302 (Found), Redirect (ConsentId)
+        PSU->>AS: Follow redirect (ConsentId)
+        PSU<<->>AS: authenticate (and SCA if required)
+
+        AS->>RS: Update funds-confirmation-consent Status to Authorised
+        Note over RS: Consent Status: Authorised
+        RS-->>AS: OK
+
+        Note right of AS: Create and distribute an authorization-code\nunder the Authorization Flow.
+        AS-->>PSU: HTTP 302 (Found), Redirect (authorization-code)
+        PSU->>CBPII: Follow redirect (authorization-code)
+
+        Note right of CBPII: Retrieve an access-token under the Authorization Flow.\nThis token can then be used for the\nfunds-confirmation POST requests in step [16].
+        CBPII->>AS: Exchange authorization-code for access token
+        AS-->>CBPII: access-token
+
+    else Decoupled (Using CIBA)
+        CBPII->>AS: POST /bc-authorize (login_hint_token)
+        AS-->>CBPII: OK
+
+        PSU->>AS: Authorise (Consent Id)
+        PSU<<->>AS: authenticate
+        PSU<<->>AS: SCA if required
+        PSU<<->>AS: select accounts
+        Note over RS: Consent Status: Authorised
+
+        alt Using callback
+            AS->>CBPII: Callback (authorization-code)
+            CBPII<<->>AS: Establish TLS 1.2 MA
+            CBPII->>AS: Exchange authorization-code for access token
+            AS-->>CBPII: access-token
+        else Using polling
+            CBPII<<->>AS: Establish TLS 1.2 MA
+            CBPII->>AS: Poll at /token using auth-req-id
+            AS-->>CBPII: access-token
+        end
+    end
+
+    Note over PSU,RS: Step 4: Initiate card payment (Outside scope of CoF API)
+    PSU->>CBPII: Initiate card payment
+
+    Note over PSU,RS: Step 5: Confirm Funds
+
+    Note right of CBPII: Create a funds-confirmation resource.\nInclude access-token retrieved in [14].
+    CBPII->>RS: POST /funds-confirmations
+
+    RS->>RS: Validate funds-confirmation against funds-confirmation-consent
+    RS->>RS: Establish if funds are available.
+    RS-->>CBPII: HTTP 201 (Created), FundsConfirmationId, FundsAvailable (true/false)
+
+    Note over PSU,RS: Step 6: Get Funds Confirmation Consent Status
+    CBPII->>RS: GET /funds-confirmation-consents/{FundsConfirmationRequestId}
+    RS-->>CBPII: HTTP 200 (OK) funds-confirmation-consent resource
+```
