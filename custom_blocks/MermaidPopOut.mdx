@@ -355,7 +355,6 @@ export const MermaidSequencePopout = function (props) {
 
   var onPointerDown = useCallback(
     function (event) {
-      if (zoom <= 1) return;
       event.preventDefault();
       setIsDragging(true);
       dragStartRef.current = {
@@ -365,7 +364,7 @@ export const MermaidSequencePopout = function (props) {
         y: pan.y,
       };
     },
-    [zoom, pan.x, pan.y]
+    [pan.x, pan.y]
   );
 
   var onPointerMove = useCallback(
@@ -543,7 +542,7 @@ export const MermaidSequencePopout = function (props) {
                   onPointerDown={onPointerDown}
                   className={
                     'absolute left-0 top-0 max-w-none select-none ' +
-                    (isDragging ? 'cursor-grabbing' : zoom > 1 ? 'cursor-grab' : 'cursor-default')
+                    (isDragging ? 'cursor-grabbing' : 'cursor-grab')
                   }
                   style={{
                     transform: 'translate(' + pan.x + 'px, ' + pan.y + 'px) scale(' + zoom + ')',
