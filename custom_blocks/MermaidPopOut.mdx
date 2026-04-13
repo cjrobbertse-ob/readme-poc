@@ -20,6 +20,8 @@ export const MermaidSequencePopout = function (props) {
     var text = (input || '').trim();
     if (!text) return '';
     if (text.indexOf('sequenceDiagram') === 0) return text;
+    if (text.indexOf('%%{') === 0 && text.indexOf('sequenceDiagram') !== -1) return text;
+    if (text.indexOf('\nsequenceDiagram') !== -1) return text;
     return 'sequenceDiagram\n' + text;
   }
 
