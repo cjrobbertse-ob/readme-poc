@@ -92,7 +92,8 @@ export const MermaidExistingBlockPopoutV2 = function (props) {
   var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : v2DefaultMaxZoom;
   var initialZoom =
     props && typeof props.initialZoom === 'number' ? props.initialZoom : v2DefaultInitialZoom;
-  var showEditorMarker = !(props && props.showEditorMarker === false);
+  var showEditorMarker = !!(props && props.showEditorMarker);
+  var showStatusText = !!(props && props.showStatusText);
 
   var v2HostRef = useRef(null);
   var v2OverlayRef = useRef(null);
@@ -403,7 +404,11 @@ export const MermaidExistingBlockPopoutV2 = function (props) {
       ) : null}
 
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-slate-600 dark:text-slate-300">{v2Status}</p>
+        {showStatusText ? (
+          <p className="text-xs text-slate-600 dark:text-slate-300">{v2Status}</p>
+        ) : (
+          <span />
+        )}
         <button
           ref={v2TriggerRef}
           type="button"
