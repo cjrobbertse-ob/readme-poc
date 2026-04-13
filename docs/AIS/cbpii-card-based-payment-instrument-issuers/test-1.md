@@ -27,29 +27,29 @@ sequenceDiagram
     CBPII->>AS: Initiate Client Credentials Grant
     AS-->>CBPII: access-token
 
-    Note right of CBPII: Create a funds-confirmation-consent with Status=AwaitingAuthorisation.\nInclude access-token retrieved in [3].
+    Note right of CBPII: Create a funds-confirmation-consent with Status=AwaitingAuthorisation.<br/>Include access-token retrieved in [3].
     CBPII->>RS: POST /funds-confirmation-consents
     Note over RS: Consent Status: AwaitingAuthorisation
     RS-->>CBPII: HTTP 201 (Created), ConsentId
 
-    Note right of CBPII: Respond to PSU with redirection to initiate\nauthorisation of the funds-confirmation-consent.
+    Note right of CBPII: Respond to PSU with redirection to initiate<br/>authorisation of the funds-confirmation-consent.
 
     Note over PSU,RS: Step 3: Agree Funds Confirmation Consent
 
     alt Redirection (Using Authorization Code Grant)
         CBPII-->>PSU: HTTP 302 (Found), Redirect (ConsentId)
         PSU->>AS: Follow redirect (ConsentId)
-        PSU<<->>AS: authenticate (and SCA if required)
+        PSU->>AS: authenticate (and SCA if required)
 
         AS->>RS: Update funds-confirmation-consent Status to Authorised
         Note over RS: Consent Status: Authorised
         RS-->>AS: OK
 
-        Note right of AS: Create and distribute an authorization-code\nunder the Authorization Flow.
+        Note right of AS: Create and distribute an authorization-code<br/>under the Authorization Flow.
         AS-->>PSU: HTTP 302 (Found), Redirect (authorization-code)
         PSU->>CBPII: Follow redirect (authorization-code)
 
-        Note right of CBPII: Retrieve an access-token under the Authorization Flow.\nThis token can then be used for the\nfunds-confirmation POST requests in step [16].
+        Note right of CBPII: Retrieve an access-token under the Authorization Flow.<br/>This token can then be used for the<br/>funds-confirmation POST requests in step [16].
         CBPII->>AS: Exchange authorization-code for access token
         AS-->>CBPII: access-token
 
@@ -58,18 +58,18 @@ sequenceDiagram
         AS-->>CBPII: OK
 
         PSU->>AS: Authorise (Consent Id)
-        PSU<<->>AS: authenticate
-        PSU<<->>AS: SCA if required
-        PSU<<->>AS: select accounts
+        PSU->>AS: authenticate
+        PSU->>AS: SCA if required
+        PSU->>AS: select accounts
         Note over RS: Consent Status: Authorised
 
         alt Using callback
             AS->>CBPII: Callback (authorization-code)
-            CBPII<<->>AS: Establish TLS 1.2 MA
+            CBPII->>AS: Establish TLS 1.2 MA
             CBPII->>AS: Exchange authorization-code for access token
             AS-->>CBPII: access-token
         else Using polling
-            CBPII<<->>AS: Establish TLS 1.2 MA
+            CBPII->>AS: Establish TLS 1.2 MA
             CBPII->>AS: Poll at /token using auth-req-id
             AS-->>CBPII: access-token
         end
@@ -80,7 +80,7 @@ sequenceDiagram
 
     Note over PSU,RS: Step 5: Confirm Funds
 
-    Note right of CBPII: Create a funds-confirmation resource.\nInclude access-token retrieved in [14].
+    Note right of CBPII: Create a funds-confirmation resource.<br/>Include access-token retrieved in [14].
     CBPII->>RS: POST /funds-confirmations
 
     RS->>RS: Validate funds-confirmation against funds-confirmation-consent
