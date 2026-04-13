@@ -25,6 +25,15 @@ export const MermaidSequencePopout = function (props) {
     return 'sequenceDiagram\n' + text;
   }
 
+  function sanitizeSequenceCode(input) {
+    var text = input || '';
+    // Mermaid sequence notes are more reliable with HTML line breaks than escaped \n.
+    text = text.replace(/\\n/g, '<br/>');
+    // Some specs use bidirectional shorthand unsupported by Mermaid sequence parser.
+    text = text.replace(/<<->>/g, '->>');
+    return text;
+  }
+
   function getMermaidPromise() {
     if (typeof window === 'undefined') return null;
     if (!window.__readmeMermaidPromise) {
@@ -153,7 +162,7 @@ export const MermaidSequencePopout = function (props) {
   var viewerRef = useRef(null);
   var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
 
-  var sequenceCode = normalizeSequenceCode(code || childrenText);
+  var sequenceCode = sanitizeSequenceCode(normalizeSequenceCode(code || childrenText));
   var modalImgSrc = svg ? svgToDataUrl(svg) : '';
 
   useEffect(
