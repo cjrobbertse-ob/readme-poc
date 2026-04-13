@@ -98,6 +98,19 @@ export const MermaidSequencePopout = function (props) {
   }
 
   var code = props && props.code ? props.code : '';
+  var childrenText = '';
+  if (props && props.children) {
+    if (Array.isArray(props.children)) {
+      childrenText = props.children
+        .map(function (part) {
+          if (part === null || part === undefined) return '';
+          return String(part);
+        })
+        .join('');
+    } else {
+      childrenText = String(props.children);
+    }
+  }
   var title = props && props.title ? props.title : 'Sequence diagram';
   var openLabel = props && props.openLabel ? props.openLabel : 'Open diagram';
   var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : DEFAULT_MIN_ZOOM;
@@ -138,7 +151,7 @@ export const MermaidSequencePopout = function (props) {
   var viewerRef = useRef(null);
   var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
 
-  var sequenceCode = normalizeSequenceCode(code);
+  var sequenceCode = normalizeSequenceCode(code || childrenText);
   var modalImgSrc = svg ? svgToDataUrl(svg) : '';
 
   useEffect(
@@ -489,3 +502,5 @@ export const MermaidSequencePopout = function (props) {
     </div>
   );
 };
+
+export const MermaidPopOut = MermaidSequencePopout;
