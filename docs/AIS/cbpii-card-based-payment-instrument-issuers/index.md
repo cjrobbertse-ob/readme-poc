@@ -122,6 +122,7 @@ CBPIIs enable customers to use payment instruments such as virtual cards and e-w
 <br />
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '20px' }}}%%
 sequenceDiagram
     autonumber
 
