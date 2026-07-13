@@ -1,16 +1,1136 @@
 ---
 name: Generateclass
 ---
-export const ExampleComponent = props => {
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+var UML_API_ALIASES = {
+  AIS: 'account-info-openapi',
+  AISP: 'account-info-openapi',
+  PIS: 'payment-initiation-openapi',
+  PISP: 'payment-initiation-openapi',
+  CBPII: 'confirmation-funds-openapi',
+  FundsConfirmation: 'confirmation-funds-openapi',
+  VRP: 'vrp-openapi',
+  Events: 'events-openapi',
+  EventNotifications: 'event-notifications-openapi',
+};
+
+var UML_THEME = {
+  primary: '#51509e',
+  primaryBorder: '#00167a',
+  text: '#1a1a1a',
+  field: '#00167a',
+  background: '#ffffff',
+  boxFill: '#f0eff8',
+  childFill: '#ffffff',
+  accent: '#0097b2',
+  accentFill: '#cceef4',
+  note: '#e3a941',
+  error: '#be123c',
+};
+
+var UML_LAYOUT = {
+  margin: 28,
+  boxMinWidth: 260,
+  boxMaxWidth: 520,
+  boxPaddingX: 16,
+  headerHeight: 34,
+  rowHeight: 21,
+  boxGapY: 26,
+  columnGap: 116,
+  fontSize: 13,
+  titleFontSize: 14,
+};
+
+function umlClamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function umlEscapeXml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function umlDecodeHtmlEntities(value) {
+  if (typeof document === 'undefined') return value;
+  var textarea = document.createElement('textarea');
+  textarea.innerHTML = value;
+  return textarea.value;
+}
+
+function umlTruncate(value, maxLength) {
+  var text = String(value == null ? '' : value);
+  if (text.length <= maxLength) return text;
+  return text.slice(0, Math.max(0, maxLength - 1)) + '…';
+}
+
+function umlUnique(values) {
+  var seen = {};
+  return values.filter(function (value) {
+    if (seen[value]) return false;
+    seen[value] = true;
+    return true;
+  });
+}
+
+function umlObjectKeys(object) {
+  return Object.keys(object || {}).sort(function (a, b) {
+    return a.localeCompare(b);
+  });
+}
+
+function umlResolveApiFilename(api) {
+  var text = String(api || '').trim();
+  if (!text) throw new Error('Add an api prop, for example api="PIS".');
+
+  if (UML_API_ALIASES[text]) return UML_API_ALIASES[text];
+
+  var normalized = text
+    .replace(/\.(json|ya?ml)$/i, '')
+    .replace(/[_\s]+/g, '-');
+  var aliasKey = Object.keys(UML_API_ALIASES).find(function (key) {
+    return key.toLowerCase() === text.toLowerCase();
+  });
+
+  return aliasKey ? UML_API_ALIASES[aliasKey] : normalized;
+}
+
+function umlFindApiDefinitions(value, results, depth) {
+  if (!value || depth > 10) return;
+
+  if (Array.isArray(value)) {
+    value.forEach(function (item) {
+      umlFindApiDefinitions(item, results, depth + 1);
+    });
+    return;
+  }
+
+  if (typeof value !== 'object') return;
+
+  if (Array.isArray(value.apiDefinitions)) {
+    value.apiDefinitions.forEach(function (definition) {
+      if (definition && definition.source && definition.source.sync_url) {
+        results.push(definition);
+      }
+    });
+  }
+
+  Object.keys(value).forEach(function (key) {
+    if (key === 'apiDefinitions') return;
+    umlFindApiDefinitions(value[key], results, depth + 1);
+  });
+}
+
+export function discoverReadMeOpenApiSyncUrl(api) {
+  if (typeof document === 'undefined') {
+    throw new Error('ReadMe page state is unavailable outside the browser.');
+  }
+
+  var wantedFilename = umlResolveApiFilename(api);
+  var script = document.querySelector('script#ssr-props, script[id="ssr-props"]');
+  if (!script) {
+    throw new Error('Could not find ReadMe ssr-props page state. The OpenAPI source URL cannot be inferred.');
+  }
+
+  var raw = script.textContent || script.getAttribute('data-json') || '';
+  if (!raw) {
+    throw new Error('ReadMe ssr-props page state was empty.');
+  }
+
+  var parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (firstError) {
+    try {
+      parsed = JSON.parse(umlDecodeHtmlEntities(raw));
+    } catch (secondError) {
+      throw new Error('ReadMe ssr-props page state could not be parsed as JSON.');
+    }
+  }
+
+  var definitions = [];
+  umlFindApiDefinitions(parsed, definitions, 0);
+
+  var match = definitions.find(function (definition) {
+    var url = definition && definition.source && definition.source.sync_url;
+    return (
+      typeof url === 'string' &&
+      new RegExp('/' + wantedFilename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.ya?ml(?:[?#].*)?$', 'i').test(url)
+    );
+  });
+
+  if (!match) {
+    throw new Error('Could not find a ReadMe OpenAPI sync_url for "' + api + '" (' + wantedFilename + ').');
+  }
+
+  return match.source.sync_url;
+}
+
+export function deriveOpenApiJsonUrl(syncUrl) {
+  var url = String(syncUrl || '');
+  if (!url) throw new Error('The ReadMe OpenAPI sync_url was empty.');
+  if (/\.json(?:[?#].*)?$/i.test(url)) return url;
+  if (!/\.ya?ml(?:[?#].*)?$/i.test(url)) {
+    throw new Error('The ReadMe OpenAPI sync_url did not point to a YAML or JSON file: ' + url);
+  }
+  return url.replace(/\.ya?ml(?=([?#].*)?$)/i, '.json');
+}
+
+function umlResolvePointer(documentRoot, pointer) {
+  if (!pointer || pointer.charAt(0) !== '#') {
+    throw new Error('Unsupported external OpenAPI reference: ' + pointer);
+  }
+
+  var parts = pointer
+    .slice(2)
+    .split('/')
+    .map(function (part) {
+      return part.replace(/~1/g, '/').replace(/~0/g, '~');
+    });
+
+  return parts.reduce(function (current, part) {
+    if (!current || typeof current !== 'object' || !(part in current)) {
+      throw new Error('Could not resolve OpenAPI reference: ' + pointer);
+    }
+    return current[part];
+  }, documentRoot);
+}
+
+function umlMergeSchemas(schemas) {
+  return schemas.reduce(function (merged, schema) {
+    var next = schema || {};
+    var mergedRequired = umlUnique((merged.required || []).concat(next.required || []));
+    var mergedProperties = Object.assign({}, merged.properties || {}, next.properties || {});
+
+    return Object.assign({}, merged, next, {
+      description: merged.description || next.description,
+      required: mergedRequired,
+      properties: mergedProperties,
+      allOf: undefined,
+    });
+  }, {});
+}
+
+function umlNormalizeSchema(schema, documentRoot, refStack) {
+  if (!schema || typeof schema !== 'object') return {};
+
+  var stack = refStack || [];
+  var working = schema;
+
+  if (working.$ref) {
+    if (stack.indexOf(working.$ref) !== -1) {
+      return Object.assign({}, working, { circularRef: true });
+    }
+
+    var resolved = umlNormalizeSchema(umlResolvePointer(documentRoot, working.$ref), documentRoot, stack.concat(working.$ref));
+    var siblings = Object.assign({}, working);
+    delete siblings.$ref;
+    working = Object.assign({}, resolved, siblings);
+  }
+
+  if (Array.isArray(working.allOf)) {
+    var mergedAllOf = umlMergeSchemas(
+      working.allOf.map(function (item) {
+        return umlNormalizeSchema(item, documentRoot, stack);
+      })
+    );
+    var local = Object.assign({}, working);
+    delete local.allOf;
+    working = umlMergeSchemas([mergedAllOf, local]);
+  }
+
+  return working;
+}
+
+function umlSchemaType(schema, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  if (normalized.oneOf) return 'oneOf';
+  if (normalized.anyOf) return 'anyOf';
+  if (normalized.type) return normalized.type;
+  if (normalized.properties) return 'object';
+  if (normalized.items) return 'array';
+  if (normalized.enum) return 'string';
+  return 'any';
+}
+
+function umlChoiceTooltip(schema, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  var choices = normalized.oneOf || normalized.anyOf;
+  if (!choices) return '';
+
+  var label = normalized.oneOf ? 'One of' : 'Any of';
   return (
-    <div className="flex items-center h-full w-full">
-      <div className="bg-gray-800 rounded-md p-6 m-4">
-        {props}
-      </div>
+    label +
+    ':\n' +
+    choices
+      .map(function (choice, index) {
+        var resolved = umlNormalizeSchema(choice, documentRoot);
+        var type = umlSchemaType(resolved, documentRoot);
+        var title = resolved.title || resolved.description || resolved.enum;
+        return ' - Option ' + (index + 1) + ': ' + type + (title ? ' (' + String(title).slice(0, 140) + ')' : '');
+      })
+      .join('\n')
+  );
+}
+
+function umlFieldTooltip(schema, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  var lines = [];
+  var type = umlSchemaType(normalized, documentRoot);
+
+  if (type === 'array') {
+    type = 'array<' + umlSchemaType(normalized.items || {}, documentRoot) + '>';
+  }
+
+  lines.push('Type: ' + type);
+  ['format', 'pattern', 'minimum', 'maximum', 'minLength', 'maxLength', 'minItems', 'maxItems'].forEach(function (key) {
+    if (normalized[key] !== undefined) lines.push(key + ': ' + normalized[key]);
+  });
+
+  if (Array.isArray(normalized.enum)) {
+    lines.push('Values:');
+    normalized.enum.forEach(function (value) {
+      lines.push(' - ' + value);
+    });
+  }
+
+  if (normalized.description) lines.push('Description: ' + normalized.description);
+
+  var choiceText = umlChoiceTooltip(normalized, documentRoot);
+  if (choiceText) lines.push(choiceText);
+
+  return lines.join('\n');
+}
+
+function umlCardinality(schema, isRequired, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  var isArray = umlSchemaType(normalized, documentRoot) === 'array';
+  var min = isRequired ? 1 : 0;
+  var max = isRequired ? 1 : 1;
+
+  if (isArray) {
+    min = normalized.minItems !== undefined ? normalized.minItems : min;
+    max = normalized.maxItems !== undefined ? normalized.maxItems : '*';
+  }
+
+  return '[' + min + '..' + max + ']';
+}
+
+function umlIsObjectLike(schema, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  var type = umlSchemaType(normalized, documentRoot);
+  return type === 'object' && !!normalized.properties && !normalized.oneOf && !normalized.anyOf;
+}
+
+function umlChildSchema(schema, documentRoot) {
+  var normalized = umlNormalizeSchema(schema, documentRoot);
+  if (umlSchemaType(normalized, documentRoot) === 'array') {
+    var itemSchema = umlNormalizeSchema(normalized.items || {}, documentRoot);
+    return umlIsObjectLike(itemSchema, documentRoot) ? itemSchema : null;
+  }
+  return umlIsObjectLike(normalized, documentRoot) ? normalized : null;
+}
+
+function umlRefKey(schema) {
+  if (!schema || typeof schema !== 'object') return '';
+  if (schema.$ref) return schema.$ref;
+  if (schema.items && schema.items.$ref) return schema.items.$ref;
+  return '';
+}
+
+function umlParseSelector(selector) {
+  var text = String(selector || '').trim();
+  if (!text) throw new Error('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data".');
+
+  var alias = '';
+  var path = text;
+  var aliasIndex = text.lastIndexOf(':');
+  if (aliasIndex > -1) {
+    path = text.slice(0, aliasIndex);
+    alias = text.slice(aliasIndex + 1).trim();
+  }
+
+  var parts = path.split('.').filter(Boolean);
+  if (!parts.length) throw new Error('Schema selector was empty.');
+
+  return {
+    parts: parts,
+    alias: alias || parts[parts.length - 1],
+  };
+}
+
+export function resolveOpenApiSchemaSelector(openApiDocument, selector) {
+  var parsed = umlParseSelector(selector);
+  var schemas =
+    openApiDocument &&
+    openApiDocument.components &&
+    openApiDocument.components.schemas;
+
+  if (!schemas || !schemas[parsed.parts[0]]) {
+    throw new Error('Could not find top-level OpenAPI schema "' + parsed.parts[0] + '".');
+  }
+
+  var current = schemas[parsed.parts[0]];
+
+  for (var index = 1; index < parsed.parts.length; index += 1) {
+    var segment = parsed.parts[index];
+    var normalized = umlNormalizeSchema(current, openApiDocument);
+
+    if (segment === 'properties') {
+      index += 1;
+      var propertyName = parsed.parts[index];
+      if (!propertyName) throw new Error('Schema selector ended after ".properties".');
+      if (!normalized.properties || !normalized.properties[propertyName]) {
+        throw new Error('Could not find property "' + propertyName + '" in selector "' + selector + '".');
+      }
+      current = normalized.properties[propertyName];
+      continue;
+    }
+
+    if (segment === 'items') {
+      if (!normalized.items) throw new Error('Could not find items in selector "' + selector + '".');
+      current = normalized.items;
+      continue;
+    }
+
+    if (normalized.properties && normalized.properties[segment]) {
+      current = normalized.properties[segment];
+      continue;
+    }
+
+    if (normalized[segment] !== undefined) {
+      current = normalized[segment];
+      continue;
+    }
+
+    throw new Error('Could not resolve selector segment "' + segment + '" in "' + selector + '".');
+  }
+
+  return {
+    title: parsed.alias,
+    schema: umlNormalizeSchema(current, openApiDocument),
+  };
+}
+
+function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancestorRefs) {
+  var normalized = umlNormalizeSchema(schema, openApiDocument);
+  var required = normalized.required || [];
+  var fields = [];
+  var children = [];
+  var currentAncestors = ancestors || [];
+  var currentAncestorRefs = ancestorRefs || [];
+
+  umlObjectKeys(normalized.properties).forEach(function (propertyName) {
+    var propertySchema = normalized.properties[propertyName];
+    var propertyNormalized = umlNormalizeSchema(propertySchema, openApiDocument);
+    var cardinality = umlCardinality(propertyNormalized, required.indexOf(propertyName) !== -1, openApiDocument);
+    var childSchema = umlChildSchema(propertyNormalized, openApiDocument);
+    var nextPath = refPath + '.properties.' + propertyName;
+    var refKey = umlRefKey(propertySchema);
+
+    if (
+      childSchema &&
+      currentAncestors.indexOf(nextPath) === -1 &&
+      (!refKey || currentAncestorRefs.indexOf(refKey) === -1)
+    ) {
+      children.push({
+        name: propertyName,
+        cardinality: cardinality,
+        tooltip: umlFieldTooltip(propertyNormalized, openApiDocument),
+        node: umlBuildNode(
+          openApiDocument,
+          childSchema,
+          propertyName,
+          nextPath,
+          currentAncestors.concat(nextPath),
+          refKey ? currentAncestorRefs.concat(refKey) : currentAncestorRefs
+        ),
+      });
+      return;
+    }
+
+    fields.push({
+      name: propertyName,
+      cardinality: cardinality,
+      tooltip: umlFieldTooltip(propertyNormalized, openApiDocument),
+    });
+  });
+
+  return {
+    id: 'uml-node-' + refPath.replace(/[^a-z0-9]+/gi, '-'),
+    title: title,
+    tooltip: normalized.description || title,
+    fields: fields,
+    children: children,
+    width: UML_LAYOUT.boxMinWidth,
+    height: UML_LAYOUT.headerHeight + Math.max(1, fields.length) * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX,
+    x: 0,
+    y: 0,
+    subtreeHeight: 0,
+  };
+}
+
+function umlMeasureNode(node) {
+  var longest = node.title.length;
+  node.fields.forEach(function (field) {
+    longest = Math.max(longest, (field.name + ' ' + field.cardinality).length);
+  });
+  node.width = umlClamp(longest * 7.2 + UML_LAYOUT.boxPaddingX * 2, UML_LAYOUT.boxMinWidth, UML_LAYOUT.boxMaxWidth);
+  node.height = UML_LAYOUT.headerHeight + Math.max(1, node.fields.length) * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX;
+  node.children.forEach(function (child) {
+    umlMeasureNode(child.node);
+  });
+}
+
+function umlLayoutNode(node, depth, top) {
+  var childrenHeight = node.children.reduce(function (total, child, index) {
+    return total + child.node.subtreeHeight + (index === 0 ? 0 : UML_LAYOUT.boxGapY);
+  }, 0);
+  node.subtreeHeight = Math.max(node.height, childrenHeight);
+  node.x = UML_LAYOUT.margin + depth * (UML_LAYOUT.boxMaxWidth + UML_LAYOUT.columnGap);
+  node.y = top + (node.subtreeHeight - node.height) / 2;
+
+  var childTop = top + (node.subtreeHeight - childrenHeight) / 2;
+  node.children.forEach(function (child, index) {
+    if (index > 0) childTop += UML_LAYOUT.boxGapY;
+    umlLayoutNode(child.node, depth + 1, childTop);
+    childTop += child.node.subtreeHeight;
+  });
+}
+
+function umlCalculateSubtreeHeight(node) {
+  node.children.forEach(function (child) {
+    umlCalculateSubtreeHeight(child.node);
+  });
+
+  var childrenHeight = node.children.reduce(function (total, child, index) {
+    return total + child.node.subtreeHeight + (index === 0 ? 0 : UML_LAYOUT.boxGapY);
+  }, 0);
+  node.subtreeHeight = Math.max(node.height, childrenHeight);
+}
+
+function umlWalkNodes(node, callback) {
+  callback(node);
+  node.children.forEach(function (child) {
+    umlWalkNodes(child.node, callback);
+  });
+}
+
+function umlRenderNode(node) {
+  var parts = [];
+  var titleY = node.y + 22;
+  var rowStartY = node.y + UML_LAYOUT.headerHeight + 20;
+
+  parts.push(
+    '<g class="uml-node" id="' +
+      umlEscapeXml(node.id) +
+      '">' +
+      '<title>' +
+      umlEscapeXml(node.tooltip) +
+      '</title>' +
+      '<rect class="uml-box" x="' +
+      node.x +
+      '" y="' +
+      node.y +
+      '" width="' +
+      node.width +
+      '" height="' +
+      node.height +
+      '" rx="8"/>' +
+      '<rect class="uml-header" x="' +
+      node.x +
+      '" y="' +
+      node.y +
+      '" width="' +
+      node.width +
+      '" height="' +
+      UML_LAYOUT.headerHeight +
+      '" rx="8"/>' +
+      '<path class="uml-header-seam" d="M ' +
+      node.x +
+      ' ' +
+      (node.y + UML_LAYOUT.headerHeight) +
+      ' H ' +
+      (node.x + node.width) +
+      '"/>' +
+      '<text class="uml-title" x="' +
+      (node.x + node.width / 2) +
+      '" y="' +
+      titleY +
+      '" text-anchor="middle">' +
+      umlEscapeXml(umlTruncate(node.title, 54)) +
+      '</text>'
+  );
+
+  if (!node.fields.length) {
+    parts.push(
+      '<text class="uml-field uml-empty" x="' +
+        (node.x + UML_LAYOUT.boxPaddingX) +
+        '" y="' +
+        rowStartY +
+        '">No scalar fields</text>'
+    );
+  } else {
+    node.fields.forEach(function (field, index) {
+      parts.push(
+        '<text class="uml-field" x="' +
+          (node.x + UML_LAYOUT.boxPaddingX) +
+          '" y="' +
+          (rowStartY + index * UML_LAYOUT.rowHeight) +
+          '">' +
+          '<title>' +
+          umlEscapeXml(field.tooltip) +
+          '</title>' +
+          umlEscapeXml(umlTruncate(field.name + ' ' + field.cardinality, 64)) +
+          '</text>'
+      );
+    });
+  }
+
+  parts.push('</g>');
+  return parts.join('');
+}
+
+function umlRenderEdge(parent, child) {
+  var fromX = parent.x + parent.width;
+  var fromY = parent.y + parent.height / 2;
+  var toX = child.node.x;
+  var toY = child.node.y + child.node.height / 2;
+  var midX = fromX + (toX - fromX) / 2;
+  var labelX = midX;
+  var labelY = Math.min(fromY, toY) + Math.abs(toY - fromY) / 2 - 8;
+
+  return (
+    '<g class="uml-edge">' +
+    '<title>' +
+    umlEscapeXml(child.tooltip) +
+    '</title>' +
+    '<path d="M ' +
+    fromX +
+    ' ' +
+    fromY +
+    ' C ' +
+    (fromX + 42) +
+    ' ' +
+    fromY +
+    ', ' +
+    (toX - 42) +
+    ' ' +
+    toY +
+    ', ' +
+    toX +
+    ' ' +
+    toY +
+    '" marker-start="url(#umlDiamond)" marker-end="url(#umlArrow)"/>' +
+    '<rect class="uml-edge-label-bg" x="' +
+    (labelX - 78) +
+    '" y="' +
+    (labelY - 14) +
+    '" width="156" height="20" rx="10"/>' +
+    '<text class="uml-edge-label" x="' +
+    labelX +
+    '" y="' +
+    labelY +
+    '" text-anchor="middle">' +
+    umlEscapeXml(umlTruncate(child.name + ' ' + child.cardinality, 30)) +
+    '</text>' +
+    '</g>'
+  );
+}
+
+export function generateUmlSvg(openApiDocument, selector) {
+  var selected = resolveOpenApiSchemaSelector(openApiDocument, selector);
+  var rootNode = umlBuildNode(openApiDocument, selected.schema, selected.title, selected.title, [selected.title], []);
+
+  umlMeasureNode(rootNode);
+  umlCalculateSubtreeHeight(rootNode);
+  umlLayoutNode(rootNode, 0, UML_LAYOUT.margin);
+
+  var maxX = 0;
+  var maxY = 0;
+  umlWalkNodes(rootNode, function (node) {
+    maxX = Math.max(maxX, node.x + node.width);
+    maxY = Math.max(maxY, node.y + node.height);
+  });
+
+  var width = Math.ceil(maxX + UML_LAYOUT.margin);
+  var height = Math.ceil(maxY + UML_LAYOUT.margin);
+  var edges = [];
+  var nodes = [];
+
+  umlWalkNodes(rootNode, function (node) {
+    node.children.forEach(function (child) {
+      edges.push(umlRenderEdge(node, child));
+    });
+    nodes.push(umlRenderNode(node));
+  });
+
+  return (
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' +
+    width +
+    '" height="' +
+    height +
+    '" viewBox="0 0 ' +
+    width +
+    ' ' +
+    height +
+    '" role="img" aria-label="' +
+    umlEscapeXml(selected.title) +
+    ' UML diagram">' +
+    '<title>' +
+    umlEscapeXml(selected.title) +
+    ' UML diagram</title>' +
+    '<defs>' +
+    '<marker id="umlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>' +
+    '<marker id="umlDiamond" viewBox="0 0 16 10" refX="0" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M 0 5 L 8 10 L 16 5 L 8 0 z"/></marker>' +
+    '<style><![CDATA[' +
+    'svg{background:' +
+    UML_THEME.background +
+    ';font-family:Metropolis,Inter,Arial,sans-serif;color:' +
+    UML_THEME.text +
+    '} .uml-box{fill:' +
+    UML_THEME.childFill +
+    ';stroke:' +
+    UML_THEME.primaryBorder +
+    ';stroke-width:2;filter:drop-shadow(0 4px 10px rgba(0,0,0,.12))}.uml-header{fill:' +
+    UML_THEME.primary +
+    ';stroke:' +
+    UML_THEME.primaryBorder +
+    ';stroke-width:2}.uml-header-seam{stroke:' +
+    UML_THEME.primaryBorder +
+    ';stroke-width:2}.uml-title{fill:#fff;font-weight:700;font-size:' +
+    UML_LAYOUT.titleFontSize +
+    'px}.uml-field{fill:' +
+    UML_THEME.field +
+    ';font-size:' +
+    UML_LAYOUT.fontSize +
+    'px}.uml-empty{fill:#64748b;font-style:italic}.uml-edge path{fill:none;stroke:' +
+    UML_THEME.primaryBorder +
+    ';stroke-width:2}.uml-edge marker path{fill:' +
+    UML_THEME.primaryBorder +
+    '}.uml-edge-label-bg{fill:' +
+    UML_THEME.accentFill +
+    ';stroke:' +
+    UML_THEME.accent +
+    ';stroke-width:1}.uml-edge-label{fill:' +
+    UML_THEME.text +
+    ';font-size:12px;font-weight:600}' +
+    ']]></style>' +
+    '</defs>' +
+    edges.join('') +
+    nodes.join('') +
+    '</svg>'
+  );
+}
+
+function umlSvgToDataUrl(svg) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg || '');
+}
+
+function umlDownloadFilename(schema) {
+  var parsed = umlParseSelector(schema);
+  return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'uml-diagram';
+}
+
+async function umlFetchOpenApiDocument(api) {
+  var syncUrl = discoverReadMeOpenApiSyncUrl(api);
+  var jsonUrl = deriveOpenApiJsonUrl(syncUrl);
+  var response = await fetch(jsonUrl, { credentials: 'omit' });
+
+  if (!response.ok) {
+    throw new Error('Could not fetch OpenAPI JSON from ' + jsonUrl + ' (' + response.status + ').');
+  }
+
+  try {
+    return await response.json();
+  } catch (error) {
+    throw new Error('OpenAPI JSON from ' + jsonUrl + ' could not be parsed.');
+  }
+}
+
+export const UmlGenerator = function (props) {
+  var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : 0.35;
+  var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : 4;
+  var initialZoom = props && typeof props.initialZoom === 'number' ? props.initialZoom : 1;
+  var api = props && props.api;
+  var schema = props && props.schema;
+  var openLabel = (props && props.openLabel) || 'Generate UML diagram';
+  var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
+
+  var overlayRef = useRef(null);
+  var viewerRef = useRef(null);
+  var triggerRef = useRef(null);
+  var closeButtonRef = useRef(null);
+  var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
+
+  var svgState = useState('');
+  var svg = svgState[0];
+  var setSvg = svgState[1];
+
+  var openState = useState(false);
+  var isOpen = openState[0];
+  var setIsOpen = openState[1];
+
+  var loadingState = useState(false);
+  var isLoading = loadingState[0];
+  var setIsLoading = loadingState[1];
+
+  var errorState = useState('');
+  var error = errorState[0];
+  var setError = errorState[1];
+
+  var zoomState = useState(umlClamp(initialZoom, minZoom, maxZoom));
+  var zoom = zoomState[0];
+  var setZoom = zoomState[1];
+
+  var panState = useState({ x: 0, y: 0 });
+  var pan = panState[0];
+  var setPan = panState[1];
+
+  var draggingState = useState(false);
+  var isDragging = draggingState[0];
+  var setIsDragging = draggingState[1];
+
+  var closeModal = useCallback(function () {
+    setIsOpen(false);
+    setIsDragging(false);
+  }, []);
+
+  var resetView = useCallback(
+    function () {
+      setZoom(umlClamp(initialZoom, minZoom, maxZoom));
+      setPan({ x: 0, y: 0 });
+    },
+    [initialZoom, minZoom, maxZoom]
+  );
+
+  var generateAndOpen = useCallback(
+    async function () {
+      setIsOpen(true);
+      setError('');
+      resetView();
+
+      if (svg) return;
+
+      setIsLoading(true);
+      try {
+        if (!api) throw new Error('Add an api prop, for example api="PIS".');
+        if (!schema) throw new Error('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2".');
+
+        var openApiDocument = await umlFetchOpenApiDocument(api);
+        setSvg(generateUmlSvg(openApiDocument, schema));
+      } catch (generationError) {
+        setError((generationError && generationError.message) || 'Failed to generate the UML diagram.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [api, schema, svg, resetView]
+  );
+
+  var zoomIn = useCallback(
+    function () {
+      setZoom(function (value) {
+        return umlClamp(Number((value + 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var zoomOut = useCallback(
+    function () {
+      setZoom(function (value) {
+        return umlClamp(Number((value - 0.2).toFixed(2)), minZoom, maxZoom);
+      });
+    },
+    [minZoom, maxZoom]
+  );
+
+  var downloadSvg = useCallback(
+    function () {
+      if (!svg || typeof document === 'undefined') return;
+
+      var blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = umlDownloadFilename(schema) + '.svg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+    [svg, schema]
+  );
+
+  var onOverlayMouseDown = useCallback(
+    function (event) {
+      if (event.target === overlayRef.current) closeModal();
+    },
+    [closeModal]
+  );
+
+  var onWheel = useCallback(
+    function (event) {
+      event.preventDefault();
+
+      var viewer = viewerRef.current;
+      if (!viewer) return;
+
+      var rect = viewer.getBoundingClientRect();
+      var pointX = event.clientX - rect.left;
+      var pointY = event.clientY - rect.top;
+      var delta = event.deltaY > 0 ? -0.15 : 0.15;
+      var nextZoom = umlClamp(Number((zoom + delta).toFixed(2)), minZoom, maxZoom);
+      if (nextZoom === zoom) return;
+
+      var scaleRatio = nextZoom / zoom;
+      setZoom(nextZoom);
+      setPan({
+        x: pointX - (pointX - pan.x) * scaleRatio,
+        y: pointY - (pointY - pan.y) * scaleRatio,
+      });
+    },
+    [zoom, pan.x, pan.y, minZoom, maxZoom]
+  );
+
+  var onPointerDown = useCallback(
+    function (event) {
+      event.preventDefault();
+      setIsDragging(true);
+      dragStartRef.current = {
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        x: pan.x,
+        y: pan.y,
+      };
+    },
+    [pan.x, pan.y]
+  );
+
+  var onPointerMove = useCallback(
+    function (event) {
+      if (!isDragging) return;
+      setPan({
+        x: dragStartRef.current.x + event.clientX - dragStartRef.current.pointerX,
+        y: dragStartRef.current.y + event.clientY - dragStartRef.current.pointerY,
+      });
+    },
+    [isDragging]
+  );
+
+  var onPointerUp = useCallback(function () {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(
+    function () {
+      if (!isOpen) {
+        if (triggerRef.current && triggerRef.current.focus) triggerRef.current.focus();
+        return undefined;
+      }
+
+      var previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      if (closeButtonRef.current && closeButtonRef.current.focus) closeButtonRef.current.focus();
+
+      function onKeyDown(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeModal();
+          return;
+        }
+        if (event.key === '+' || event.key === '=') {
+          event.preventDefault();
+          zoomIn();
+          return;
+        }
+        if (event.key === '-') {
+          event.preventDefault();
+          zoomOut();
+          return;
+        }
+        if (event.key === '0') {
+          event.preventDefault();
+          resetView();
+        }
+      }
+
+      window.addEventListener('keydown', onKeyDown);
+
+      return function () {
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener('keydown', onKeyDown);
+      };
+    },
+    [isOpen, closeModal, zoomIn, zoomOut, resetView]
+  );
+
+  return (
+    <div className="my-4">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={generateAndOpen}
+        disabled={isLoading}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          border: '1px solid ' + UML_THEME.primaryBorder,
+          borderRadius: '8px',
+          background: UML_THEME.primary,
+          color: '#ffffff',
+          padding: '9px 14px',
+          fontSize: '13px',
+          fontWeight: 700,
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          opacity: isLoading ? 0.7 : 1,
+        }}
+      >
+        {isLoading ? 'Generating UML…' : openLabel}
+      </button>
+
+      {isOpen ? (
+        <div
+          ref={overlayRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title + ' viewer'}
+          onMouseDown={onOverlayMouseDown}
+          style={{
+            position: 'fixed',
+            zIndex: 2147483647,
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px',
+            background: 'rgba(0, 0, 0, 0.75)',
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+              maxWidth: '1280px',
+              height: '90vh',
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                borderBottom: '1px solid #e2e8f0',
+                padding: '10px 12px',
+              }}
+            >
+              <p style={{ margin: 0, color: UML_THEME.text, fontSize: '14px', fontWeight: 700 }}>{title}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <button type="button" onClick={zoomOut} disabled={!svg}>
+                  -
+                </button>
+                <button type="button" onClick={zoomIn} disabled={!svg}>
+                  +
+                </button>
+                <button type="button" onClick={resetView} disabled={!svg}>
+                  Reset
+                </button>
+                <button type="button" onClick={downloadSvg} disabled={!svg}>
+                  Download SVG
+                </button>
+                <button ref={closeButtonRef} type="button" onClick={closeModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={viewerRef}
+              onWheel={svg ? onWheel : undefined}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+              style={{
+                position: 'relative',
+                flex: 1,
+                overflow: 'hidden',
+                background: '#f8fafc',
+              }}
+            >
+              {isLoading ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: UML_THEME.primary,
+                    fontSize: '14px',
+                    fontWeight: 700,
+                  }}
+                >
+                  Generating UML diagram…
+                </div>
+              ) : null}
+
+              {error ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '18px',
+                    color: UML_THEME.error,
+                    fontSize: '14px',
+                    textAlign: 'center',
+                  }}
+                >
+                  {error}
+                </div>
+              ) : null}
+
+              {svg && !error ? (
+                <img
+                  src={umlSvgToDataUrl(svg)}
+                  alt={title}
+                  draggable={false}
+                  onPointerDown={onPointerDown}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    maxWidth: 'none',
+                    userSelect: 'none',
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    transform: 'translate(' + pan.x + 'px, ' + pan.y + 'px) scale(' + zoom + ')',
+                    transformOrigin: 'top left',
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
 
-<ExampleComponent>
-  Here's a very simple example component rather than an empty state. This should help you figure out what's happening quicker and see what's possible with custom components!
-</ExampleComponent>
+export default UmlGenerator;
