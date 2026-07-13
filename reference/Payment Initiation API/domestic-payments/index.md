@@ -105,6 +105,15 @@ This section describes the `OBDomestic2` class which is reused as the Initiation
 
 ##### UML Diagram
 
+<UmlGenerator
+  api="PIS"
+  schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2"
+/>
+
+<br />
+
+<br />
+
 ![](https://files.readme.io/b2e652d77b7c1dd60b77df0d7e22e6dc33435b496fc7781cf8d2f207fbd3c803-image.png)
 
 #### Notes
