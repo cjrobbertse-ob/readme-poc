@@ -2,9 +2,6 @@
 name: GenerateUML
 ---
 export const GenerateUML = function (props) {
-  return <UmlGeneratorRuntime {...props} />;
-};
-
 var UML_API_ALIASES = {
   AIS: 'account-info-openapi',
   AISP: 'account-info-openapi',
@@ -1185,6 +1182,9 @@ function UmlGeneratorRuntime(props) {
     </div>
   );
 }
+
+  return <UmlGeneratorRuntime {...props} />;
+};
 
 <GenerateUML
   api="PIS"
