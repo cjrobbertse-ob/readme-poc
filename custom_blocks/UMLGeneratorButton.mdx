@@ -71,7 +71,13 @@ var UML_LAYOUT = {
   headerHeight: 34,
   rowHeight: 21,
   boxGapY: 26,
-  columnGap: 116,
+  columnGap: 156,
+  edgeBusOffset: 44,
+  edgeLabelWidth: 48,
+  edgeLabelHeight: 18,
+  edgeLabelTextBaselineOffset: 14,
+  edgeLabelLineGap: 8,
+  edgeArrowClearance: 18,
   fontSize: 13,
   titleFontSize: 14,
 };
@@ -1113,10 +1119,18 @@ function umlRenderEdge(parent, child) {
   var fromY = parent.y + UML_LAYOUT.headerHeight / 2;
   var toX = child.node.x;
   var toY = child.node.y + UML_LAYOUT.headerHeight / 2;
-  var busX = fromX + Math.min(44, Math.max(24, (toX - fromX) / 2));
   var labelText = child.cardinality.replace(/^\[|\]$/g, '');
-  var labelX = busX + Math.max(34, (toX - busX) / 2);
-  var labelY = toY - 8;
+  var busX = fromX + Math.min(UML_LAYOUT.edgeBusOffset, Math.max(24, (toX - fromX) / 2));
+  var labelWidth = Math.max(UML_LAYOUT.edgeLabelWidth, labelText.length * 7 + 18);
+  var labelHeight = UML_LAYOUT.edgeLabelHeight;
+  var labelMinX = busX + UML_LAYOUT.edgeLabelLineGap + labelWidth / 2;
+  var labelMaxX = toX - UML_LAYOUT.edgeArrowClearance - UML_LAYOUT.edgeLabelLineGap - labelWidth / 2;
+  var labelX =
+    labelMaxX >= labelMinX
+      ? labelMinX + (labelMaxX - labelMinX) / 2
+      : busX + Math.max(labelWidth / 2 + UML_LAYOUT.edgeLabelLineGap, (toX - busX) / 2);
+  var labelTop = toY - UML_LAYOUT.edgeLabelLineGap - labelHeight;
+  var labelY = labelTop + UML_LAYOUT.edgeLabelTextBaselineOffset;
 
   return (
     '<g class="uml-edge">' +
@@ -1135,10 +1149,14 @@ function umlRenderEdge(parent, child) {
     toX +
     '" marker-start="url(#umlDiamond)" marker-end="url(#umlArrow)"/>' +
     '<rect class="uml-edge-label-bg" x="' +
-    (labelX - 24) +
+    (labelX - labelWidth / 2) +
     '" y="' +
-    (labelY - 14) +
-    '" width="48" height="18" rx="9"/>' +
+    labelTop +
+    '" width="' +
+    labelWidth +
+    '" height="' +
+    labelHeight +
+    '" rx="9"/>' +
     '<text class="uml-edge-label" x="' +
     labelX +
     '" y="' +
