@@ -125,33 +125,84 @@ function umlFindApiDefinitions(value, results, depth) {
   });
 }
 
+function umlAvailableDocuments() {
+  if (typeof document === 'undefined') return [];
+
+  var docs = [document];
+  if (typeof window !== 'undefined') {
+    try {
+      if (window.parent && window.parent.document) docs.push(window.parent.document);
+    } catch (error) {
+      // Parent document is cross-origin on some ReadMe surfaces.
+    }
+
+    try {
+      if (window.top && window.top.document) docs.push(window.top.document);
+    } catch (error) {
+      // Top document is cross-origin on some ReadMe surfaces.
+    }
+  }
+
+  return docs.filter(function (doc, index) {
+    return doc && docs.indexOf(doc) === index;
+  });
+}
+
+function umlReadScriptJson(script) {
+  if (!script) return '';
+
+  var candidates = [
+    script.textContent,
+    script.innerHTML,
+    script.getAttribute && script.getAttribute('data-json'),
+    script.getAttribute && script.getAttribute('data-props'),
+  ];
+
+  for (var index = 0; index < candidates.length; index += 1) {
+    if (candidates[index]) return candidates[index];
+  }
+
+  return '';
+}
+
+function umlParseReadMeState(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch (firstError) {
+    try {
+      return JSON.parse(umlDecodeHtmlEntities(raw));
+    } catch (secondError) {
+      throw new Error('ReadMe page state could not be parsed as JSON.');
+    }
+  }
+}
+
 export function discoverReadMeOpenApiSyncUrl(api) {
   if (typeof document === 'undefined') {
     throw new Error('ReadMe page state is unavailable outside the browser.');
   }
 
   var wantedFilename = umlResolveApiFilename(api);
-  var script = document.querySelector('script#ssr-props, script[id="ssr-props"]');
+  var documents = umlAvailableDocuments();
+  var script = null;
+
+  documents.some(function (doc) {
+    script = doc.querySelector('script#ssr-props, script[id="ssr-props"]');
+    return !!script;
+  });
+
   if (!script) {
-    throw new Error('Could not find ReadMe ssr-props page state. The OpenAPI source URL cannot be inferred.');
+    throw new Error(
+      'Could not find ReadMe ssr-props page state in this frame or its parent. The OpenAPI source URL cannot be inferred.'
+    );
   }
 
-  var raw = script.textContent || script.getAttribute('data-json') || '';
+  var raw = umlReadScriptJson(script);
   if (!raw) {
     throw new Error('ReadMe ssr-props page state was empty.');
   }
 
-  var parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (firstError) {
-    try {
-      parsed = JSON.parse(umlDecodeHtmlEntities(raw));
-    } catch (secondError) {
-      throw new Error('ReadMe ssr-props page state could not be parsed as JSON.');
-    }
-  }
-
+  var parsed = umlParseReadMeState(raw);
   var definitions = [];
   umlFindApiDefinitions(parsed, definitions, 0);
 
