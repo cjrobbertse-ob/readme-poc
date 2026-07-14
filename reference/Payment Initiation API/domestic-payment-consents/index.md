@@ -13,6 +13,6 @@ hidden: false
   schema="OBRisk1"
 />
 
-<GenerateUML />
+<GenerateUML api="PIS" schema="OBWriteDomesticConsent4" />
 
 <br />
