@@ -1428,18 +1428,25 @@ function UMLGeneratorButtonRuntime(props) {
   );
 
   var downloadSvg = useCallback(
-    function () {
+    function (event) {
+      if (event && event.preventDefault) event.preventDefault();
+      if (event && event.stopPropagation) event.stopPropagation();
       if (!svg || typeof document === 'undefined') return;
 
       var blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       var url = URL.createObjectURL(blob);
-      var link = document.createElement('a');
+      var frame = document.createElement('iframe');
+      frame.style.display = 'none';
+      document.body.appendChild(frame);
+
+      var frameDocument = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      var link = frameDocument.createElement('a');
       link.href = url;
       link.download = umlDownloadFilename(schema) + '.svg';
-      document.body.appendChild(link);
+      frameDocument.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
       window.setTimeout(function () {
+        if (frame.parentNode) frame.parentNode.removeChild(frame);
         URL.revokeObjectURL(url);
       }, 60000);
     },
