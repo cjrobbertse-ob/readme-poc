@@ -3,6 +3,10 @@ name: GenerateUML
 ---
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+export const UmlGenerator = function (props) {
+  return <UmlGeneratorRuntime {...props} />;
+};
+
 var UML_API_ALIASES = {
   AIS: 'account-info-openapi',
   AISP: 'account-info-openapi',
@@ -804,7 +808,7 @@ async function umlFetchOpenApiDocument(api) {
   }
 }
 
-export const UmlGenerator = function (props) {
+function UmlGeneratorRuntime(props) {
   var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : 0.35;
   var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : 4;
   var initialZoom = props && typeof props.initialZoom === 'number' ? props.initialZoom : 1;
@@ -1182,7 +1186,7 @@ export const UmlGenerator = function (props) {
       ) : null}
     </div>
   );
-};
+}
 
 <UmlGenerator
   api="PIS"
