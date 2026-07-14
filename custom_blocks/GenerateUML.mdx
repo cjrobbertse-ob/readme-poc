@@ -16,49 +16,18 @@ var UML_API_ALIASES = {
   EventNotifications: 'event-notifications-openapi',
 };
 
-var UML_THEMES = {
-  light: {
-    mode: 'light',
-    primary: '#8382c3',
-    primaryBorder: '#51509e',
-    text: '#1a1a1a',
-    mutedText: '#64748b',
-    field: '#51509e',
-    background: '#ffffff',
-    surface: '#ffffff',
-    viewerBackground: '#f8fafc',
-    boxFill: '#f0eff8',
-    childFill: '#f7f7fb',
-    accent: '#e71d73',
-    accentFill: '#fde8f1',
-    note: '#e3a941',
-    error: '#be123c',
-    shadow: 'drop-shadow(0 4px 10px rgba(0,0,0,.12))',
-    overlay: 'rgba(0, 0, 0, 0.75)',
-    surfaceBorder: '#e2e8f0',
-    surfaceShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
-  },
-  dark: {
-    mode: 'dark',
-    primary: '#51509e',
-    primaryBorder: '#8382c3',
-    text: '#f8fafc',
-    mutedText: '#cbd5e1',
-    field: '#e0f2fe',
-    background: '#080f2f',
-    surface: '#10172f',
-    viewerBackground: '#070b1f',
-    boxFill: '#191642',
-    childFill: '#111936',
-    accent: '#0cc0df',
-    accentFill: '#073a4a',
-    note: '#e3a941',
-    error: '#fb7185',
-    shadow: 'drop-shadow(0 4px 10px rgba(0,0,0,.32))',
-    overlay: 'rgba(0, 0, 0, 0.82)',
-    surfaceBorder: '#26315f',
-    surfaceShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
-  },
+var UML_THEME = {
+  primary: '#51509e',
+  primaryBorder: '#00167a',
+  text: '#1a1a1a',
+  field: '#00167a',
+  background: '#ffffff',
+  boxFill: '#f0eff8',
+  childFill: '#f7f7fb',
+  accent: '#0097b2',
+  accentFill: '#cceef4',
+  note: '#e3a941',
+  error: '#be123c',
 };
 
 var UML_LAYOUT = {
@@ -178,68 +147,6 @@ function umlAvailableDocuments() {
   return docs.filter(function (doc, index) {
     return doc && docs.indexOf(doc) === index;
   });
-}
-
-function umlNormalizeThemeMode(value) {
-  var mode = String(value || '').toLowerCase();
-  if (mode === 'light' || mode === 'dark') return mode;
-  return '';
-}
-
-function umlDocumentThemeMode(doc) {
-  if (!doc) return '';
-
-  var elements = [doc.documentElement, doc.body].filter(Boolean);
-  for (var index = 0; index < elements.length; index += 1) {
-    var element = elements[index];
-    var explicitTheme = umlNormalizeThemeMode(
-      element.getAttribute('data-theme') ||
-        element.getAttribute('data-color-mode') ||
-        element.getAttribute('data-rm-color-mode') ||
-        element.getAttribute('color-scheme')
-    );
-
-    if (explicitTheme) return explicitTheme;
-
-    var className = ' ' + (element.className && element.className.baseVal ? element.className.baseVal : element.className || '') + ' ';
-    if (/\s(dark|dark-mode|theme-dark|rm-dark|rm-dark-theme)\s/i.test(className)) return 'dark';
-    if (/\s(light|light-mode|theme-light|rm-light|rm-light-theme)\s/i.test(className)) return 'light';
-  }
-
-  try {
-    var style = doc.defaultView && doc.defaultView.getComputedStyle && doc.defaultView.getComputedStyle(doc.documentElement);
-    var colorScheme = style && umlNormalizeThemeMode(style.getPropertyValue('color-scheme'));
-    if (colorScheme) return colorScheme;
-  } catch (error) {
-    // Some parent documents can be cross-origin.
-  }
-
-  return '';
-}
-
-function umlDetectThemeMode(requestedTheme) {
-  var explicitTheme = umlNormalizeThemeMode(requestedTheme);
-  if (explicitTheme) return explicitTheme;
-
-  var documents = umlAvailableDocuments();
-  for (var index = 0; index < documents.length; index += 1) {
-    var documentTheme = umlDocumentThemeMode(documents[index]);
-    if (documentTheme) return documentTheme;
-  }
-
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    try {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-    } catch (error) {
-      // Ignore unavailable media query APIs.
-    }
-  }
-
-  return 'light';
-}
-
-function umlThemeForMode(mode) {
-  return UML_THEMES[umlNormalizeThemeMode(mode) || 'light'] || UML_THEMES.light;
 }
 
 function umlReadScriptJson(script) {
@@ -1077,8 +984,7 @@ function umlRenderEdge(parent, child) {
   );
 }
 
-function generateUmlSvg(openApiDocument, selector, theme) {
-  var umlTheme = theme || UML_THEMES.light;
+function generateUmlSvg(openApiDocument, selector) {
   var selected = resolveOpenApiSchemaSelector(openApiDocument, selector);
   var rootNode = umlBuildNode(openApiDocument, selected.schema, selected.title, selected.title, [selected.title], []);
 
@@ -1128,39 +1034,35 @@ function generateUmlSvg(openApiDocument, selector, theme) {
     '<marker id="umlDiamond" viewBox="0 0 16 10" refX="0" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M 0 5 L 8 10 L 16 5 L 8 0 z"/></marker>' +
     '<style><![CDATA[' +
     'svg{background:' +
-    umlTheme.background +
+    UML_THEME.background +
     ';font-family:Metropolis,Inter,Arial,sans-serif;color:' +
-    umlTheme.text +
+    UML_THEME.text +
     '} .uml-box{fill:' +
-    umlTheme.childFill +
+    UML_THEME.childFill +
     ';stroke:' +
-    umlTheme.primaryBorder +
-    ';stroke-width:2;filter:' +
-    umlTheme.shadow +
-    '}.uml-header{fill:' +
-    umlTheme.primary +
+    UML_THEME.primaryBorder +
+    ';stroke-width:2;filter:drop-shadow(0 4px 10px rgba(0,0,0,.12))}.uml-header{fill:' +
+    UML_THEME.primary +
     ';stroke:' +
-    umlTheme.primaryBorder +
+    UML_THEME.primaryBorder +
     ';stroke-width:2}.uml-header-seam{stroke:' +
-    umlTheme.primaryBorder +
+    UML_THEME.primaryBorder +
     ';stroke-width:2}.uml-title{fill:#fff;font-weight:700;font-size:' +
     UML_LAYOUT.titleFontSize +
     'px}.uml-field{fill:' +
-    umlTheme.field +
+    UML_THEME.field +
     ';font-size:' +
     UML_LAYOUT.fontSize +
-    'px}.uml-empty{fill:' +
-    umlTheme.mutedText +
-    ';font-style:italic}.uml-edge path{fill:none;stroke:' +
-    umlTheme.primaryBorder +
+    'px}.uml-empty{fill:#64748b;font-style:italic}.uml-edge path{fill:none;stroke:' +
+    UML_THEME.primaryBorder +
     ';stroke-width:2}.uml-edge marker path{fill:' +
-    umlTheme.primaryBorder +
+    UML_THEME.primaryBorder +
     '}.uml-edge-label-bg{fill:' +
-    umlTheme.accentFill +
+    UML_THEME.accentFill +
     ';stroke:' +
-    umlTheme.accent +
+    UML_THEME.accent +
     ';stroke-width:1}.uml-edge-label{fill:' +
-    umlTheme.text +
+    UML_THEME.text +
     ';font-size:12px;font-weight:600}' +
     ']]></style>' +
     '</defs>' +
@@ -1247,7 +1149,6 @@ function UmlGeneratorRuntime(props) {
   var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
   var openLabel = (props && props.openLabel) || 'Generate UML diagram';
   var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
-  var requestedTheme = props && (props.theme || props.colorMode);
 
   var overlayRef = useRef(null);
   var viewerRef = useRef(null);
@@ -1258,10 +1159,6 @@ function UmlGeneratorRuntime(props) {
   var svgState = useState('');
   var svg = svgState[0];
   var setSvg = svgState[1];
-
-  var svgThemeState = useState('');
-  var svgThemeMode = svgThemeState[0];
-  var setSvgThemeMode = svgThemeState[1];
 
   var openState = useState(false);
   var isOpen = openState[0];
@@ -1287,57 +1184,6 @@ function UmlGeneratorRuntime(props) {
   var isDragging = draggingState[0];
   var setIsDragging = draggingState[1];
 
-  var themeModeState = useState(umlDetectThemeMode(requestedTheme));
-  var themeMode = themeModeState[0];
-  var setThemeMode = themeModeState[1];
-  var activeTheme = umlThemeForMode(themeMode);
-
-  useEffect(
-    function () {
-      function updateThemeMode() {
-        setThemeMode(umlDetectThemeMode(requestedTheme));
-      }
-
-      updateThemeMode();
-
-      var mediaQuery = null;
-      if (!umlNormalizeThemeMode(requestedTheme) && typeof window !== 'undefined' && window.matchMedia) {
-        try {
-          mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-          if (mediaQuery.addEventListener) mediaQuery.addEventListener('change', updateThemeMode);
-          else if (mediaQuery.addListener) mediaQuery.addListener(updateThemeMode);
-        } catch (error) {
-          mediaQuery = null;
-        }
-      }
-
-      var observers = [];
-      if (typeof MutationObserver !== 'undefined') {
-        umlAvailableDocuments().forEach(function (doc) {
-          [doc.documentElement, doc.body].filter(Boolean).forEach(function (element) {
-            var observer = new MutationObserver(updateThemeMode);
-            observer.observe(element, {
-              attributes: true,
-              attributeFilter: ['class', 'data-theme', 'data-color-mode', 'data-rm-color-mode', 'color-scheme'],
-            });
-            observers.push(observer);
-          });
-        });
-      }
-
-      return function () {
-        observers.forEach(function (observer) {
-          observer.disconnect();
-        });
-        if (mediaQuery) {
-          if (mediaQuery.removeEventListener) mediaQuery.removeEventListener('change', updateThemeMode);
-          else if (mediaQuery.removeListener) mediaQuery.removeListener(updateThemeMode);
-        }
-      };
-    },
-    [requestedTheme]
-  );
-
   var closeModal = useCallback(function () {
     setIsOpen(false);
     setIsDragging(false);
@@ -1357,7 +1203,7 @@ function UmlGeneratorRuntime(props) {
       setError('');
       resetView();
 
-      if (svg && svgThemeMode === activeTheme.mode) return;
+      if (svg) return;
 
       setIsLoading(true);
       try {
@@ -1367,15 +1213,14 @@ function UmlGeneratorRuntime(props) {
         var openApiDocument = await umlFetchOpenApiDocument(api, {
           openApiUrl: openApiUrl,
         });
-        setSvg(generateUmlSvg(openApiDocument, schema, activeTheme));
-        setSvgThemeMode(activeTheme.mode);
+        setSvg(generateUmlSvg(openApiDocument, schema));
       } catch (generationError) {
         setError((generationError && generationError.message) || 'Failed to generate the UML diagram.');
       } finally {
         setIsLoading(false);
       }
     },
-    [api, schema, svg, svgThemeMode, activeTheme, resetView, openApiUrl]
+    [api, schema, svg, resetView, openApiUrl]
   );
 
   var zoomIn = useCallback(
@@ -1517,17 +1362,6 @@ function UmlGeneratorRuntime(props) {
     [isOpen, closeModal, zoomIn, zoomOut, resetView]
   );
 
-  var controlButtonStyle = {
-    border: '1px solid ' + activeTheme.surfaceBorder,
-    borderRadius: '6px',
-    background: activeTheme.mode === 'dark' ? '#171f3f' : '#ffffff',
-    color: activeTheme.text,
-    padding: '6px 9px',
-    fontSize: '12px',
-    fontWeight: 700,
-    cursor: 'pointer',
-  };
-
   return (
     <div className="my-4">
       <button
@@ -1539,9 +1373,9 @@ function UmlGeneratorRuntime(props) {
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          border: '1px solid ' + activeTheme.primaryBorder,
+          border: '1px solid ' + UML_THEME.primaryBorder,
           borderRadius: '8px',
-          background: activeTheme.mode === 'dark' ? activeTheme.accent : activeTheme.primary,
+          background: UML_THEME.primary,
           color: '#ffffff',
           padding: '9px 14px',
           fontSize: '13px',
@@ -1568,7 +1402,7 @@ function UmlGeneratorRuntime(props) {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '12px',
-            background: activeTheme.overlay,
+            background: 'rgba(0, 0, 0, 0.75)',
           }}
         >
           <div
@@ -1579,9 +1413,9 @@ function UmlGeneratorRuntime(props) {
               width: '100%',
               maxWidth: '1280px',
               height: '90vh',
-              background: activeTheme.surface,
+              background: '#ffffff',
               borderRadius: '12px',
-              boxShadow: activeTheme.surfaceShadow,
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
               overflow: 'hidden',
             }}
           >
@@ -1591,25 +1425,25 @@ function UmlGeneratorRuntime(props) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '8px',
-                borderBottom: '1px solid ' + activeTheme.surfaceBorder,
+                borderBottom: '1px solid #e2e8f0',
                 padding: '10px 12px',
               }}
             >
-              <p style={{ margin: 0, color: activeTheme.text, fontSize: '14px', fontWeight: 700 }}>{title}</p>
+              <p style={{ margin: 0, color: UML_THEME.text, fontSize: '14px', fontWeight: 700 }}>{title}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                <button type="button" onClick={zoomOut} disabled={!svg} style={controlButtonStyle}>
+                <button type="button" onClick={zoomOut} disabled={!svg}>
                   -
                 </button>
-                <button type="button" onClick={zoomIn} disabled={!svg} style={controlButtonStyle}>
+                <button type="button" onClick={zoomIn} disabled={!svg}>
                   +
                 </button>
-                <button type="button" onClick={resetView} disabled={!svg} style={controlButtonStyle}>
+                <button type="button" onClick={resetView} disabled={!svg}>
                   Reset
                 </button>
-                <button type="button" onClick={downloadSvg} disabled={!svg} style={controlButtonStyle}>
+                <button type="button" onClick={downloadSvg} disabled={!svg}>
                   Download SVG
                 </button>
-                <button ref={closeButtonRef} type="button" onClick={closeModal} style={controlButtonStyle}>
+                <button ref={closeButtonRef} type="button" onClick={closeModal}>
                   Close
                 </button>
               </div>
@@ -1625,7 +1459,7 @@ function UmlGeneratorRuntime(props) {
                 position: 'relative',
                 flex: 1,
                 overflow: 'hidden',
-                background: activeTheme.viewerBackground,
+                background: '#f8fafc',
               }}
             >
               {isLoading ? (
@@ -1636,7 +1470,7 @@ function UmlGeneratorRuntime(props) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: activeTheme.mode === 'dark' ? activeTheme.accent : activeTheme.primary,
+                    color: UML_THEME.primary,
                     fontSize: '14px',
                     fontWeight: 700,
                   }}
@@ -1654,7 +1488,7 @@ function UmlGeneratorRuntime(props) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '18px',
-                    color: activeTheme.error,
+                    color: UML_THEME.error,
                     fontSize: '14px',
                     textAlign: 'center',
                   }}
