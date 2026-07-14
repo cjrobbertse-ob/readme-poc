@@ -1,8 +1,6 @@
 ---
 name: GenerateUML
 ---
-const { useCallback, useEffect, useRef, useState } = React;
-
 export const GenerateUML = function (props) {
   return <UmlGeneratorRuntime {...props} />;
 };
@@ -817,46 +815,46 @@ function UmlGeneratorRuntime(props) {
   var openLabel = (props && props.openLabel) || 'Generate UML diagram';
   var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
 
-  var overlayRef = useRef(null);
-  var viewerRef = useRef(null);
-  var triggerRef = useRef(null);
-  var closeButtonRef = useRef(null);
-  var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
+  var overlayRef = React.useRef(null);
+  var viewerRef = React.useRef(null);
+  var triggerRef = React.useRef(null);
+  var closeButtonRef = React.useRef(null);
+  var dragStartRef = React.useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
 
-  var svgState = useState('');
+  var svgState = React.useState('');
   var svg = svgState[0];
   var setSvg = svgState[1];
 
-  var openState = useState(false);
+  var openState = React.useState(false);
   var isOpen = openState[0];
   var setIsOpen = openState[1];
 
-  var loadingState = useState(false);
+  var loadingState = React.useState(false);
   var isLoading = loadingState[0];
   var setIsLoading = loadingState[1];
 
-  var errorState = useState('');
+  var errorState = React.useState('');
   var error = errorState[0];
   var setError = errorState[1];
 
-  var zoomState = useState(umlClamp(initialZoom, minZoom, maxZoom));
+  var zoomState = React.useState(umlClamp(initialZoom, minZoom, maxZoom));
   var zoom = zoomState[0];
   var setZoom = zoomState[1];
 
-  var panState = useState({ x: 0, y: 0 });
+  var panState = React.useState({ x: 0, y: 0 });
   var pan = panState[0];
   var setPan = panState[1];
 
-  var draggingState = useState(false);
+  var draggingState = React.useState(false);
   var isDragging = draggingState[0];
   var setIsDragging = draggingState[1];
 
-  var closeModal = useCallback(function () {
+  var closeModal = React.useCallback(function () {
     setIsOpen(false);
     setIsDragging(false);
   }, []);
 
-  var resetView = useCallback(
+  var resetView = React.useCallback(
     function () {
       setZoom(umlClamp(initialZoom, minZoom, maxZoom));
       setPan({ x: 0, y: 0 });
@@ -864,7 +862,7 @@ function UmlGeneratorRuntime(props) {
     [initialZoom, minZoom, maxZoom]
   );
 
-  var generateAndOpen = useCallback(
+  var generateAndOpen = React.useCallback(
     async function () {
       setIsOpen(true);
       setError('');
@@ -888,7 +886,7 @@ function UmlGeneratorRuntime(props) {
     [api, schema, svg, resetView]
   );
 
-  var zoomIn = useCallback(
+  var zoomIn = React.useCallback(
     function () {
       setZoom(function (value) {
         return umlClamp(Number((value + 0.2).toFixed(2)), minZoom, maxZoom);
@@ -897,7 +895,7 @@ function UmlGeneratorRuntime(props) {
     [minZoom, maxZoom]
   );
 
-  var zoomOut = useCallback(
+  var zoomOut = React.useCallback(
     function () {
       setZoom(function (value) {
         return umlClamp(Number((value - 0.2).toFixed(2)), minZoom, maxZoom);
@@ -906,7 +904,7 @@ function UmlGeneratorRuntime(props) {
     [minZoom, maxZoom]
   );
 
-  var downloadSvg = useCallback(
+  var downloadSvg = React.useCallback(
     function () {
       if (!svg || typeof document === 'undefined') return;
 
@@ -923,14 +921,14 @@ function UmlGeneratorRuntime(props) {
     [svg, schema]
   );
 
-  var onOverlayMouseDown = useCallback(
+  var onOverlayMouseDown = React.useCallback(
     function (event) {
       if (event.target === overlayRef.current) closeModal();
     },
     [closeModal]
   );
 
-  var onWheel = useCallback(
+  var onWheel = React.useCallback(
     function (event) {
       event.preventDefault();
 
@@ -954,7 +952,7 @@ function UmlGeneratorRuntime(props) {
     [zoom, pan.x, pan.y, minZoom, maxZoom]
   );
 
-  var onPointerDown = useCallback(
+  var onPointerDown = React.useCallback(
     function (event) {
       event.preventDefault();
       setIsDragging(true);
@@ -968,7 +966,7 @@ function UmlGeneratorRuntime(props) {
     [pan.x, pan.y]
   );
 
-  var onPointerMove = useCallback(
+  var onPointerMove = React.useCallback(
     function (event) {
       if (!isDragging) return;
       setPan({
@@ -979,11 +977,11 @@ function UmlGeneratorRuntime(props) {
     [isDragging]
   );
 
-  var onPointerUp = useCallback(function () {
+  var onPointerUp = React.useCallback(function () {
     setIsDragging(false);
   }, []);
 
-  useEffect(
+  React.useEffect(
     function () {
       if (!isOpen) {
         if (triggerRef.current && triggerRef.current.focus) triggerRef.current.focus();
