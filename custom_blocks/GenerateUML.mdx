@@ -1,9 +1,9 @@
 ---
 name: GenerateUML
 ---
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+const { useCallback, useEffect, useRef, useState } = React;
 
-export const UmlGenerator = function (props) {
+export const GenerateUML = function (props) {
   return <UmlGeneratorRuntime {...props} />;
 };
 
@@ -1188,7 +1188,7 @@ function UmlGeneratorRuntime(props) {
   );
 }
 
-<UmlGenerator
+<GenerateUML
   api="PIS"
   schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2"
 />
