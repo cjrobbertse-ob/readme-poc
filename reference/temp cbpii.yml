@@ -26,10 +26,12 @@ paths:
         funds-confirmation-consent resource, by sending a copy of the consent to
         the ASPSP.
 
+
         On success (HTTP 201), the response contains a `ConsentId`, the current
         `Status` of the consent (initially `AWAU` - AwaitingAuthorisation), and
         a `StatusUpdateDateTime`. The `DebtorAccount` submitted in the request
         is echoed back in the response.
+
 
         **Side effects:** Creating this consent does not immediately authorise
         fund confirmations. The PSU must separately authenticate and authorise
