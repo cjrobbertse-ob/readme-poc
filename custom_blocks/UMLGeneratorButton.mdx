@@ -3,7 +3,7 @@ name: UMLGeneratorButton
 ---
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export const GenerateUML = function (props) {
+export const UMLGeneratorButton = function (props) {
 var UML_API_ALIASES = {
   AIS: 'account-info-openapi',
   AISP: 'account-info-openapi',
@@ -1313,7 +1313,7 @@ async function umlFetchOpenApiDocument(api, options) {
   throw new Error('Could not fetch OpenAPI JSON. Tried: ' + fetchErrors.join('; '));
 }
 
-function UmlGeneratorRuntime(props) {
+function UMLGeneratorButtonRuntime(props) {
   var minZoom = props && typeof props.minZoom === 'number' ? props.minZoom : 0.35;
   var maxZoom = props && typeof props.maxZoom === 'number' ? props.maxZoom : 4;
   var initialZoom = props && typeof props.initialZoom === 'number' ? props.initialZoom : 1;
@@ -1641,7 +1641,7 @@ function UmlGeneratorRuntime(props) {
               fontWeight: 500,
             }}
           >
-            {'<GenerateUML api="PIS" schema="OBWriteDomesticConsent4" />'}
+            {'<UMLGeneratorButton api="PIS" schema="OBWriteDomesticConsent4" />'}
           </pre>
           <p style={{ margin: '8px 0 0' }}>
             See the{' '}
@@ -1818,7 +1818,7 @@ function UmlGeneratorRuntime(props) {
   );
 }
 
-  return <UmlGeneratorRuntime {...props} />;
+  return <UMLGeneratorButtonRuntime {...props} />;
 };
 
-<GenerateUML />
+<UMLGeneratorButton />
