@@ -16,18 +16,43 @@ var UML_API_ALIASES = {
   EventNotifications: 'event-notifications-openapi',
 };
 
-var UML_THEME = {
-  primary: '#51509e',
-  primaryBorder: '#00167a',
-  text: '#1a1a1a',
-  field: '#00167a',
-  background: '#ffffff',
-  boxFill: '#f0eff8',
-  childFill: '#f7f7fb',
-  accent: '#0097b2',
-  accentFill: '#cceef4',
-  note: '#e3a941',
-  error: '#be123c',
+var UML_THEMES = {
+  light: {
+    primary: '#51509e',
+    primaryBorder: '#00167a',
+    primaryText: '#ffffff',
+    text: '#1a1a1a',
+    field: '#00167a',
+    background: '#ffffff',
+    boxFill: '#f0eff8',
+    childFill: '#f7f7fb',
+    accent: '#0097b2',
+    accentFill: '#cceef4',
+    muted: '#64748b',
+    modalBackground: '#ffffff',
+    modalBorder: '#e2e8f0',
+    viewerBackground: '#f8fafc',
+    shadow: 'rgba(0,0,0,.12)',
+    error: '#be123c',
+  },
+  dark: {
+    primary: '#51509e',
+    primaryBorder: '#b9b7ff',
+    primaryText: '#ffffff',
+    text: '#f8fafc',
+    field: '#d7d6ff',
+    background: '#0b1020',
+    boxFill: '#211f46',
+    childFill: '#15172b',
+    accent: '#00a8c6',
+    accentFill: '#083747',
+    muted: '#94a3b8',
+    modalBackground: '#0f172a',
+    modalBorder: '#334155',
+    viewerBackground: '#020617',
+    shadow: 'rgba(0,0,0,.45)',
+    error: '#fb7185',
+  },
 };
 
 var UML_LAYOUT = {
@@ -76,6 +101,56 @@ function umlUnique(values) {
     seen[value] = true;
     return true;
   });
+}
+
+function umlMergeTheme(baseTheme, overrideTheme) {
+  return Object.assign({}, baseTheme || {}, overrideTheme || {});
+}
+
+function umlThemeFromMode(mode, props) {
+  var selectedMode = mode === 'dark' ? 'dark' : 'light';
+  var baseTheme = UML_THEMES[selectedMode];
+  var modeOverride = selectedMode === 'dark' ? props && props.darkTheme : props && props.lightTheme;
+  return umlMergeTheme(umlMergeTheme(baseTheme, modeOverride), props && props.themeOverrides);
+}
+
+function umlThemeTextFromDocument(doc) {
+  if (!doc) return '';
+
+  var elements = [doc.documentElement, doc.body].filter(Boolean);
+  var values = [];
+  elements.forEach(function (element) {
+    ['data-theme', 'data-color-mode', 'data-color-scheme', 'data-readme-color-scheme', 'color-scheme'].forEach(function (name) {
+      var attr = element.getAttribute && element.getAttribute(name);
+      if (attr) values.push(attr);
+    });
+    if (element.className) values.push(String(element.className));
+    if (element.style && element.style.colorScheme) values.push(element.style.colorScheme);
+  });
+
+  return values.join(' ').toLowerCase();
+}
+
+function umlDetectReadMeThemeMode(props) {
+  var requested = props && props.theme ? String(props.theme).toLowerCase() : 'auto';
+  if (requested === 'light' || requested === 'dark') return requested;
+
+  var documents = umlAvailableDocuments();
+  for (var index = 0; index < documents.length; index += 1) {
+    var text = umlThemeTextFromDocument(documents[index]);
+    if (/(^|[\s_-])dark($|[\s_-])/.test(text) || text.indexOf('night') !== -1) return 'dark';
+    if (/(^|[\s_-])light($|[\s_-])/.test(text)) return 'light';
+  }
+
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    try {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    } catch (error) {
+      // Fall back to the light brand theme when media queries are unavailable.
+    }
+  }
+
+  return 'light';
 }
 
 function umlObjectKeys(object) {
@@ -984,7 +1059,8 @@ function umlRenderEdge(parent, child) {
   );
 }
 
-function generateUmlSvg(openApiDocument, selector) {
+function generateUmlSvg(openApiDocument, selector, theme) {
+  var umlTheme = theme || UML_THEMES.light;
   var selected = resolveOpenApiSchemaSelector(openApiDocument, selector);
   var rootNode = umlBuildNode(openApiDocument, selected.schema, selected.title, selected.title, [selected.title], []);
 
@@ -1034,35 +1110,41 @@ function generateUmlSvg(openApiDocument, selector) {
     '<marker id="umlDiamond" viewBox="0 0 16 10" refX="0" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M 0 5 L 8 10 L 16 5 L 8 0 z"/></marker>' +
     '<style><![CDATA[' +
     'svg{background:' +
-    UML_THEME.background +
+    umlTheme.background +
     ';font-family:Metropolis,Inter,Arial,sans-serif;color:' +
-    UML_THEME.text +
+    umlTheme.text +
     '} .uml-box{fill:' +
-    UML_THEME.childFill +
+    umlTheme.childFill +
     ';stroke:' +
-    UML_THEME.primaryBorder +
-    ';stroke-width:2;filter:drop-shadow(0 4px 10px rgba(0,0,0,.12))}.uml-header{fill:' +
-    UML_THEME.primary +
+    umlTheme.primaryBorder +
+    ';stroke-width:2;filter:drop-shadow(0 4px 10px ' +
+    umlTheme.shadow +
+    ')}.uml-header{fill:' +
+    umlTheme.primary +
     ';stroke:' +
-    UML_THEME.primaryBorder +
+    umlTheme.primaryBorder +
     ';stroke-width:2}.uml-header-seam{stroke:' +
-    UML_THEME.primaryBorder +
-    ';stroke-width:2}.uml-title{fill:#fff;font-weight:700;font-size:' +
+    umlTheme.primaryBorder +
+    ';stroke-width:2}.uml-title{fill:' +
+    umlTheme.primaryText +
+    ';font-weight:700;font-size:' +
     UML_LAYOUT.titleFontSize +
     'px}.uml-field{fill:' +
-    UML_THEME.field +
+    umlTheme.field +
     ';font-size:' +
     UML_LAYOUT.fontSize +
-    'px}.uml-empty{fill:#64748b;font-style:italic}.uml-edge path{fill:none;stroke:' +
-    UML_THEME.primaryBorder +
+    'px}.uml-empty{fill:' +
+    umlTheme.muted +
+    ';font-style:italic}.uml-edge path{fill:none;stroke:' +
+    umlTheme.primaryBorder +
     ';stroke-width:2}.uml-edge marker path{fill:' +
-    UML_THEME.primaryBorder +
+    umlTheme.primaryBorder +
     '}.uml-edge-label-bg{fill:' +
-    UML_THEME.accentFill +
+    umlTheme.accentFill +
     ';stroke:' +
-    UML_THEME.accent +
+    umlTheme.accent +
     ';stroke-width:1}.uml-edge-label{fill:' +
-    UML_THEME.text +
+    umlTheme.text +
     ';font-size:12px;font-weight:600}' +
     ']]></style>' +
     '</defs>' +
@@ -1149,6 +1231,10 @@ function UmlGeneratorRuntime(props) {
   var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
   var openLabel = (props && props.openLabel) || 'Generate UML diagram';
   var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
+  var themeModeState = useState(umlDetectReadMeThemeMode(props));
+  var themeMode = themeModeState[0];
+  var setThemeMode = themeModeState[1];
+  var umlTheme = umlThemeFromMode(themeMode, props);
 
   var overlayRef = useRef(null);
   var viewerRef = useRef(null);
@@ -1159,6 +1245,10 @@ function UmlGeneratorRuntime(props) {
   var svgState = useState('');
   var svg = svgState[0];
   var setSvg = svgState[1];
+
+  var svgThemeModeState = useState('');
+  var svgThemeMode = svgThemeModeState[0];
+  var setSvgThemeMode = svgThemeModeState[1];
 
   var openState = useState(false);
   var isOpen = openState[0];
@@ -1203,7 +1293,7 @@ function UmlGeneratorRuntime(props) {
       setError('');
       resetView();
 
-      if (svg) return;
+      if (svg && svgThemeMode === themeMode) return;
 
       setIsLoading(true);
       try {
@@ -1213,14 +1303,15 @@ function UmlGeneratorRuntime(props) {
         var openApiDocument = await umlFetchOpenApiDocument(api, {
           openApiUrl: openApiUrl,
         });
-        setSvg(generateUmlSvg(openApiDocument, schema));
+        setSvg(generateUmlSvg(openApiDocument, schema, umlTheme));
+        setSvgThemeMode(themeMode);
       } catch (generationError) {
         setError((generationError && generationError.message) || 'Failed to generate the UML diagram.');
       } finally {
         setIsLoading(false);
       }
     },
-    [api, schema, svg, resetView, openApiUrl]
+    [api, schema, svg, svgThemeMode, themeMode, umlTheme, resetView, openApiUrl]
   );
 
   var zoomIn = useCallback(
@@ -1362,6 +1453,62 @@ function UmlGeneratorRuntime(props) {
     [isOpen, closeModal, zoomIn, zoomOut, resetView]
   );
 
+  useEffect(
+    function () {
+      function syncThemeMode() {
+        var nextThemeMode = umlDetectReadMeThemeMode(props);
+        setThemeMode(function (currentThemeMode) {
+          return currentThemeMode === nextThemeMode ? currentThemeMode : nextThemeMode;
+        });
+      }
+
+      syncThemeMode();
+
+      var observers = [];
+      if (typeof MutationObserver !== 'undefined') {
+        umlAvailableDocuments().forEach(function (doc) {
+          [doc.documentElement, doc.body].filter(Boolean).forEach(function (element) {
+            var observer = new MutationObserver(syncThemeMode);
+            observer.observe(element, {
+              attributes: true,
+              attributeFilter: [
+                'class',
+                'style',
+                'data-theme',
+                'data-color-mode',
+                'data-color-scheme',
+                'data-readme-color-scheme',
+                'color-scheme',
+              ],
+            });
+            observers.push(observer);
+          });
+        });
+      }
+
+      var mediaQuery = null;
+      try {
+        mediaQuery =
+          typeof window !== 'undefined' && window.matchMedia
+            ? window.matchMedia('(prefers-color-scheme: dark)')
+            : null;
+        if (mediaQuery && mediaQuery.addEventListener) mediaQuery.addEventListener('change', syncThemeMode);
+        else if (mediaQuery && mediaQuery.addListener) mediaQuery.addListener(syncThemeMode);
+      } catch (error) {
+        mediaQuery = null;
+      }
+
+      return function () {
+        observers.forEach(function (observer) {
+          observer.disconnect();
+        });
+        if (mediaQuery && mediaQuery.removeEventListener) mediaQuery.removeEventListener('change', syncThemeMode);
+        else if (mediaQuery && mediaQuery.removeListener) mediaQuery.removeListener(syncThemeMode);
+      };
+    },
+    [props && props.theme]
+  );
+
   return (
     <div className="my-4">
       <button
@@ -1373,10 +1520,10 @@ function UmlGeneratorRuntime(props) {
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          border: '1px solid ' + UML_THEME.primaryBorder,
+          border: '1px solid ' + umlTheme.primaryBorder,
           borderRadius: '8px',
-          background: UML_THEME.primary,
-          color: '#ffffff',
+          background: umlTheme.primary,
+          color: umlTheme.primaryText,
           padding: '9px 14px',
           fontSize: '13px',
           fontWeight: 700,
@@ -1413,7 +1560,8 @@ function UmlGeneratorRuntime(props) {
               width: '100%',
               maxWidth: '1280px',
               height: '90vh',
-              background: '#ffffff',
+              background: umlTheme.modalBackground,
+              color: umlTheme.text,
               borderRadius: '12px',
               boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
               overflow: 'hidden',
@@ -1425,11 +1573,11 @@ function UmlGeneratorRuntime(props) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '8px',
-                borderBottom: '1px solid #e2e8f0',
+                borderBottom: '1px solid ' + umlTheme.modalBorder,
                 padding: '10px 12px',
               }}
             >
-              <p style={{ margin: 0, color: UML_THEME.text, fontSize: '14px', fontWeight: 700 }}>{title}</p>
+              <p style={{ margin: 0, color: umlTheme.text, fontSize: '14px', fontWeight: 700 }}>{title}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <button type="button" onClick={zoomOut} disabled={!svg}>
                   -
@@ -1459,7 +1607,7 @@ function UmlGeneratorRuntime(props) {
                 position: 'relative',
                 flex: 1,
                 overflow: 'hidden',
-                background: '#f8fafc',
+                background: umlTheme.viewerBackground,
               }}
             >
               {isLoading ? (
@@ -1470,7 +1618,7 @@ function UmlGeneratorRuntime(props) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: UML_THEME.primary,
+                    color: umlTheme.primaryBorder,
                     fontSize: '14px',
                     fontWeight: 700,
                   }}
@@ -1488,7 +1636,7 @@ function UmlGeneratorRuntime(props) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '18px',
-                    color: UML_THEME.error,
+                    color: umlTheme.error,
                     fontSize: '14px',
                     textAlign: 'center',
                   }}
