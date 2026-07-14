@@ -27,16 +27,17 @@ paths:
         the ASPSP.
 
 
-        On success (HTTP 201), the response contains a `ConsentId`, the current
-        `Status` of the consent (initially `AWAU` - AwaitingAuthorisation), and
-        a `StatusUpdateDateTime`. The `DebtorAccount` submitted in the request
-        is echoed back in the response.
+        On success (HTTP 201), the response contains a `ConsentId`,
+        `CreationDateTime`, the current `Status` of the consent,
+        `StatusUpdateDateTime`, and the `DebtorAccount` associated with the
+        consent. The consent may initially be returned with status `AWAU`
+        (AwaitingAuthorisation).
 
 
-        **Side effects:** Creating this consent does not immediately authorise
-        fund confirmations. The PSU must separately authenticate and authorise
-        the consent with the ASPSP (using the PSU OAuth2 `authorizationCode`
-        flow) before a CBPII can call `POST /funds-confirmations` against it.
+        **Note:** Creating this consent does not immediately authorise funds
+        confirmations. The PSU may need to authenticate and authorise the
+        consent with the ASPSP before the consent can be used for funds
+        confirmation requests.
       operationId: CreateFundsConfirmationConsents
       parameters:
         - $ref: '#/components/parameters/x-fapi-auth-date'
@@ -82,6 +83,17 @@ paths:
       description: >-
         Enables a CBPII to retrieve the status of a Funds Confirmation Consent
         resource.
+
+
+        On success (HTTP 200), the response contains the consent `ConsentId`,
+        `CreationDateTime`, current `Status`, `StatusUpdateDateTime`, optional
+        `StatusReason`, optional `ExpirationDateTime`, and the `DebtorAccount`
+        associated with the consent.
+
+
+        **Note:** This operation is read-only. It does not change the consent
+        status, authorise the consent, revoke the consent, or perform a funds
+        availability check.
       operationId: GetFundsConfirmationConsentsConsentId
       parameters:
         - $ref: '#/components/parameters/ConsentId'
@@ -118,6 +130,15 @@ paths:
       description: >-
         Enables a CBPII to inform the PSU’s ASPSP that the PSU has revoked their
         consent to provide funds confirmations.
+
+
+        On success (HTTP 204), the response has no body. The ASPSP confirms that
+        the funds-confirmation-consent resource identified by `ConsentId` has
+        been deleted or revoked for future funds confirmation use.
+
+
+        **Note:** After this operation succeeds, the consent can no longer be
+        used to create funds confirmation requests.
       operationId: DeleteFundsConfirmationConsentsConsentId
       parameters:
         - $ref: '#/components/parameters/ConsentId'
@@ -155,6 +176,21 @@ paths:
       description: >-
         Enables a CBPII to check whether a PSU has sufficient available funds
         for a CBPII transaction.
+
+
+        The request identifies the authorised funds-confirmation consent using
+        `ConsentId`, provides a CBPII-assigned `Reference`, and specifies the
+        `InstructedAmount` to check.
+
+
+        On success (HTTP 201), the response contains a `FundsConfirmationId`,
+        the related `ConsentId`, `CreationDateTime`, the boolean
+        `FundsAvailable` result, the `Reference`, and the `InstructedAmount`
+        checked.
+
+
+        **Note:** This operation checks availability only; it does not reserve
+        funds, move funds, or initiate a payment.
       operationId: CreateFundsConfirmations
       parameters:
         - $ref: '#/components/parameters/x-fapi-auth-date'
