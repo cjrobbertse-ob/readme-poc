@@ -856,7 +856,7 @@ function umlConfigurationWarnings(api, schema) {
   var warnings = [];
   if (!String(api || '').trim()) warnings.push('Add an api prop, for example api="PIS".');
   if (!String(schema || '').trim()) {
-    warnings.push('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2".');
+    warnings.push('Add a schema prop, for example schema="OBWriteDomesticConsent4".');
   }
   return warnings;
 }
@@ -1628,6 +1628,33 @@ function UmlGeneratorRuntime(props) {
               return <li key={warning}>{warning}</li>;
             })}
           </ul>
+          <pre
+            style={{
+              margin: '10px 0 0',
+              border: '1px solid ' + umlTheme.warningBorder,
+              borderRadius: '6px',
+              background: umlTheme.modalBackground,
+              color: umlTheme.text,
+              padding: '8px',
+              overflowX: 'auto',
+              fontSize: '12px',
+              fontWeight: 500,
+            }}
+          >
+            {'<GenerateUML api="PIS" schema="OBWriteDomesticConsent4" />'}
+          </pre>
+          <p style={{ margin: '8px 0 0' }}>
+            See the{' '}
+            <a
+              href="https://github.com/OpenBankingUK/ReadMe-Custom-Components/tree/main/uml-generator#schema-diagram-generator-for-readme"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: 'inherit', textDecoration: 'underline' }}
+            >
+              UML generator README
+            </a>{' '}
+            for supported APIs and schema selector examples.
+          </p>
         </div>
       ) : (
         <button
