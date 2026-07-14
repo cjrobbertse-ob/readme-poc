@@ -178,34 +178,231 @@ function umlParseReadMeState(raw) {
   }
 }
 
-function discoverReadMeOpenApiSyncUrl(api) {
+function umlFindDefinitionsInScript(script) {
+  var raw = umlReadScriptJson(script);
+  if (!raw || raw.indexOf('apiDefinitions') === -1 || raw.indexOf('sync_url') === -1) return [];
+
+  var definitions = [];
+  umlFindApiDefinitions(umlParseReadMeState(raw), definitions, 0);
+  return definitions;
+}
+
+function umlEscapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function umlNormalizeHtmlForOpenApiSearch(value) {
+  var text = umlDecodeHtmlEntities(String(value || ''));
+  text = text.replace(/\\u002F/gi, '/').replace(/\\\//g, '/');
+
+  try {
+    text = decodeURIComponent(text);
+  } catch (error) {
+    // Ignore malformed percent-encoding in unrelated page content.
+  }
+
+  return text;
+}
+
+function umlAbsoluteUrl(url, baseUrl) {
+  try {
+    return new URL(url, baseUrl || window.location.origin).href;
+  } catch (error) {
+    return url;
+  }
+}
+
+function umlFindDefinitionsInDocument(doc) {
+  if (!doc || !doc.querySelectorAll) return [];
+
+  var scripts = Array.prototype.slice.call(
+    doc.querySelectorAll('script#ssr-props, script[id="ssr-props"], script[type="application/json"], script')
+  );
+  var definitions = [];
+
+  scripts.some(function (script) {
+    try {
+      definitions = umlFindDefinitionsInScript(script);
+      return definitions.length > 0;
+    } catch (error) {
+      return false;
+    }
+  });
+
+  return definitions;
+}
+
+function umlParseHtmlDocument(html) {
+  if (!html || typeof DOMParser === 'undefined') return [];
+  return new DOMParser().parseFromString(html, 'text/html');
+}
+
+function umlFindDefinitionsInHtml(html) {
+  var parsedDocument = umlParseHtmlDocument(html);
+  return parsedDocument ? umlFindDefinitionsInDocument(parsedDocument) : [];
+}
+
+function umlFindOpenApiUrlInHtml(html, api, baseUrl) {
+  var wantedFilename = umlResolveApiFilename(api);
+  var escapedFilename = umlEscapeRegExp(wantedFilename);
+  var text = umlNormalizeHtmlForOpenApiSearch(html);
+  var patterns = [
+    new RegExp('(https?:\\/\\/[^"\\\'<>\\s)]+\\/' + escapedFilename + '\\.(?:json|ya?ml)(?:[?#][^"\\\'<>\\s)]*)?)', 'i'),
+    new RegExp('(\\/(?:branches|versions)\\/[^"\\\'<>\\s)]+\\/apis\\/' + escapedFilename + '\\.(?:json|ya?ml)(?:[?#][^"\\\'<>\\s)]*)?)', 'i'),
+    new RegExp(
+      '(?:sync_url|url|href|uri)["\\\']?\\s*:\\s*["\\\']([^"\\\']*\\/' +
+        escapedFilename +
+        '\\.(?:json|ya?ml)(?:[?#][^"\\\']*)?)["\\\']',
+      'i'
+    ),
+  ];
+
+  for (var index = 0; index < patterns.length; index += 1) {
+    var match = text.match(patterns[index]);
+    if (match) return umlAbsoluteUrl(match[1] || match[0], baseUrl);
+  }
+
+  return '';
+}
+
+function umlFindReadMeVersionInHtml(html) {
+  var text = umlNormalizeHtmlForOpenApiSearch(html);
+  var patterns = [
+    /"urlManagerOpts"[\s\S]{0,800}?"version"\s*:\s*"([^"]+)"/i,
+    /"version"\s*:\s*"([^"]+)"/i,
+    /readme-version["'][^>]*content=["']([^"']+)["']/i,
+    /\/(?:branches|versions)\/([^/"'<>?#\s)]+)\/apis\//i,
+    /\/(?:branches|versions)\/([^/"'<>?#\s)]+)/i,
+  ];
+
+  for (var index = 0; index < patterns.length; index += 1) {
+    var match = text.match(patterns[index]);
+    if (match && match[1]) return match[1];
+  }
+
+  return '';
+}
+
+function umlCandidatePageUrls() {
+  if (typeof window === 'undefined') return [];
+
+  var urls = [];
+
+  function addUrl(value) {
+    if (typeof value === 'string' && value && urls.indexOf(value) === -1 && !/^about:|^blob:|^data:/i.test(value)) {
+      urls.push(value);
+    }
+  }
+
+  try {
+    addUrl(window.location && window.location.href);
+  } catch (error) {
+    // Location may be unavailable in some embedded previews.
+  }
+
+  try {
+    addUrl(document && document.referrer);
+  } catch (error) {
+    // Referrer may be unavailable.
+  }
+
+  try {
+    var canonical = document && document.querySelector && document.querySelector('link[rel="canonical"]');
+    addUrl(canonical && canonical.href);
+  } catch (error) {
+    // Canonical link may be unavailable.
+  }
+
+  try {
+    addUrl(window.parent && window.parent.location && window.parent.location.href);
+  } catch (error) {
+    // Parent location can be cross-origin in the ReadMe editor.
+  }
+
+  try {
+    addUrl(window.top && window.top.location && window.top.location.href);
+  } catch (error) {
+    // Top location can be cross-origin in the ReadMe editor.
+  }
+
+  return umlUnique(
+    urls.map(function (url) {
+      return String(url).split('#')[0];
+    })
+  );
+}
+
+async function umlFetchPageHtml(url) {
+  var response = await fetch(url, { credentials: 'include' });
+  if (!response.ok) return '';
+  return await response.text();
+}
+
+async function umlFetchPageDefinitions() {
+  var urls = umlCandidatePageUrls();
+
+  for (var index = 0; index < urls.length; index += 1) {
+    try {
+      var response = await fetch(urls[index], { credentials: 'include' });
+      if (!response.ok) continue;
+
+      var definitions = umlFindDefinitionsInHtml(await response.text());
+      if (definitions.length) return definitions;
+    } catch (error) {
+      // Try the next candidate URL; the final error explains that discovery failed.
+    }
+  }
+
+  return [];
+}
+
+async function discoverReadMeOpenApiUrlFromPageHtml(api) {
   if (typeof document === 'undefined') {
     throw new Error('ReadMe page state is unavailable outside the browser.');
   }
 
+  var documents = umlAvailableDocuments();
+
+  for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
+    try {
+      var doc = documents[docIndex];
+      var html = doc.documentElement && doc.documentElement.outerHTML;
+      var found = umlFindOpenApiUrlInHtml(html, api, doc.location && doc.location.href);
+      if (found) return found;
+    } catch (error) {
+      // Ignore inaccessible parent/top documents.
+    }
+  }
+
+  var urls = umlCandidatePageUrls();
+  for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
+    try {
+      var fetchedHtml = await umlFetchPageHtml(urls[urlIndex]);
+      var fetchedFound = umlFindOpenApiUrlInHtml(fetchedHtml, api, urls[urlIndex]);
+      if (fetchedFound) return fetchedFound;
+    } catch (error) {
+      // Ignore fetch failures and try the next candidate.
+    }
+  }
+
+  throw new Error('Could not infer the OpenAPI URL from the current page HTML for api="' + api + '".');
+}
+
+async function discoverReadMeOpenApiSyncUrl(api) {
   var wantedFilename = umlResolveApiFilename(api);
   var documents = umlAvailableDocuments();
-  var script = null;
+  var definitions = [];
 
   documents.some(function (doc) {
-    script = doc.querySelector('script#ssr-props, script[id="ssr-props"]');
-    return !!script;
+    definitions = umlFindDefinitionsInDocument(doc);
+    return definitions.length > 0;
   });
 
-  if (!script) {
-    throw new Error(
-      'Could not find ReadMe ssr-props page state in this frame or its parent. The OpenAPI source URL cannot be inferred.'
-    );
-  }
+  if (!definitions.length) definitions = await umlFetchPageDefinitions();
 
-  var raw = umlReadScriptJson(script);
-  if (!raw) {
-    throw new Error('ReadMe ssr-props page state was empty.');
+  if (!definitions.length) {
+    throw new Error('Could not find ReadMe page state in this frame, its parent, or the current page HTML.');
   }
-
-  var parsed = umlParseReadMeState(raw);
-  var definitions = [];
-  umlFindApiDefinitions(parsed, definitions, 0);
 
   var match = definitions.find(function (definition) {
     var url = definition && definition.source && definition.source.sync_url;
@@ -230,6 +427,89 @@ function deriveOpenApiJsonUrl(syncUrl) {
     throw new Error('The ReadMe OpenAPI sync_url did not point to a YAML or JSON file: ' + url);
   }
   return url.replace(/\.ya?ml(?=([?#].*)?$)/i, '.json');
+}
+
+function umlExplicitOpenApiUrl(options) {
+  if (!options) return '';
+  return options.openApiUrl || options.sourceUrl || options.url || '';
+}
+
+function umlGithubRefsForReadMeVersion(version) {
+  var raw = String(version || '').trim();
+  if (!raw) return [];
+
+  var cleaned = raw.replace(/^refs\/(?:tags|heads)\//i, '').replace(/^\/+|\/+$/g, '');
+  var withoutV = cleaned.replace(/^v/i, '');
+  var refs = [];
+
+  function addRef(ref) {
+    if (ref && refs.indexOf(ref) === -1) refs.push(ref);
+  }
+
+  addRef('refs/tags/' + cleaned);
+  addRef('refs/tags/v' + withoutV);
+
+  var updateMatch = withoutV.match(/^(\d+\.\d+)(?:\.0)?[-_]?update[-_]?(\d+)$/i);
+  if (updateMatch) addRef('refs/tags/v' + updateMatch[1] + '-Update-' + updateMatch[2]);
+
+  var leadingVersion = withoutV.match(/^(\d+\.\d+(?:\.\d+)?)/);
+  if (leadingVersion) addRef('refs/tags/v' + leadingVersion[1]);
+
+  addRef('refs/heads/' + cleaned);
+  addRef('refs/heads/' + withoutV);
+  addRef('refs/heads/v' + withoutV);
+
+  return refs;
+}
+
+function umlFindReadMeVersionInUrl(url) {
+  var match = String(url || '').match(/\/(?:branches|versions)\/([^/?#]+)/i);
+  return match && match[1] ? decodeURIComponent(match[1]) : '';
+}
+
+async function umlInferReadMeVersion() {
+  var documents = umlAvailableDocuments();
+
+  for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
+    try {
+      var doc = documents[docIndex];
+      var foundInDocument = umlFindReadMeVersionInHtml(doc.documentElement && doc.documentElement.outerHTML);
+      if (foundInDocument) return foundInDocument;
+      var foundInLocation = umlFindReadMeVersionInUrl(doc.location && doc.location.href);
+      if (foundInLocation) return foundInLocation;
+    } catch (error) {
+      // Ignore inaccessible parent/top documents.
+    }
+  }
+
+  var urls = umlCandidatePageUrls();
+  for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
+    var foundInUrl = umlFindReadMeVersionInUrl(urls[urlIndex]);
+    if (foundInUrl) return foundInUrl;
+
+    try {
+      var html = await umlFetchPageHtml(urls[urlIndex]);
+      var foundInHtml = umlFindReadMeVersionInHtml(html);
+      if (foundInHtml) return foundInHtml;
+    } catch (error) {
+      // Ignore fetch failures and try the next candidate.
+    }
+  }
+
+  return '';
+}
+
+function umlBuildOpenBankingRawJsonUrls(api, readMeVersion) {
+  var filename = umlResolveApiFilename(api);
+  return umlGithubRefsForReadMeVersion(readMeVersion).map(function (githubRef) {
+    return (
+      'https://raw.githubusercontent.com/OpenBankingUK/read-write-api-specs/' +
+      githubRef.replace(/^\/+|\/+$/g, '') +
+      '/dist/openapi/' +
+      filename +
+      '.json'
+    );
+  });
 }
 
 function umlResolvePointer(documentRoot, pointer) {
@@ -789,20 +1069,63 @@ function umlDownloadFilename(schema) {
   return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'uml-diagram';
 }
 
-async function umlFetchOpenApiDocument(api) {
-  var syncUrl = discoverReadMeOpenApiSyncUrl(api);
-  var jsonUrl = deriveOpenApiJsonUrl(syncUrl);
-  var response = await fetch(jsonUrl, { credentials: 'omit' });
+async function umlFetchOpenApiDocument(api, options) {
+  var explicitUrl = umlExplicitOpenApiUrl(options);
+  var candidateUrls = [];
+  var discoveryErrors = [];
 
-  if (!response.ok) {
-    throw new Error('Could not fetch OpenAPI JSON from ' + jsonUrl + ' (' + response.status + ').');
+  if (explicitUrl) {
+    candidateUrls.push(deriveOpenApiJsonUrl(explicitUrl));
+  } else {
+    try {
+      candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiUrlFromPageHtml(api)));
+    } catch (htmlDiscoveryError) {
+      discoveryErrors.push(htmlDiscoveryError && htmlDiscoveryError.message);
+      try {
+        candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiSyncUrl(api)));
+      } catch (stateDiscoveryError) {
+        discoveryErrors.push(stateDiscoveryError && stateDiscoveryError.message);
+      }
+    }
+
+    try {
+      var readMeVersion = await umlInferReadMeVersion();
+      candidateUrls = candidateUrls.concat(umlBuildOpenBankingRawJsonUrls(api, readMeVersion));
+    } catch (versionError) {
+      discoveryErrors.push(versionError && versionError.message);
+    }
   }
 
-  try {
-    return await response.json();
-  } catch (error) {
-    throw new Error('OpenAPI JSON from ' + jsonUrl + ' could not be parsed.');
+  candidateUrls = umlUnique(candidateUrls.filter(Boolean));
+  if (!candidateUrls.length) {
+    throw new Error(
+      'Could not infer an OpenAPI URL for api="' +
+        api +
+        '". ' +
+        discoveryErrors.filter(Boolean).join(' ')
+    );
   }
+
+  var fetchErrors = [];
+
+  for (var index = 0; index < candidateUrls.length; index += 1) {
+    var jsonUrl = candidateUrls[index];
+    try {
+      var isRawGithubUrl = /^https:\/\/raw\.githubusercontent\.com\//i.test(jsonUrl);
+      var response = await fetch(jsonUrl, { credentials: isRawGithubUrl ? 'omit' : 'same-origin' });
+
+      if (!response.ok) {
+        fetchErrors.push(jsonUrl + ' (' + response.status + ')');
+        continue;
+      }
+
+      return await response.json();
+    } catch (error) {
+      fetchErrors.push(jsonUrl + ' (' + ((error && error.message) || 'fetch failed') + ')');
+    }
+  }
+
+  throw new Error('Could not fetch OpenAPI JSON. Tried: ' + fetchErrors.join('; '));
 }
 
 function UmlGeneratorRuntime(props) {
@@ -811,6 +1134,7 @@ function UmlGeneratorRuntime(props) {
   var initialZoom = props && typeof props.initialZoom === 'number' ? props.initialZoom : 1;
   var api = props && props.api;
   var schema = props && props.schema;
+  var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
   var openLabel = (props && props.openLabel) || 'Generate UML diagram';
   var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
 
@@ -874,7 +1198,9 @@ function UmlGeneratorRuntime(props) {
         if (!api) throw new Error('Add an api prop, for example api="PIS".');
         if (!schema) throw new Error('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2".');
 
-        var openApiDocument = await umlFetchOpenApiDocument(api);
+        var openApiDocument = await umlFetchOpenApiDocument(api, {
+          openApiUrl: openApiUrl,
+        });
         setSvg(generateUmlSvg(openApiDocument, schema));
       } catch (generationError) {
         setError((generationError && generationError.message) || 'Failed to generate the UML diagram.');
@@ -882,7 +1208,7 @@ function UmlGeneratorRuntime(props) {
         setIsLoading(false);
       }
     },
-    [api, schema, svg, resetView]
+    [api, schema, svg, resetView, openApiUrl]
   );
 
   var zoomIn = useCallback(
