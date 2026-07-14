@@ -8,4 +8,9 @@ hidden: false
   schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2"
 />
 
+<GenerateUML
+  api="PIS"
+  schema="OBRisk1"
+/>
+
 <br />
