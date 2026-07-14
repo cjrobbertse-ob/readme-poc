@@ -818,20 +818,35 @@ function umlMeasureNode(node) {
   });
 }
 
-function umlLayoutNode(node, depth, top) {
-  var childrenHeight = node.children.reduce(function (total, child, index) {
-    return total + child.node.subtreeHeight + (index === 0 ? 0 : UML_LAYOUT.boxGapY);
-  }, 0);
-  node.subtreeHeight = Math.max(node.height, childrenHeight);
-  node.x = UML_LAYOUT.margin + depth * (UML_LAYOUT.boxMaxWidth + UML_LAYOUT.columnGap);
-  node.y = top + (node.subtreeHeight - node.height) / 2;
+function umlLayoutNode(node, columnLefts, depth, top) {
+  node.x = columnLefts[depth];
+  node.y = top;
 
-  var childTop = top + (node.subtreeHeight - childrenHeight) / 2;
+  var childTop = top;
   node.children.forEach(function (child, index) {
     if (index > 0) childTop += UML_LAYOUT.boxGapY;
-    umlLayoutNode(child.node, depth + 1, childTop);
+    umlLayoutNode(child.node, columnLefts, depth + 1, childTop);
     childTop += child.node.subtreeHeight;
   });
+}
+
+function umlCollectColumnWidths(node, depth, widths) {
+  widths[depth] = Math.max(widths[depth] || 0, node.width);
+  node.children.forEach(function (child) {
+    umlCollectColumnWidths(child.node, depth + 1, widths);
+  });
+}
+
+function umlColumnLefts(widths) {
+  var lefts = [];
+  var nextLeft = UML_LAYOUT.margin;
+
+  widths.forEach(function (width, index) {
+    lefts[index] = nextLeft;
+    nextLeft += width + UML_LAYOUT.columnGap;
+  });
+
+  return lefts;
 }
 
 function umlCalculateSubtreeHeight(node) {
@@ -929,12 +944,13 @@ function umlRenderNode(node) {
 
 function umlRenderEdge(parent, child) {
   var fromX = parent.x + parent.width;
-  var fromY = parent.y + parent.height / 2;
+  var fromY = parent.y + UML_LAYOUT.headerHeight / 2;
   var toX = child.node.x;
-  var toY = child.node.y + child.node.height / 2;
-  var midX = fromX + (toX - fromX) / 2;
-  var labelX = midX;
-  var labelY = Math.min(fromY, toY) + Math.abs(toY - fromY) / 2 - 8;
+  var toY = child.node.y + UML_LAYOUT.headerHeight / 2;
+  var busX = fromX + Math.min(44, Math.max(24, (toX - fromX) / 2));
+  var labelText = child.cardinality.replace(/^\[|\]$/g, '');
+  var labelX = busX + Math.max(34, (toX - busX) / 2);
+  var labelY = toY - 8;
 
   return (
     '<g class="uml-edge">' +
@@ -945,30 +961,24 @@ function umlRenderEdge(parent, child) {
     fromX +
     ' ' +
     fromY +
-    ' C ' +
-    (fromX + 42) +
-    ' ' +
-    fromY +
-    ', ' +
-    (toX - 42) +
-    ' ' +
+    ' H ' +
+    busX +
+    ' V ' +
     toY +
-    ', ' +
+    ' H ' +
     toX +
-    ' ' +
-    toY +
     '" marker-start="url(#umlDiamond)" marker-end="url(#umlArrow)"/>' +
     '<rect class="uml-edge-label-bg" x="' +
-    (labelX - 78) +
+    (labelX - 24) +
     '" y="' +
     (labelY - 14) +
-    '" width="156" height="20" rx="10"/>' +
+    '" width="48" height="18" rx="9"/>' +
     '<text class="uml-edge-label" x="' +
     labelX +
     '" y="' +
     labelY +
     '" text-anchor="middle">' +
-    umlEscapeXml(umlTruncate(child.name + ' ' + child.cardinality, 30)) +
+    umlEscapeXml(labelText) +
     '</text>' +
     '</g>'
   );
@@ -980,7 +990,9 @@ function generateUmlSvg(openApiDocument, selector) {
 
   umlMeasureNode(rootNode);
   umlCalculateSubtreeHeight(rootNode);
-  umlLayoutNode(rootNode, 0, UML_LAYOUT.margin);
+  var columnWidths = [];
+  umlCollectColumnWidths(rootNode, 0, columnWidths);
+  umlLayoutNode(rootNode, umlColumnLefts(columnWidths), 0, UML_LAYOUT.margin);
 
   var maxX = 0;
   var maxY = 0;
