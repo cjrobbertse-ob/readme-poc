@@ -28,6 +28,7 @@ var UML_THEMES = {
     childFill: '#f7f7fb',
     accent: '#0097b2',
     accentFill: '#cceef4',
+    marker: '#0097b2',
     muted: '#64748b',
     modalBackground: '#ffffff',
     modalBorder: '#e2e8f0',
@@ -46,6 +47,7 @@ var UML_THEMES = {
     childFill: '#15172b',
     accent: '#00a8c6',
     accentFill: '#083747',
+    marker: '#00a8c6',
     muted: '#94a3b8',
     modalBackground: '#0f172a',
     modalBorder: '#334155',
@@ -1204,7 +1206,7 @@ function generateUmlSvg(openApiDocument, selector, theme) {
     ';font-style:italic}.uml-edge path{fill:none;stroke:' +
     umlTheme.primaryBorder +
     ';stroke-width:2}.uml-marker{fill:' +
-    umlTheme.primaryBorder +
+    (umlTheme.marker || umlTheme.accent || umlTheme.primaryBorder) +
     '}.uml-edge-label-bg{fill:' +
     umlTheme.accentFill +
     ';stroke:' +
