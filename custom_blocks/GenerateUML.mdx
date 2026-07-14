@@ -114,21 +114,69 @@ function umlThemeFromMode(mode, props) {
   return umlMergeTheme(umlMergeTheme(baseTheme, modeOverride), props && props.themeOverrides);
 }
 
-function umlThemeTextFromDocument(doc) {
-  if (!doc) return '';
+function umlThemeModeFromText(value) {
+  var text = String(value || '').toLowerCase();
+  if (/(^|[\s_-])light($|[\s_-])/.test(text)) return 'light';
+  if (/(^|[\s_-])dark($|[\s_-])/.test(text) || text.indexOf('night') !== -1) return 'dark';
+  return '';
+}
 
-  var elements = [doc.documentElement, doc.body].filter(Boolean);
-  var values = [];
-  elements.forEach(function (element) {
-    ['data-theme', 'data-color-mode', 'data-color-scheme', 'data-readme-color-scheme', 'color-scheme'].forEach(function (name) {
-      var attr = element.getAttribute && element.getAttribute(name);
-      if (attr) values.push(attr);
-    });
-    if (element.className) values.push(String(element.className));
-    if (element.style && element.style.colorScheme) values.push(element.style.colorScheme);
-  });
+function umlThemeModeFromElementAttributes(element) {
+  if (!element || !element.getAttribute) return '';
 
-  return values.join(' ').toLowerCase();
+  var explicitAttributes = ['data-theme', 'data-color-mode', 'data-color-scheme', 'data-readme-color-scheme', 'color-scheme'];
+  for (var index = 0; index < explicitAttributes.length; index += 1) {
+    var mode = umlThemeModeFromText(element.getAttribute(explicitAttributes[index]));
+    if (mode) return mode;
+  }
+
+  return umlThemeModeFromText(element.style && element.style.colorScheme);
+}
+
+function umlThemeModeFromElementClasses(element) {
+  if (!element || !element.className) return '';
+  return umlThemeModeFromText(String(element.className));
+}
+
+function umlParseRgbColor(value) {
+  var match = String(value || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/i);
+  if (!match || match[4] === '0') return null;
+
+  return {
+    red: Number(match[1]),
+    green: Number(match[2]),
+    blue: Number(match[3]),
+  };
+}
+
+function umlRelativeLuminance(color) {
+  if (!color) return null;
+
+  function channel(value) {
+    var normalized = value / 255;
+    return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
+  }
+
+  return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue);
+}
+
+function umlThemeModeFromDocumentPaint(doc) {
+  var docWindow = doc && doc.defaultView ? doc.defaultView : typeof window !== 'undefined' ? window : null;
+  if (!doc || !docWindow || !docWindow.getComputedStyle) return '';
+
+  var elements = [doc.body, doc.documentElement].filter(Boolean);
+  for (var index = 0; index < elements.length; index += 1) {
+    try {
+      var styles = docWindow.getComputedStyle(elements[index]);
+      var background = umlParseRgbColor(styles && styles.backgroundColor);
+      var luminance = umlRelativeLuminance(background);
+      if (luminance !== null) return luminance < 0.5 ? 'dark' : 'light';
+    } catch (error) {
+      // Ignore inaccessible computed styles and continue to the next document.
+    }
+  }
+
+  return '';
 }
 
 function umlDetectReadMeThemeMode(props) {
@@ -136,10 +184,28 @@ function umlDetectReadMeThemeMode(props) {
   if (requested === 'light' || requested === 'dark') return requested;
 
   var documents = umlAvailableDocuments();
+
   for (var index = 0; index < documents.length; index += 1) {
-    var text = umlThemeTextFromDocument(documents[index]);
-    if (/(^|[\s_-])dark($|[\s_-])/.test(text) || text.indexOf('night') !== -1) return 'dark';
-    if (/(^|[\s_-])light($|[\s_-])/.test(text)) return 'light';
+    var doc = documents[index];
+    var elements = [doc.documentElement, doc.body].filter(Boolean);
+    for (var attrIndex = 0; attrIndex < elements.length; attrIndex += 1) {
+      var attrMode = umlThemeModeFromElementAttributes(elements[attrIndex]);
+      if (attrMode) return attrMode;
+    }
+  }
+
+  for (var paintIndex = 0; paintIndex < documents.length; paintIndex += 1) {
+    var paintMode = umlThemeModeFromDocumentPaint(documents[paintIndex]);
+    if (paintMode) return paintMode;
+  }
+
+  for (var classDocIndex = 0; classDocIndex < documents.length; classDocIndex += 1) {
+    var classDoc = documents[classDocIndex];
+    var classElements = [classDoc.documentElement, classDoc.body].filter(Boolean);
+    for (var classIndex = 0; classIndex < classElements.length; classIndex += 1) {
+      var classMode = umlThemeModeFromElementClasses(classElements[classIndex]);
+      if (classMode) return classMode;
+    }
   }
 
   if (typeof window !== 'undefined' && window.matchMedia) {
