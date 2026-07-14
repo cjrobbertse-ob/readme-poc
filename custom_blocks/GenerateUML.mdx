@@ -1169,10 +1169,10 @@ function generateUmlSvg(openApiDocument, selector, theme) {
     height +
     '" role="img" aria-label="' +
     umlEscapeXml(selected.title) +
-    ' UML diagram">' +
+    ' schema diagram">' +
     '<title>' +
     umlEscapeXml(selected.title) +
-    ' UML diagram</title>' +
+    ' schema diagram</title>' +
     '<defs>' +
     '<marker id="umlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="uml-marker" d="M 0 0 L 10 5 L 0 10 z"/></marker>' +
     '<marker id="umlDiamond" viewBox="0 0 16 10" refX="0" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="uml-marker" d="M 0 5 L 8 10 L 16 5 L 8 0 z"/></marker>' +
@@ -1228,7 +1228,7 @@ function umlSvgToDataUrl(svg) {
 
 function umlDownloadFilename(schema) {
   var parsed = umlParseSelector(schema);
-  return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'uml-diagram';
+  return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'schema-diagram';
 }
 
 async function umlFetchOpenApiDocument(api, options) {
@@ -1297,8 +1297,10 @@ function UmlGeneratorRuntime(props) {
   var api = props && props.api;
   var schema = props && props.schema;
   var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
-  var openLabel = (props && props.openLabel) || 'Generate UML diagram';
-  var title = (props && props.title) || (schema ? umlParseSelector(schema).alias + ' UML diagram' : 'UML diagram');
+  var schemaTitle = schema ? umlParseSelector(schema).alias : '';
+  var openLabel = (props && props.openLabel) || (schemaTitle ? 'Generate schema diagram for ' + schemaTitle : 'Generate schema diagram');
+  var loadingLabel = schemaTitle ? 'Generating schema diagram for ' + schemaTitle + '…' : 'Generating schema diagram…';
+  var title = (props && props.title) || (schemaTitle ? schemaTitle + ' schema diagram' : 'Schema diagram');
   var themeModeState = useState(umlDetectReadMeThemeMode(props));
   var themeMode = themeModeState[0];
   var setThemeMode = themeModeState[1];
@@ -1374,7 +1376,7 @@ function UmlGeneratorRuntime(props) {
         setSvg(generateUmlSvg(openApiDocument, schema, umlTheme));
         setSvgThemeMode(themeMode);
       } catch (generationError) {
-        setError((generationError && generationError.message) || 'Failed to generate the UML diagram.');
+        setError((generationError && generationError.message) || 'Failed to generate the schema diagram.');
       } finally {
         setIsLoading(false);
       }
@@ -1599,7 +1601,7 @@ function UmlGeneratorRuntime(props) {
           opacity: isLoading ? 0.7 : 1,
         }}
       >
-        {isLoading ? 'Generating UML…' : openLabel}
+        {isLoading ? loadingLabel : openLabel}
       </button>
 
       {isOpen ? (
@@ -1691,7 +1693,7 @@ function UmlGeneratorRuntime(props) {
                     fontWeight: 700,
                   }}
                 >
-                  Generating UML diagram…
+                  {loadingLabel}
                 </div>
               ) : null}
 
