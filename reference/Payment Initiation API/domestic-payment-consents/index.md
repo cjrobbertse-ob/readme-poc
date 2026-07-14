@@ -13,4 +13,6 @@ hidden: false
   schema="OBRisk1"
 />
 
+<GenerateUML />
+
 <br />
