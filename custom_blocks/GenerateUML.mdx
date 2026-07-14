@@ -35,6 +35,9 @@ var UML_THEMES = {
     viewerBackground: '#f8fafc',
     shadow: 'rgba(0,0,0,.12)',
     error: '#be123c',
+    warning: '#b45309',
+    warningBackground: '#fffbeb',
+    warningBorder: '#f59e0b',
   },
   dark: {
     primary: '#51509e',
@@ -54,6 +57,9 @@ var UML_THEMES = {
     viewerBackground: '#020617',
     shadow: 'rgba(0,0,0,.45)',
     error: '#fb7185',
+    warning: '#fbbf24',
+    warningBackground: '#422006',
+    warningBorder: '#f59e0b',
   },
 };
 
@@ -838,6 +844,23 @@ function umlParseSelector(selector) {
   };
 }
 
+function umlTryParseSelector(selector) {
+  try {
+    return umlParseSelector(selector);
+  } catch (error) {
+    return null;
+  }
+}
+
+function umlConfigurationWarnings(api, schema) {
+  var warnings = [];
+  if (!String(api || '').trim()) warnings.push('Add an api prop, for example api="PIS".');
+  if (!String(schema || '').trim()) {
+    warnings.push('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2".');
+  }
+  return warnings;
+}
+
 function resolveOpenApiSchemaSelector(openApiDocument, selector) {
   var parsed = umlParseSelector(selector);
   var schemas =
@@ -1297,7 +1320,9 @@ function UmlGeneratorRuntime(props) {
   var api = props && props.api;
   var schema = props && props.schema;
   var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
-  var schemaTitle = schema ? umlParseSelector(schema).alias : '';
+  var parsedSchema = umlTryParseSelector(schema);
+  var schemaTitle = parsedSchema ? parsedSchema.alias : '';
+  var configurationWarnings = umlConfigurationWarnings(api, schema);
   var openLabel = (props && props.openLabel) || (schemaTitle ? 'Generate schema diagram for ' + schemaTitle : 'Generate schema diagram');
   var loadingLabel = schemaTitle ? 'Generating schema diagram for ' + schemaTitle + '…' : 'Generating schema diagram…';
   var title = (props && props.title) || (schemaTitle ? schemaTitle + ' schema diagram' : 'Schema diagram');
@@ -1581,28 +1606,53 @@ function UmlGeneratorRuntime(props) {
 
   return (
     <div className="my-4">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={generateAndOpen}
-        disabled={isLoading}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          border: '1px solid ' + umlTheme.primaryBorder,
-          borderRadius: '8px',
-          background: umlTheme.primary,
-          color: umlTheme.primaryText,
-          padding: '9px 14px',
-          fontSize: '13px',
-          fontWeight: 700,
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1,
-        }}
-      >
-        {isLoading ? loadingLabel : openLabel}
-      </button>
+      {configurationWarnings.length ? (
+        <div
+          role="alert"
+          style={{
+            display: 'inline-block',
+            maxWidth: '720px',
+            border: '1px solid ' + umlTheme.warningBorder,
+            borderRadius: '8px',
+            background: umlTheme.warningBackground,
+            color: umlTheme.warning,
+            padding: '10px 12px',
+            fontSize: '13px',
+            fontWeight: 600,
+            lineHeight: 1.45,
+          }}
+        >
+          <strong>Schema diagram is not configured.</strong>
+          <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+            {configurationWarnings.map(function (warning) {
+              return <li key={warning}>{warning}</li>;
+            })}
+          </ul>
+        </div>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={generateAndOpen}
+          disabled={isLoading}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: '1px solid ' + umlTheme.primaryBorder,
+            borderRadius: '8px',
+            background: umlTheme.primary,
+            color: umlTheme.primaryText,
+            padding: '9px 14px',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.7 : 1,
+          }}
+        >
+          {isLoading ? loadingLabel : openLabel}
+        </button>
+      )}
 
       {isOpen ? (
         <div
@@ -1743,3 +1793,5 @@ function UmlGeneratorRuntime(props) {
 
   return <UmlGeneratorRuntime {...props} />;
 };
+
+<GenerateUML />
