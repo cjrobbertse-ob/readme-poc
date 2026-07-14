@@ -3,7 +3,7 @@ title: Domestic Payment Consents
 excerpt: testing
 hidden: false
 ---
-<UmlGenerator
+<GenerateUML
   api="PIS"
   schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2"
 />
