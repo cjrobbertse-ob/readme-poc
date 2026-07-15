@@ -4,14 +4,9 @@ info:
   description: >-
     Swagger for Confirmation of Funds API Specification.
 
+
     **Please Note**: There are no optional fields, if a field is not marked as
     “Required” it is a Conditional field.
-
-    ajsdkajsdk ajsdkajsdkjas kdjaskdja skdasjkd asdasdasdasdasdasdasdas
-    dasdlkasldk alskdlak l lkasdlka ask askdjaskdjaksjdkj as adjs kajsd kjaksj
-    dkjask jas 
-
-    asdasas 
   termsOfService: https://www.openbanking.org.uk/terms
   contact:
     name: Service Desk
@@ -32,7 +27,7 @@ paths:
         - Funds Confirmation Consents
       summary: Create a Funds Confirmation Consent
       description: >-
-        Enables a 
+        Enables a
 
         CBPII to ask an ASPSP to create a new funds-confirmation-consent
         resource, by sending a copy of the consent to the ASPSP.
@@ -850,6 +845,7 @@ components:
                 All dates in the JSON payloads are represented in ISO 8601
                 date-time format. 
 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
 
@@ -896,6 +892,7 @@ components:
                     Name of the account, as assigned by the account servicing
                     institution.
 
+
                     Usage: The account name is the name or names of the account
                     owner(s) represented at an account level. The account name
                     is not the product name or the nickname of the account.
@@ -906,6 +903,7 @@ components:
                   description: >-
                     This is secondary identification of the account, as assigned
                     by the account servicing institution. 
+
 
                     This can be used by building societies to additionally
                     identify accounts with a roll number (in addition to a sort
@@ -942,8 +940,10 @@ components:
                 Date and time at which the resource was created. All dates in
                 the JSON payloads are represented in ISO 8601 date-time format. 
 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
+
 
                 2017-04-05T10:43:07+00:00
               type: string
@@ -960,8 +960,10 @@ components:
                 dates in the JSON payloads are represented in ISO 8601 date-time
                 format. 
 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
+
 
                 2017-04-05T10:43:07+00:00
               type: string
@@ -971,12 +973,15 @@ components:
                 Specified date and time the funds confirmation authorisation
                 will expire.
 
+
                 If this is not populated, the authorisation will be open ended.
                 All dates in the JSON payloads are represented in ISO 8601
                 date-time format. 
 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
+
 
                 2017-04-05T10:43:07+00:00
               type: string
@@ -993,8 +998,11 @@ components:
                 SchemeName:
                   description: >-
                     Name of the identification scheme, in a coded form as
-                    published in an external list. For a full list of values
-                    refer to `OBInternalAccountIdentification4Code` in
+                    published in an external list. 
+
+
+                    For a full list of values refer to
+                    `OBInternalAccountIdentification4Code` in
                     *OB_Internal_CodeSet*
                     [here](https://github.com/OpenBankingUK/External_Internal_CodeSets)
                   type: string
@@ -1017,6 +1025,7 @@ components:
                     Name of the account, as assigned by the account servicing
                     institution.
 
+
                     Usage: The account name is the name or names of the account
                     owner(s) represented at an account level. The account name
                     is not the product name or the nickname of the account.
@@ -1027,6 +1036,7 @@ components:
                   description: >-
                     This is secondary identification of the account, as assigned
                     by the account servicing institution. 
+
 
                     This can be used by building societies to additionally
                     identify accounts with a roll number (in addition to a sort
@@ -1043,8 +1053,10 @@ components:
       additionalProperties: false
     OBInternalConsentStatus1Code:
       description: >-
-        Specifies the status of consent resource in code form. For a full list
-        of values refer to `OBInternalConsentStatus1Code` in
+        Specifies the status of consent resource in code form. 
+
+
+        For a full list of values refer to `OBInternalConsentStatus1Code` in
         *OB_Internal_CodeSet*
         [here](https://github.com/OpenBankingUK/External_Internal_CodeSets)
       type: string
@@ -1088,8 +1100,10 @@ components:
                 Date and time at which the resource was created. All dates in
                 the JSON payloads are represented in ISO 8601 date-time format. 
 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
+
 
                 2017-04-05T10:43:07+00:00
               type: string
