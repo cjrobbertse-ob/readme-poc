@@ -920,6 +920,10 @@ function resolveOpenApiSchemaSelector(openApiDocument, selector) {
   };
 }
 
+function umlNodeHeight(fieldCount) {
+  return fieldCount ? UML_LAYOUT.headerHeight + fieldCount * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX : UML_LAYOUT.headerHeight;
+}
+
 function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancestorRefs) {
   var normalized = umlNormalizeSchema(schema, openApiDocument);
   var required = normalized.required || [];
@@ -971,7 +975,7 @@ function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancest
     fields: fields,
     children: children,
     width: UML_LAYOUT.boxMinWidth,
-    height: UML_LAYOUT.headerHeight + Math.max(1, fields.length) * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX,
+    height: umlNodeHeight(fields.length),
     x: 0,
     y: 0,
     subtreeHeight: 0,
@@ -984,7 +988,7 @@ function umlMeasureNode(node) {
     longest = Math.max(longest, (field.name + ' ' + field.cardinality).length);
   });
   node.width = umlClamp(longest * 7.2 + UML_LAYOUT.boxPaddingX * 2, UML_LAYOUT.boxMinWidth, UML_LAYOUT.boxMaxWidth);
-  node.height = UML_LAYOUT.headerHeight + Math.max(1, node.fields.length) * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX;
+  node.height = umlNodeHeight(node.fields.length);
   node.children.forEach(function (child) {
     umlMeasureNode(child.node);
   });
@@ -1041,8 +1045,8 @@ function umlWalkNodes(node, callback) {
 
 function umlRenderNode(node) {
   var parts = [];
+  var hasFields = node.fields.length > 0;
   var titleY = node.y + 22;
-  var rowStartY = node.y + UML_LAYOUT.headerHeight + 20;
 
   parts.push(
     '<g class="uml-node" id="' +
@@ -1069,13 +1073,15 @@ function umlRenderNode(node) {
       '" height="' +
       UML_LAYOUT.headerHeight +
       '" rx="8"/>' +
-      '<path class="uml-header-seam" d="M ' +
-      node.x +
-      ' ' +
-      (node.y + UML_LAYOUT.headerHeight) +
-      ' H ' +
-      (node.x + node.width) +
-      '"/>' +
+      (hasFields
+        ? '<path class="uml-header-seam" d="M ' +
+          node.x +
+          ' ' +
+          (node.y + UML_LAYOUT.headerHeight) +
+          ' H ' +
+          (node.x + node.width) +
+          '"/>'
+        : '') +
       '<text class="uml-title" x="' +
       (node.x + node.width / 2) +
       '" y="' +
@@ -1085,7 +1091,8 @@ function umlRenderNode(node) {
       '</text>'
   );
 
-  if (node.fields.length) {
+  if (hasFields) {
+    var rowStartY = node.y + UML_LAYOUT.headerHeight + 20;
     node.fields.forEach(function (field, index) {
       parts.push(
         '<text class="uml-field" x="' +
