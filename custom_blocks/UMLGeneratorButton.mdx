@@ -1085,15 +1085,7 @@ function umlRenderNode(node) {
       '</text>'
   );
 
-  if (!node.fields.length) {
-    parts.push(
-      '<text class="uml-field uml-empty" x="' +
-        (node.x + UML_LAYOUT.boxPaddingX) +
-        '" y="' +
-        rowStartY +
-        '">No scalar fields</text>'
-    );
-  } else {
+  if (node.fields.length) {
     node.fields.forEach(function (field, index) {
       parts.push(
         '<text class="uml-field" x="' +
@@ -1242,9 +1234,7 @@ function generateUmlSvg(openApiDocument, selector, theme) {
     umlTheme.field +
     ';font-size:' +
     UML_LAYOUT.fontSize +
-    'px}.uml-empty{fill:' +
-    umlTheme.muted +
-    ';font-style:italic}.uml-edge path{fill:none;stroke:' +
+    'px}.uml-edge path{fill:none;stroke:' +
     umlTheme.primaryBorder +
     ';stroke-width:2}.uml-marker{fill:' +
     (umlTheme.marker || umlTheme.accent || umlTheme.primaryBorder) +
