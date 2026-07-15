@@ -1,12 +1,17 @@
 openapi: 3.0.0
 info:
   title: Confirmation of Funds API Specification
-  description: >
+  description: >-
     Swagger for Confirmation of Funds API Specification.
-
 
     **Please Note**: There are no optional fields, if a field is not marked as
     “Required” it is a Conditional field.
+
+    ajsdkajsdk ajsdkajsdkjas kdjaskdja skdasjkd asdasdasdasdasdasdasdas
+    dasdlkasldk alskdlak l lkasdlka ask askdjaskdjaksjdkj as adjs kajsd kjaksj
+    dkjask jas 
+
+    asdasas 
   termsOfService: https://www.openbanking.org.uk/terms
   contact:
     name: Service Desk
@@ -15,6 +20,11 @@ info:
     name: open-licence
     url: https://www.openbanking.org.uk/open-licence
   version: 4.0.1
+tags:
+  - name: Funds Confirmation Consents
+    description: Operations related to funds confirmation consents
+  - name: Funds Confirmations
+    description: Operations related to funds confirmations
 paths:
   /funds-confirmation-consents:
     post:
@@ -22,21 +32,22 @@ paths:
         - Funds Confirmation Consents
       summary: Create a Funds Confirmation Consent
       description: >-
-        Enables a CBPII to ask an ASPSP to create a new
-        funds-confirmation-consent resource, by sending a copy of the consent to
-        the ASPSP.
+        Enables a 
+
+        CBPII to ask an ASPSP to create a new funds-confirmation-consent
+        resource, by sending a copy of the consent to the ASPSP.
 
 
         On success (HTTP 201), the response contains a `ConsentId`,
         `CreationDateTime`, the current `Status` of the consent,
         `StatusUpdateDateTime`, and the `DebtorAccount` associated with the
         consent. The consent may initially be returned with status `AWAU`
-        (AwaitingAuthorisation).
+        (`AwaitingAuthorisation`).
 
 
         **Note:** Creating this consent does not immediately authorise funds
-        confirmations. The PSU may need to authenticate and authorise the
-        consent with the ASPSP before the consent can be used for funds
+        confirmations. The PSU will need to authenticate and authorise the
+        consent with their ASPSP before the consent can be used for funds
         confirmation requests.
       operationId: CreateFundsConfirmationConsents
       parameters:
@@ -128,7 +139,7 @@ paths:
         - Funds Confirmation Consents
       summary: Delete a Funds Confirmation Consent
       description: >-
-        Enables a CBPII to inform the PSU’s ASPSP that the PSU has revoked their
+        Enables a CBPII to inform the PSU's ASPSP that the PSU has revoked their
         consent to provide funds confirmations.
 
 
@@ -267,8 +278,10 @@ components:
       description: >-
         The time when the PSU last logged in with the TPP. 
 
+
         All dates in the HTTP headers are represented as RFC 7231 Full Dates. An
         example is below: 
+
 
         Sun, 10 Sep 2017 19:43:31 UTC
       schema:
@@ -287,7 +300,7 @@ components:
     x-idempotency-key:
       name: x-idempotency-key
       in: header
-      description: |
+      description: |-
         Every request will be processed only once per x-idempotency-key.  The
         Idempotency Key will be valid for 24 hours.
       required: true
@@ -306,7 +319,7 @@ components:
       in: header
       name: x-client-id
       required: false
-      description: >
+      description: >-
         Only used if an ASPSP requires the client ID in order to return rate
         limit headers. 
 
@@ -322,7 +335,7 @@ components:
   headers:
     RateLimit-Policy:
       required: false
-      description: >
+      description: >-
         TPPs __must__ refer to ASPSP developer portals for further information
         on any rate limit policies, if the headers are supported and any
         additional requirements.
@@ -346,7 +359,7 @@ components:
         type: string
     RateLimit:
       required: false
-      description: >
+      description: >-
         TPPs __must__ refer to ASPSP developer portals for further information
         on any rate limit policies, if the headers are supported and any
         additional requirements.
@@ -492,14 +505,6 @@ components:
         application/jose+jwe:
           schema:
             $ref: '#/components/schemas/OBErrorResponse1'
-    404Error:
-      description: Not found
-      headers:
-        x-fapi-interaction-id:
-          required: true
-          description: An RFC4122 UID used as a correlation id.
-          schema:
-            type: string
     405Error:
       description: Method Not Allowed
       headers:
@@ -556,7 +561,21 @@ components:
   securitySchemes:
     TPPOAuth2Security:
       type: oauth2
-      description: TPP client credential authorisation flow with the ASPSP
+      description: >-
+        TPP client credential authorisation flow with the ASPSP.
+
+
+        FAPI 1 Advanced / OAuth 2.0 client credentials authorisation flow with
+        the ASPSP. Access tokens are sent on resource requests using the
+        standard HTTP Authorization header with the Bearer authentication
+        scheme: `Authorization: Bearer <access-token>`.
+
+
+        This OpenAPI security scheme represents the OAuth2 access-token
+        requirement. Additional Open Banking/FAPI requirements such as transport
+        security, client authentication method, signing, PAR/JAR, or certificate
+        binding are profiled by the Open Banking security profile and may not be
+        fully expressible in OpenAPI 3.0 securitySchemes.
       flows:
         clientCredentials:
           tokenUrl: https://authserver.example/token
@@ -567,6 +586,19 @@ components:
       description: >-
         OAuth flow, it is required when the PSU needs to perform SCA with the
         ASPSP when a TPP wants to access an ASPSP resource owned by the PSU
+
+
+        FAPI 1 Advanced / OAuth 2.0 client credentials authorisation flow with
+        the ASPSP. Access tokens are sent on resource requests using the
+        standard HTTP Authorization header with the Bearer authentication
+        scheme: `Authorization: Bearer <access-token>`.
+
+
+        This OpenAPI security scheme represents the OAuth2
+        access-tokenrequirement. Additional Open Banking/FAPI requirements such
+        as transport security, client authentication method, signing, PAR/JAR,
+        or certificate binding are profiled by the Open Banking security profile
+        and may not be fully expressible in OpenAPI 3.0 securitySchemes.
       flows:
         authorizationCode:
           authorizationUrl: https://authserver.example/authorization
@@ -574,13 +606,6 @@ components:
           scopes:
             fundsconfirmations: Funds confirmation entitlement
   schemas:
-    Identification_0:
-      description: >-
-        Identification assigned by an institution to identify an account. This
-        identification is known by the account owner.
-      type: string
-      minLength: 1
-      maxLength: 256
     OBProxy1:
       description: >-
         Specifies an alternate assumed name for the identification of the
@@ -607,8 +632,11 @@ components:
     ExternalProxyAccountType1Code:
       description: >-
         Specifies the external proxy account type code, as published in the
-        proxy account type external code set.<br > For a full list of values
-        refer to `ExternalProxyAccountType1Code` in *ISO_External_CodeSet*
+        proxy account type external code set.
+
+
+        For a full list of values refer to `ExternalProxyAccountType1Code` in
+        *ISO_External_CodeSet*
         [here](https://github.com/OpenBankingUK/External_Internal_CodeSets)
       type: string
       enum:
@@ -638,8 +666,10 @@ components:
         All dates in the JSON payloads are represented in ISO 8601 date-time
         format. 
 
+
         All date-time fields in responses must include the timezone. An example
         is below:
+
 
         2017-04-05T10:43:07+00:00
       type: string
@@ -689,7 +719,8 @@ components:
             A description of the error that occurred. e.g., 'A mandatory field
             isn't supplied' or 'RequestedExecutionDateTime must be in future'
 
-            OBL doesn't standardise this field
+
+            OBL doesn't standardise this field.
           type: string
           minLength: 1
           maxLength: 500
@@ -723,15 +754,19 @@ components:
           minLength: 1
           maxLength: 40
         Code:
-          description: >-
-            Deprecated <br>High level textual error code, to help categorise the
-            errors.
+          description: |-
+            Deprecated
+
+            High level textual error code, to help categorise the errors.
           type: string
           minLength: 1
           example: 400 BadRequest
           maxLength: 40
         Message:
-          description: Deprecated <br>Brief Error message
+          description: |-
+            Deprecated
+
+            Brief Error message
           type: string
           minLength: 1
           example: There is something wrong with the request parameters provided
@@ -809,9 +844,15 @@ components:
               description: >-
                 Specified date and time the funds confirmation authorisation
                 will expire.
-                 If this is not populated, the authorisation will be open ended. All dates in the JSON payloads are represented in ISO 8601 date-time format. 
+
+
+                If this is not populated, the authorisation will be open ended.
+                All dates in the JSON payloads are represented in ISO 8601
+                date-time format. 
+
                 All date-time fields in responses must include the timezone. An
                 example is below:
+
 
                 2017-04-05T10:43:07+00:00
               type: string
@@ -828,7 +869,10 @@ components:
                 SchemeName:
                   description: >-
                     Name of the identification scheme, in a coded form as
-                    published in an external list. For a full list of values see
+                    published in an external list. 
+
+
+                    For a full list of values see
                     `OBInternalAccountIdentification4Code` in
                     *OB_Internal_CodeSet*
                     [here](https://github.com/OpenBankingUK/External_Internal_CodeSets)
