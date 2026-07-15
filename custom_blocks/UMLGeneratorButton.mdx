@@ -1272,6 +1272,67 @@ function umlDownloadFilename(schema) {
   return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'schema-diagram';
 }
 
+function UMLLoadingSpinner(props) {
+  var size = (props && props.size) || 18;
+  var color = (props && props.color) || UML_THEMES.light.primary;
+  var accentColor = (props && props.accentColor) || UML_THEMES.light.accent;
+  var trackColor = (props && props.trackColor) || color;
+
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={{ display: 'inline-block', flex: '0 0 auto' }}
+    >
+      <circle cx="12" cy="12" r="9" fill="none" stroke={trackColor} strokeWidth="3" opacity="0.25" />
+      <g>
+        <path d="M 12 3 A 9 9 0 0 1 21 12" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="12" cy="3" r="2" fill={accentColor} />
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="0 12 12"
+          to="360 12 12"
+          dur="0.85s"
+          repeatCount="indefinite"
+        />
+      </g>
+    </svg>
+  );
+}
+
+function UMLLoadingProgress(props) {
+  var width = (props && props.width) || 240;
+  var height = 6;
+  var segmentWidth = Math.round(width * 0.36);
+  var color = (props && props.color) || UML_THEMES.light.primary;
+  var trackColor = (props && props.trackColor) || color;
+
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={width}
+      height={height}
+      viewBox={'0 0 ' + width + ' ' + height}
+      style={{ display: 'block', maxWidth: '100%', borderRadius: '999px', overflow: 'hidden' }}
+    >
+      <rect width={width} height={height} rx={height / 2} fill={trackColor} opacity="0.2" />
+      <rect width={segmentWidth} height={height} rx={height / 2} fill={color}>
+        <animate
+          attributeName="x"
+          values={'-' + segmentWidth + ';' + width}
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+      </rect>
+    </svg>
+  );
+}
+
 async function umlFetchOpenApiDocument(api, options) {
   var explicitUrl = umlExplicitOpenApiUrl(options);
   var candidateUrls = [];
@@ -1673,7 +1734,7 @@ function UMLGeneratorButtonRuntime(props) {
           <p style={{ margin: '8px 0 0' }}>
             See the{' '}
             <a
-              href="https://github.com/OpenBankingUK/ReadMe-Custom-Components/tree/main/uml-generator#schema-diagram-generator-for-readme"
+              href="https://github.com/OpenBankingUK/ReadMe-Custom-Components/blob/main/uml-generator-button/README.md#schema-diagram-generator-for-readme"
               target="_blank"
               rel="noreferrer"
               style={{ color: 'inherit', textDecoration: 'underline' }}
@@ -1689,6 +1750,7 @@ function UMLGeneratorButtonRuntime(props) {
           type="button"
           onClick={generateAndOpen}
           disabled={isLoading}
+          aria-busy={isLoading}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -1704,7 +1766,15 @@ function UMLGeneratorButtonRuntime(props) {
             opacity: isLoading ? 0.7 : 1,
           }}
         >
-          {isLoading ? loadingLabel : openLabel}
+          {isLoading ? (
+            <UMLLoadingSpinner
+              size={16}
+              color={umlTheme.primaryText}
+              accentColor={umlTheme.accent}
+              trackColor={umlTheme.primaryText}
+            />
+          ) : null}
+          <span>{isLoading ? loadingLabel : openLabel}</span>
         </button>
       )}
 
@@ -1786,18 +1856,37 @@ function UMLGeneratorButtonRuntime(props) {
             >
               {isLoading ? (
                 <div
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
                   style={{
                     position: 'absolute',
                     inset: 0,
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: '14px',
+                    padding: '24px',
                     color: umlTheme.primaryBorder,
                     fontSize: '14px',
                     fontWeight: 700,
+                    textAlign: 'center',
                   }}
                 >
-                  {loadingLabel}
+                  <UMLLoadingSpinner
+                    size={42}
+                    color={umlTheme.primaryBorder}
+                    accentColor={umlTheme.accent}
+                    trackColor={umlTheme.primaryBorder}
+                  />
+                  <div>
+                    <p style={{ margin: 0 }}>{loadingLabel}</p>
+                    <p style={{ margin: '6px 0 0', color: umlTheme.muted, fontSize: '12px', fontWeight: 600 }}>
+                      Downloading the OpenAPI source and building the SVG diagram.
+                    </p>
+                  </div>
+                  <UMLLoadingProgress color={umlTheme.accent} trackColor={umlTheme.primaryBorder} />
                 </div>
               ) : null}
 
