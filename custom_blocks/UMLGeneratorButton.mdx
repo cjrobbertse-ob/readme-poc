@@ -117,6 +117,35 @@ function umlUnique(values) {
   });
 }
 
+function umlSharedState() {
+  var host = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
+  var key = '__obReadMeUmlGeneratorSharedStateV1';
+  if (!host[key]) {
+    host[key] = {
+      openApiDocumentByUrl: Object.create(null),
+      pageHtmlByUrl: Object.create(null),
+      openApiUrlByApi: Object.create(null),
+      syncUrlByApi: Object.create(null),
+      readMeVersionPromise: null,
+    };
+  }
+  return host[key];
+}
+
+function umlCachePromise(cache, key, loader) {
+  if (!key) return loader();
+  if (cache[key]) return cache[key];
+
+  cache[key] = Promise.resolve()
+    .then(loader)
+    .catch(function (error) {
+      delete cache[key];
+      throw error;
+    });
+
+  return cache[key];
+}
+
 function umlMergeTheme(baseTheme, overrideTheme) {
   return Object.assign({}, baseTheme || {}, overrideTheme || {});
 }
@@ -397,6 +426,16 @@ function umlFindDefinitionsInHtml(html) {
   return parsedDocument ? umlFindDefinitionsInDocument(parsedDocument) : [];
 }
 
+function umlFindSyncUrlInDefinitions(definitions, api) {
+  var wantedFilename = umlResolveApiFilename(api);
+  var filenamePattern = new RegExp('/' + wantedFilename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.(?:json|ya?ml)(?:[?#].*)?$', 'i');
+  var match = (definitions || []).find(function (definition) {
+    var url = definition && definition.source && definition.source.sync_url;
+    return typeof url === 'string' && filenamePattern.test(url);
+  });
+  return match && match.source ? match.source.sync_url : '';
+}
+
 function umlFindOpenApiUrlInHtml(html, api, baseUrl) {
   var wantedFilename = umlResolveApiFilename(api);
   var escapedFilename = umlEscapeRegExp(wantedFilename);
@@ -488,9 +527,14 @@ function umlCandidatePageUrls() {
 }
 
 async function umlFetchPageHtml(url) {
-  var response = await fetch(url, { credentials: 'include' });
-  if (!response.ok) return '';
-  return await response.text();
+  var key = String(url || '');
+  if (!key) return '';
+
+  return umlCachePromise(umlSharedState().pageHtmlByUrl, key, async function () {
+    var response = await fetch(url, { credentials: 'include' });
+    if (!response.ok) return '';
+    return await response.text();
+  });
 }
 
 async function umlFetchPageDefinitions() {
@@ -498,10 +542,7 @@ async function umlFetchPageDefinitions() {
 
   for (var index = 0; index < urls.length; index += 1) {
     try {
-      var response = await fetch(urls[index], { credentials: 'include' });
-      if (!response.ok) continue;
-
-      var definitions = umlFindDefinitionsInHtml(await response.text());
+      var definitions = umlFindDefinitionsInHtml(await umlFetchPageHtml(urls[index]));
       if (definitions.length) return definitions;
     } catch (error) {
       // Try the next candidate URL; the final error explains that discovery failed.
@@ -512,66 +553,79 @@ async function umlFetchPageDefinitions() {
 }
 
 async function discoverReadMeOpenApiUrlFromPageHtml(api) {
-  if (typeof document === 'undefined') {
-    throw new Error('ReadMe page state is unavailable outside the browser.');
-  }
-
-  var documents = umlAvailableDocuments();
-
-  for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
-    try {
-      var doc = documents[docIndex];
-      var html = doc.documentElement && doc.documentElement.outerHTML;
-      var found = umlFindOpenApiUrlInHtml(html, api, doc.location && doc.location.href);
-      if (found) return found;
-    } catch (error) {
-      // Ignore inaccessible parent/top documents.
+  var cacheKey = umlResolveApiFilename(api);
+  return umlCachePromise(umlSharedState().openApiUrlByApi, cacheKey, async function () {
+    if (typeof document === 'undefined') {
+      throw new Error('ReadMe page state is unavailable outside the browser.');
     }
-  }
 
-  var urls = umlCandidatePageUrls();
-  for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
-    try {
-      var fetchedHtml = await umlFetchPageHtml(urls[urlIndex]);
-      var fetchedFound = umlFindOpenApiUrlInHtml(fetchedHtml, api, urls[urlIndex]);
-      if (fetchedFound) return fetchedFound;
-    } catch (error) {
-      // Ignore fetch failures and try the next candidate.
+    var documents = umlAvailableDocuments();
+
+    for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
+      try {
+        var doc = documents[docIndex];
+        var definitions = umlFindDefinitionsInDocument(doc);
+        var discoveredFromState = umlFindSyncUrlInDefinitions(definitions, api);
+        if (discoveredFromState) return discoveredFromState;
+      } catch (error) {
+        // Ignore inaccessible parent/top documents.
+      }
     }
-  }
 
-  throw new Error('Could not infer the OpenAPI URL from the current page HTML for api="' + api + '".');
+    for (var htmlDocIndex = 0; htmlDocIndex < documents.length; htmlDocIndex += 1) {
+      try {
+        var htmlDoc = documents[htmlDocIndex];
+        var html = htmlDoc.documentElement && htmlDoc.documentElement.outerHTML;
+        var found = umlFindOpenApiUrlInHtml(html, api, htmlDoc.location && htmlDoc.location.href);
+        if (found) return found;
+      } catch (error) {
+        // Ignore inaccessible parent/top documents.
+      }
+    }
+
+    var urls = umlCandidatePageUrls();
+    for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
+      try {
+        var fetchedHtml = await umlFetchPageHtml(urls[urlIndex]);
+        var fetchedDefinitions = umlFindDefinitionsInHtml(fetchedHtml);
+        var fetchedSyncUrl = umlFindSyncUrlInDefinitions(fetchedDefinitions, api);
+        if (fetchedSyncUrl) return fetchedSyncUrl;
+
+        var fetchedFound = umlFindOpenApiUrlInHtml(fetchedHtml, api, urls[urlIndex]);
+        if (fetchedFound) return fetchedFound;
+      } catch (error) {
+        // Ignore fetch failures and try the next candidate.
+      }
+    }
+
+    throw new Error('Could not infer the OpenAPI URL from the current page HTML for api="' + api + '".');
+  });
 }
 
 async function discoverReadMeOpenApiSyncUrl(api) {
   var wantedFilename = umlResolveApiFilename(api);
-  var documents = umlAvailableDocuments();
-  var definitions = [];
+  return umlCachePromise(umlSharedState().syncUrlByApi, wantedFilename, async function () {
+    var documents = umlAvailableDocuments();
+    var definitions = [];
 
-  documents.some(function (doc) {
-    definitions = umlFindDefinitionsInDocument(doc);
-    return definitions.length > 0;
+    documents.some(function (doc) {
+      definitions = umlFindDefinitionsInDocument(doc);
+      return definitions.length > 0;
+    });
+
+    if (!definitions.length) definitions = await umlFetchPageDefinitions();
+
+    if (!definitions.length) {
+      throw new Error('Could not find ReadMe page state in this frame, its parent, or the current page HTML.');
+    }
+
+    var syncUrl = umlFindSyncUrlInDefinitions(definitions, api);
+    if (!syncUrl) {
+      throw new Error('Could not find a ReadMe OpenAPI sync_url for "' + api + '" (' + wantedFilename + ').');
+    }
+
+    return syncUrl;
   });
-
-  if (!definitions.length) definitions = await umlFetchPageDefinitions();
-
-  if (!definitions.length) {
-    throw new Error('Could not find ReadMe page state in this frame, its parent, or the current page HTML.');
-  }
-
-  var match = definitions.find(function (definition) {
-    var url = definition && definition.source && definition.source.sync_url;
-    return (
-      typeof url === 'string' &&
-      new RegExp('/' + wantedFilename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.ya?ml(?:[?#].*)?$', 'i').test(url)
-    );
-  });
-
-  if (!match) {
-    throw new Error('Could not find a ReadMe OpenAPI sync_url for "' + api + '" (' + wantedFilename + ').');
-  }
-
-  return match.source.sync_url;
 }
 
 function deriveOpenApiJsonUrl(syncUrl) {
@@ -623,35 +677,45 @@ function umlFindReadMeVersionInUrl(url) {
 }
 
 async function umlInferReadMeVersion() {
-  var documents = umlAvailableDocuments();
+  var shared = umlSharedState();
+  if (shared.readMeVersionPromise) return shared.readMeVersionPromise;
 
-  for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
-    try {
-      var doc = documents[docIndex];
-      var foundInDocument = umlFindReadMeVersionInHtml(doc.documentElement && doc.documentElement.outerHTML);
-      if (foundInDocument) return foundInDocument;
-      var foundInLocation = umlFindReadMeVersionInUrl(doc.location && doc.location.href);
-      if (foundInLocation) return foundInLocation;
-    } catch (error) {
-      // Ignore inaccessible parent/top documents.
+  shared.readMeVersionPromise = (async function () {
+    var documents = umlAvailableDocuments();
+
+    for (var docIndex = 0; docIndex < documents.length; docIndex += 1) {
+      try {
+        var doc = documents[docIndex];
+        var foundInDocument = umlFindReadMeVersionInHtml(doc.documentElement && doc.documentElement.outerHTML);
+        if (foundInDocument) return foundInDocument;
+        var foundInLocation = umlFindReadMeVersionInUrl(doc.location && doc.location.href);
+        if (foundInLocation) return foundInLocation;
+      } catch (error) {
+        // Ignore inaccessible parent/top documents.
+      }
     }
-  }
 
-  var urls = umlCandidatePageUrls();
-  for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
-    var foundInUrl = umlFindReadMeVersionInUrl(urls[urlIndex]);
-    if (foundInUrl) return foundInUrl;
+    var urls = umlCandidatePageUrls();
+    for (var urlIndex = 0; urlIndex < urls.length; urlIndex += 1) {
+      var foundInUrl = umlFindReadMeVersionInUrl(urls[urlIndex]);
+      if (foundInUrl) return foundInUrl;
 
-    try {
-      var html = await umlFetchPageHtml(urls[urlIndex]);
-      var foundInHtml = umlFindReadMeVersionInHtml(html);
-      if (foundInHtml) return foundInHtml;
-    } catch (error) {
-      // Ignore fetch failures and try the next candidate.
+      try {
+        var html = await umlFetchPageHtml(urls[urlIndex]);
+        var foundInHtml = umlFindReadMeVersionInHtml(html);
+        if (foundInHtml) return foundInHtml;
+      } catch (error) {
+        // Ignore fetch failures and try the next candidate.
+      }
     }
-  }
 
-  return '';
+    return '';
+  })().catch(function (error) {
+    shared.readMeVersionPromise = null;
+    throw error;
+  });
+
+  return shared.readMeVersionPromise;
 }
 
 function umlBuildOpenBankingRawJsonUrls(api, readMeVersion) {
@@ -667,9 +731,13 @@ function umlBuildOpenBankingRawJsonUrls(api, readMeVersion) {
   });
 }
 
-function umlResolvePointer(documentRoot, pointer) {
+function umlResolvePointer(documentRoot, pointer, memo) {
   if (!pointer || pointer.charAt(0) !== '#') {
     throw new Error('Unsupported external OpenAPI reference: ' + pointer);
+  }
+
+  if (memo && memo.pointers && memo.pointers[pointer]) {
+    return memo.pointers[pointer];
   }
 
   var parts = pointer
@@ -679,12 +747,15 @@ function umlResolvePointer(documentRoot, pointer) {
       return part.replace(/~1/g, '/').replace(/~0/g, '~');
     });
 
-  return parts.reduce(function (current, part) {
+  var resolved = parts.reduce(function (current, part) {
     if (!current || typeof current !== 'object' || !(part in current)) {
       throw new Error('Could not resolve OpenAPI reference: ' + pointer);
     }
     return current[part];
   }, documentRoot);
+
+  if (memo && memo.pointers) memo.pointers[pointer] = resolved;
+  return resolved;
 }
 
 function umlMergeSchemas(schemas) {
@@ -702,10 +773,16 @@ function umlMergeSchemas(schemas) {
   }, {});
 }
 
-function umlNormalizeSchema(schema, documentRoot, refStack) {
+function umlNormalizeSchema(schema, documentRoot, refStack, memo) {
   if (!schema || typeof schema !== 'object') return {};
 
   var stack = refStack || [];
+  var canReadWeakMap = typeof WeakMap !== 'undefined';
+  var normalizedCache = memo && memo.normalized && canReadWeakMap ? memo.normalized : null;
+  if (!stack.length && normalizedCache && normalizedCache.has(schema)) {
+    return normalizedCache.get(schema);
+  }
+
   var working = schema;
 
   if (working.$ref) {
@@ -713,7 +790,12 @@ function umlNormalizeSchema(schema, documentRoot, refStack) {
       return Object.assign({}, working, { circularRef: true });
     }
 
-    var resolved = umlNormalizeSchema(umlResolvePointer(documentRoot, working.$ref), documentRoot, stack.concat(working.$ref));
+    var resolved = umlNormalizeSchema(
+      umlResolvePointer(documentRoot, working.$ref, memo),
+      documentRoot,
+      stack.concat(working.$ref),
+      memo
+    );
     var siblings = Object.assign({}, working);
     delete siblings.$ref;
     working = Object.assign({}, resolved, siblings);
@@ -722,7 +804,7 @@ function umlNormalizeSchema(schema, documentRoot, refStack) {
   if (Array.isArray(working.allOf)) {
     var mergedAllOf = umlMergeSchemas(
       working.allOf.map(function (item) {
-        return umlNormalizeSchema(item, documentRoot, stack);
+        return umlNormalizeSchema(item, documentRoot, stack, memo);
       })
     );
     var local = Object.assign({}, working);
@@ -730,11 +812,12 @@ function umlNormalizeSchema(schema, documentRoot, refStack) {
     working = umlMergeSchemas([mergedAllOf, local]);
   }
 
+  if (!stack.length && normalizedCache) normalizedCache.set(schema, working);
   return working;
 }
 
-function umlSchemaType(schema, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
+function umlSchemaType(schema, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
   if (normalized.oneOf) return 'oneOf';
   if (normalized.anyOf) return 'anyOf';
   if (normalized.type) return normalized.type;
@@ -744,8 +827,8 @@ function umlSchemaType(schema, documentRoot) {
   return 'any';
 }
 
-function umlChoiceTooltip(schema, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
+function umlChoiceTooltip(schema, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
   var choices = normalized.oneOf || normalized.anyOf;
   if (!choices) return '';
 
@@ -755,8 +838,8 @@ function umlChoiceTooltip(schema, documentRoot) {
     ':\n' +
     choices
       .map(function (choice, index) {
-        var resolved = umlNormalizeSchema(choice, documentRoot);
-        var type = umlSchemaType(resolved, documentRoot);
+        var resolved = umlNormalizeSchema(choice, documentRoot, null, memo);
+        var type = umlSchemaType(resolved, documentRoot, memo);
         var title = resolved.title || resolved.description || resolved.enum;
         return ' - Option ' + (index + 1) + ': ' + type + (title ? ' (' + String(title).slice(0, 140) + ')' : '');
       })
@@ -764,13 +847,13 @@ function umlChoiceTooltip(schema, documentRoot) {
   );
 }
 
-function umlFieldTooltip(schema, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
+function umlFieldTooltip(schema, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
   var lines = [];
-  var type = umlSchemaType(normalized, documentRoot);
+  var type = umlSchemaType(normalized, documentRoot, memo);
 
   if (type === 'array') {
-    type = 'array<' + umlSchemaType(normalized.items || {}, documentRoot) + '>';
+    type = 'array<' + umlSchemaType(normalized.items || {}, documentRoot, memo) + '>';
   }
 
   lines.push('Type: ' + type);
@@ -787,15 +870,15 @@ function umlFieldTooltip(schema, documentRoot) {
 
   if (normalized.description) lines.push('Description: ' + normalized.description);
 
-  var choiceText = umlChoiceTooltip(normalized, documentRoot);
+  var choiceText = umlChoiceTooltip(normalized, documentRoot, memo);
   if (choiceText) lines.push(choiceText);
 
   return lines.join('\n');
 }
 
-function umlCardinality(schema, isRequired, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
-  var isArray = umlSchemaType(normalized, documentRoot) === 'array';
+function umlCardinality(schema, isRequired, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
+  var isArray = umlSchemaType(normalized, documentRoot, memo) === 'array';
   var min = isRequired ? 1 : 0;
   var max = isRequired ? 1 : 1;
 
@@ -807,19 +890,19 @@ function umlCardinality(schema, isRequired, documentRoot) {
   return '[' + min + '..' + max + ']';
 }
 
-function umlIsObjectLike(schema, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
-  var type = umlSchemaType(normalized, documentRoot);
+function umlIsObjectLike(schema, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
+  var type = umlSchemaType(normalized, documentRoot, memo);
   return type === 'object' && !!normalized.properties && !normalized.oneOf && !normalized.anyOf;
 }
 
-function umlChildSchema(schema, documentRoot) {
-  var normalized = umlNormalizeSchema(schema, documentRoot);
-  if (umlSchemaType(normalized, documentRoot) === 'array') {
-    var itemSchema = umlNormalizeSchema(normalized.items || {}, documentRoot);
-    return umlIsObjectLike(itemSchema, documentRoot) ? itemSchema : null;
+function umlChildSchema(schema, documentRoot, memo) {
+  var normalized = umlNormalizeSchema(schema, documentRoot, null, memo);
+  if (umlSchemaType(normalized, documentRoot, memo) === 'array') {
+    var itemSchema = umlNormalizeSchema(normalized.items || {}, documentRoot, null, memo);
+    return umlIsObjectLike(itemSchema, documentRoot, memo) ? itemSchema : null;
   }
-  return umlIsObjectLike(normalized, documentRoot) ? normalized : null;
+  return umlIsObjectLike(normalized, documentRoot, memo) ? normalized : null;
 }
 
 function umlRefKey(schema) {
@@ -867,7 +950,7 @@ function umlConfigurationWarnings(api, schema) {
   return warnings;
 }
 
-function resolveOpenApiSchemaSelector(openApiDocument, selector) {
+function resolveOpenApiSchemaSelector(openApiDocument, selector, memo) {
   var parsed = umlParseSelector(selector);
   var schemas =
     openApiDocument &&
@@ -882,7 +965,7 @@ function resolveOpenApiSchemaSelector(openApiDocument, selector) {
 
   for (var index = 1; index < parsed.parts.length; index += 1) {
     var segment = parsed.parts[index];
-    var normalized = umlNormalizeSchema(current, openApiDocument);
+    var normalized = umlNormalizeSchema(current, openApiDocument, null, memo);
 
     if (segment === 'properties') {
       index += 1;
@@ -916,7 +999,7 @@ function resolveOpenApiSchemaSelector(openApiDocument, selector) {
 
   return {
     title: parsed.alias,
-    schema: umlNormalizeSchema(current, openApiDocument),
+    schema: umlNormalizeSchema(current, openApiDocument, null, memo),
   };
 }
 
@@ -924,8 +1007,8 @@ function umlNodeHeight(fieldCount) {
   return fieldCount ? UML_LAYOUT.headerHeight + fieldCount * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX : UML_LAYOUT.headerHeight;
 }
 
-function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancestorRefs) {
-  var normalized = umlNormalizeSchema(schema, openApiDocument);
+function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancestorRefs, memo) {
+  var normalized = umlNormalizeSchema(schema, openApiDocument, null, memo);
   var required = normalized.required || [];
   var fields = [];
   var children = [];
@@ -934,9 +1017,9 @@ function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancest
 
   umlObjectKeys(normalized.properties).forEach(function (propertyName) {
     var propertySchema = normalized.properties[propertyName];
-    var propertyNormalized = umlNormalizeSchema(propertySchema, openApiDocument);
-    var cardinality = umlCardinality(propertyNormalized, required.indexOf(propertyName) !== -1, openApiDocument);
-    var childSchema = umlChildSchema(propertyNormalized, openApiDocument);
+    var propertyNormalized = umlNormalizeSchema(propertySchema, openApiDocument, null, memo);
+    var cardinality = umlCardinality(propertyNormalized, required.indexOf(propertyName) !== -1, openApiDocument, memo);
+    var childSchema = umlChildSchema(propertyNormalized, openApiDocument, memo);
     var nextPath = refPath + '.properties.' + propertyName;
     var refKey = umlRefKey(propertySchema);
 
@@ -948,14 +1031,15 @@ function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancest
       children.push({
         name: propertyName,
         cardinality: cardinality,
-        tooltip: umlFieldTooltip(propertyNormalized, openApiDocument),
+        tooltip: umlFieldTooltip(propertyNormalized, openApiDocument, memo),
         node: umlBuildNode(
           openApiDocument,
           childSchema,
           propertyName,
           nextPath,
           currentAncestors.concat(nextPath),
-          refKey ? currentAncestorRefs.concat(refKey) : currentAncestorRefs
+          refKey ? currentAncestorRefs.concat(refKey) : currentAncestorRefs,
+          memo
         ),
       });
       return;
@@ -964,7 +1048,7 @@ function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancest
     fields.push({
       name: propertyName,
       cardinality: cardinality,
-      tooltip: umlFieldTooltip(propertyNormalized, openApiDocument),
+      tooltip: umlFieldTooltip(propertyNormalized, openApiDocument, memo),
     });
   });
 
@@ -1169,8 +1253,20 @@ function umlRenderEdge(parent, child) {
 
 function generateUmlSvg(openApiDocument, selector, theme) {
   var umlTheme = theme || UML_THEMES.light;
-  var selected = resolveOpenApiSchemaSelector(openApiDocument, selector);
-  var rootNode = umlBuildNode(openApiDocument, selected.schema, selected.title, selected.title, [selected.title], []);
+  var schemaMemo = {
+    pointers: Object.create(null),
+    normalized: typeof WeakMap !== 'undefined' ? new WeakMap() : null,
+  };
+  var selected = resolveOpenApiSchemaSelector(openApiDocument, selector, schemaMemo);
+  var rootNode = umlBuildNode(
+    openApiDocument,
+    selected.schema,
+    selected.title,
+    selected.title,
+    [selected.title],
+    [],
+    schemaMemo
+  );
 
   umlMeasureNode(rootNode);
   umlCalculateSubtreeHeight(rootNode);
@@ -1260,10 +1356,6 @@ function generateUmlSvg(openApiDocument, selector, theme) {
   );
 }
 
-function umlSvgToDataUrl(svg) {
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg || '');
-}
-
 function umlDownloadFilename(schema) {
   var parsed = umlParseSelector(schema);
   return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'schema-diagram';
@@ -1301,34 +1393,77 @@ function UMLLoadingSpinner(props) {
   );
 }
 
+async function umlFetchOpenApiJsonDocument(jsonUrl) {
+  var key = String(jsonUrl || '');
+  if (!key) throw new Error('OpenAPI JSON URL was empty.');
+
+  return umlCachePromise(umlSharedState().openApiDocumentByUrl, key, async function () {
+    var isRawGithubUrl = /^https:\/\/raw\.githubusercontent\.com\//i.test(jsonUrl);
+    var response = await fetch(jsonUrl, { credentials: isRawGithubUrl ? 'omit' : 'same-origin' });
+    if (!response.ok) throw new Error(String(response.status));
+    return await response.json();
+  });
+}
+
 async function umlFetchOpenApiDocument(api, options) {
   var explicitUrl = umlExplicitOpenApiUrl(options);
-  var candidateUrls = [];
+  var primaryCandidateUrls = [];
   var discoveryErrors = [];
+  var fetchErrors = [];
 
   if (explicitUrl) {
-    candidateUrls.push(deriveOpenApiJsonUrl(explicitUrl));
+    primaryCandidateUrls.push(deriveOpenApiJsonUrl(explicitUrl));
   } else {
     try {
-      candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiUrlFromPageHtml(api)));
+      primaryCandidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiUrlFromPageHtml(api)));
     } catch (htmlDiscoveryError) {
       discoveryErrors.push(htmlDiscoveryError && htmlDiscoveryError.message);
       try {
-        candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiSyncUrl(api)));
+        primaryCandidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiSyncUrl(api)));
       } catch (stateDiscoveryError) {
         discoveryErrors.push(stateDiscoveryError && stateDiscoveryError.message);
       }
     }
+  }
 
+  primaryCandidateUrls = umlUnique(primaryCandidateUrls.filter(Boolean));
+  if (!primaryCandidateUrls.length && explicitUrl) {
+    throw new Error('Could not infer an OpenAPI URL from the explicit source URL.');
+  }
+
+  for (var index = 0; index < primaryCandidateUrls.length; index += 1) {
+    var primaryUrl = primaryCandidateUrls[index];
+    try {
+      return await umlFetchOpenApiJsonDocument(primaryUrl);
+    } catch (error) {
+      fetchErrors.push(primaryUrl + ' (' + ((error && error.message) || 'fetch failed') + ')');
+    }
+  }
+
+  var fallbackUrls = [];
+  if (!explicitUrl) {
     try {
       var readMeVersion = await umlInferReadMeVersion();
-      candidateUrls = candidateUrls.concat(umlBuildOpenBankingRawJsonUrls(api, readMeVersion));
+      fallbackUrls = umlBuildOpenBankingRawJsonUrls(api, readMeVersion);
     } catch (versionError) {
       discoveryErrors.push(versionError && versionError.message);
     }
   }
 
-  candidateUrls = umlUnique(candidateUrls.filter(Boolean));
+  var candidateUrls = umlUnique(primaryCandidateUrls.concat(fallbackUrls).filter(Boolean));
+  var secondaryCandidateUrls = candidateUrls.filter(function (url) {
+    return primaryCandidateUrls.indexOf(url) === -1;
+  });
+
+  for (var fallbackIndex = 0; fallbackIndex < secondaryCandidateUrls.length; fallbackIndex += 1) {
+    var fallbackUrl = secondaryCandidateUrls[fallbackIndex];
+    try {
+      return await umlFetchOpenApiJsonDocument(fallbackUrl);
+    } catch (error) {
+      fetchErrors.push(fallbackUrl + ' (' + ((error && error.message) || 'fetch failed') + ')');
+    }
+  }
+
   if (!candidateUrls.length) {
     throw new Error(
       'Could not infer an OpenAPI URL for api="' +
@@ -1336,25 +1471,6 @@ async function umlFetchOpenApiDocument(api, options) {
         '". ' +
         discoveryErrors.filter(Boolean).join(' ')
     );
-  }
-
-  var fetchErrors = [];
-
-  for (var index = 0; index < candidateUrls.length; index += 1) {
-    var jsonUrl = candidateUrls[index];
-    try {
-      var isRawGithubUrl = /^https:\/\/raw\.githubusercontent\.com\//i.test(jsonUrl);
-      var response = await fetch(jsonUrl, { credentials: isRawGithubUrl ? 'omit' : 'same-origin' });
-
-      if (!response.ok) {
-        fetchErrors.push(jsonUrl + ' (' + response.status + ')');
-        continue;
-      }
-
-      return await response.json();
-    } catch (error) {
-      fetchErrors.push(jsonUrl + ' (' + ((error && error.message) || 'fetch failed') + ')');
-    }
   }
 
   throw new Error('Could not fetch OpenAPI JSON. Tried: ' + fetchErrors.join('; '));
@@ -1367,6 +1483,7 @@ function UMLGeneratorButtonRuntime(props) {
   var api = props && props.api;
   var schema = props && props.schema;
   var openApiUrl = props && (props.openApiUrl || props.sourceUrl || props.url);
+  var prefetch = !(props && props.prefetch === false);
   var parsedSchema = umlTryParseSelector(schema);
   var schemaTitle = parsedSchema ? parsedSchema.alias : '';
   var configurationWarnings = umlConfigurationWarnings(api, schema);
@@ -1391,6 +1508,10 @@ function UMLGeneratorButtonRuntime(props) {
   var svgThemeModeState = useState('');
   var svgThemeMode = svgThemeModeState[0];
   var setSvgThemeMode = svgThemeModeState[1];
+
+  var svgObjectUrlState = useState('');
+  var svgObjectUrl = svgObjectUrlState[0];
+  var setSvgObjectUrl = svgObjectUrlState[1];
 
   var openState = useState(false);
   var isOpen = openState[0];
@@ -1480,24 +1601,20 @@ function UMLGeneratorButtonRuntime(props) {
       if (event && event.stopPropagation) event.stopPropagation();
       if (!svg || typeof document === 'undefined') return;
 
-      var blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var frame = document.createElement('iframe');
-      frame.style.display = 'none';
-      document.body.appendChild(frame);
-
-      var frameDocument = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-      var link = frameDocument.createElement('a');
-      link.href = url;
+      var url = svgObjectUrl || URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+      var shouldRevokeUrl = !svgObjectUrl;
+      var link = document.createElement('a');
       link.download = umlDownloadFilename(schema) + '.svg';
-      frameDocument.body.appendChild(link);
+      link.href = url;
+      link.style.display = 'none';
+      document.body.appendChild(link);
       link.click();
-      window.setTimeout(function () {
-        if (frame.parentNode) frame.parentNode.removeChild(frame);
-        URL.revokeObjectURL(url);
-      }, 60000);
+      if (link.parentNode) link.parentNode.removeChild(link);
+      setTimeout(function () {
+        if (shouldRevokeUrl) URL.revokeObjectURL(url);
+      }, shouldRevokeUrl ? 30000 : 0);
     },
-    [svg, schema]
+    [svg, schema, svgObjectUrl]
   );
 
   var onOverlayMouseDown = useCallback(
@@ -1559,6 +1676,62 @@ function UMLGeneratorButtonRuntime(props) {
   var onPointerUp = useCallback(function () {
     setIsDragging(false);
   }, []);
+
+  useEffect(
+    function () {
+      if (!svg) {
+        setSvgObjectUrl(function (previousUrl) {
+          if (previousUrl) URL.revokeObjectURL(previousUrl);
+          return '';
+        });
+        return undefined;
+      }
+
+      var nextUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+      setSvgObjectUrl(function (previousUrl) {
+        if (previousUrl) URL.revokeObjectURL(previousUrl);
+        return nextUrl;
+      });
+
+      return function () {
+        URL.revokeObjectURL(nextUrl);
+      };
+    },
+    [svg]
+  );
+
+  useEffect(
+    function () {
+      if (!prefetch || !api || !schema) return undefined;
+
+      var cancelled = false;
+      var idleHandle = null;
+
+      function prewarm() {
+        if (cancelled) return;
+        umlFetchOpenApiDocument(api, { openApiUrl: openApiUrl }).catch(function () {
+          // Ignore prefetch errors; click-time generation still surfaces user-visible errors.
+        });
+      }
+
+      if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+        idleHandle = window.requestIdleCallback(prewarm, { timeout: 1200 });
+        return function () {
+          cancelled = true;
+          if (idleHandle !== null && typeof window.cancelIdleCallback === 'function') {
+            window.cancelIdleCallback(idleHandle);
+          }
+        };
+      }
+
+      idleHandle = setTimeout(prewarm, 150);
+      return function () {
+        cancelled = true;
+        if (idleHandle !== null) clearTimeout(idleHandle);
+      };
+    },
+    [prefetch, api, schema, openApiUrl]
+  );
 
   useEffect(
     function () {
@@ -1875,9 +2048,9 @@ function UMLGeneratorButtonRuntime(props) {
                 </div>
               ) : null}
 
-              {svg && !error ? (
+              {svgObjectUrl && !error ? (
                 <img
-                  src={umlSvgToDataUrl(svg)}
+                  src={svgObjectUrl}
                   alt={title}
                   draggable={false}
                   onPointerDown={onPointerDown}
