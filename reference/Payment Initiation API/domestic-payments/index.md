@@ -6,6 +6,10 @@ hidden: false
 
 The Domestic Payments Consent resource is used by a <Glossary>PISP</Glossary> to register an intent to initiate a Domestic Payment.
 
+<UMLGeneratorButton api="PIS" schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2" />
+
+<br />
+
 <PISProfile />
 
 ## Endpoints
