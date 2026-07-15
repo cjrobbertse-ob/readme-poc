@@ -1272,6 +1272,17 @@ function umlDownloadFilename(schema) {
   return parsed.alias.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'schema-diagram';
 }
 
+function umlProgress(value, label) {
+  return {
+    value: umlClamp(Math.round(value), 1, 100),
+    label: label || '',
+  };
+}
+
+function umlReportProgress(onProgress, value, label) {
+  if (typeof onProgress === 'function') onProgress(umlProgress(value, label));
+}
+
 function UMLLoadingSpinner(props) {
   var size = (props && props.size) || 18;
   var color = (props && props.color) || UML_THEMES.light.primary;
@@ -1307,7 +1318,8 @@ function UMLLoadingSpinner(props) {
 function UMLLoadingProgress(props) {
   var width = (props && props.width) || 240;
   var height = 6;
-  var segmentWidth = Math.round(width * 0.36);
+  var value = umlClamp(Math.round((props && props.value) || 1), 1, 100);
+  var progressWidth = (width * value) / 100;
   var color = (props && props.color) || UML_THEMES.light.primary;
   var trackColor = (props && props.trackColor) || color;
 
@@ -1321,14 +1333,7 @@ function UMLLoadingProgress(props) {
       style={{ display: 'block', maxWidth: '100%', borderRadius: '999px', overflow: 'hidden' }}
     >
       <rect width={width} height={height} rx={height / 2} fill={trackColor} opacity="0.2" />
-      <rect width={segmentWidth} height={height} rx={height / 2} fill={color}>
-        <animate
-          attributeName="x"
-          values={'-' + segmentWidth + ';' + width}
-          dur="1.2s"
-          repeatCount="indefinite"
-        />
-      </rect>
+      <rect width={progressWidth} height={height} rx={height / 2} fill={color} />
     </svg>
   );
 }
@@ -1337,22 +1342,31 @@ async function umlFetchOpenApiDocument(api, options) {
   var explicitUrl = umlExplicitOpenApiUrl(options);
   var candidateUrls = [];
   var discoveryErrors = [];
+  var onProgress = options && options.onProgress;
+
+  umlReportProgress(onProgress, 8, 'Preparing OpenAPI source lookup.');
 
   if (explicitUrl) {
+    umlReportProgress(onProgress, 18, 'Using the configured OpenAPI source.');
     candidateUrls.push(deriveOpenApiJsonUrl(explicitUrl));
   } else {
     try {
+      umlReportProgress(onProgress, 14, 'Looking for an OpenAPI source on this page.');
       candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiUrlFromPageHtml(api)));
+      umlReportProgress(onProgress, 24, 'Found the page OpenAPI source.');
     } catch (htmlDiscoveryError) {
       discoveryErrors.push(htmlDiscoveryError && htmlDiscoveryError.message);
       try {
+        umlReportProgress(onProgress, 24, 'Checking ReadMe OpenAPI sync state.');
         candidateUrls.push(deriveOpenApiJsonUrl(await discoverReadMeOpenApiSyncUrl(api)));
+        umlReportProgress(onProgress, 31, 'Found the ReadMe OpenAPI source.');
       } catch (stateDiscoveryError) {
         discoveryErrors.push(stateDiscoveryError && stateDiscoveryError.message);
       }
     }
 
     try {
+      umlReportProgress(onProgress, 34, 'Checking the Open Banking fallback source.');
       var readMeVersion = await umlInferReadMeVersion();
       candidateUrls = candidateUrls.concat(umlBuildOpenBankingRawJsonUrls(api, readMeVersion));
     } catch (versionError) {
@@ -1361,6 +1375,7 @@ async function umlFetchOpenApiDocument(api, options) {
   }
 
   candidateUrls = umlUnique(candidateUrls.filter(Boolean));
+  umlReportProgress(onProgress, 38, 'Resolved OpenAPI source candidates.');
   if (!candidateUrls.length) {
     throw new Error(
       'Could not infer an OpenAPI URL for api="' +
@@ -1375,6 +1390,8 @@ async function umlFetchOpenApiDocument(api, options) {
   for (var index = 0; index < candidateUrls.length; index += 1) {
     var jsonUrl = candidateUrls[index];
     try {
+      var attemptProgress = 42 + Math.floor((index / Math.max(candidateUrls.length, 1)) * 32);
+      umlReportProgress(onProgress, attemptProgress, 'Fetching OpenAPI JSON.');
       var isRawGithubUrl = /^https:\/\/raw\.githubusercontent\.com\//i.test(jsonUrl);
       var response = await fetch(jsonUrl, { credentials: isRawGithubUrl ? 'omit' : 'same-origin' });
 
@@ -1383,7 +1400,10 @@ async function umlFetchOpenApiDocument(api, options) {
         continue;
       }
 
-      return await response.json();
+      umlReportProgress(onProgress, 78, 'Parsing OpenAPI JSON.');
+      var openApiDocument = await response.json();
+      umlReportProgress(onProgress, 84, 'OpenAPI JSON loaded.');
+      return openApiDocument;
     } catch (error) {
       fetchErrors.push(jsonUrl + ' (' + ((error && error.message) || 'fetch failed') + ')');
     }
@@ -1432,6 +1452,10 @@ function UMLGeneratorButtonRuntime(props) {
   var isLoading = loadingState[0];
   var setIsLoading = loadingState[1];
 
+  var loadingProgressState = useState(umlProgress(1, 'Preparing diagram generation.'));
+  var loadingProgress = loadingProgressState[0];
+  var setLoadingProgress = loadingProgressState[1];
+
   var errorState = useState('');
   var error = errorState[0];
   var setError = errorState[1];
@@ -1470,15 +1494,21 @@ function UMLGeneratorButtonRuntime(props) {
       if (svg && svgThemeMode === themeMode) return;
 
       setIsLoading(true);
+      setLoadingProgress(umlProgress(1, 'Preparing diagram generation.'));
       try {
         if (!api) throw new Error('Add an api prop, for example api="PIS".');
         if (!schema) throw new Error('Add a schema prop, for example schema="OBWriteDomesticConsent4.properties.Data.properties.Initiation:OBDomestic2".');
 
         var openApiDocument = await umlFetchOpenApiDocument(api, {
           openApiUrl: openApiUrl,
+          onProgress: setLoadingProgress,
         });
-        setSvg(generateUmlSvg(openApiDocument, schema, umlTheme));
+        setLoadingProgress(umlProgress(88, 'Building schema relationship diagram.'));
+        var generatedSvg = generateUmlSvg(openApiDocument, schema, umlTheme);
+        setLoadingProgress(umlProgress(96, 'Rendering diagram viewer.'));
+        setSvg(generatedSvg);
         setSvgThemeMode(themeMode);
+        setLoadingProgress(umlProgress(100, 'Diagram ready.'));
       } catch (generationError) {
         setError((generationError && generationError.message) || 'Failed to generate the schema diagram.');
       } finally {
@@ -1883,10 +1913,26 @@ function UMLGeneratorButtonRuntime(props) {
                   <div>
                     <p style={{ margin: 0 }}>{loadingLabel}</p>
                     <p style={{ margin: '6px 0 0', color: umlTheme.muted, fontSize: '12px', fontWeight: 600 }}>
-                      Downloading the OpenAPI source and building the SVG diagram.
+                      {loadingProgress.label}
                     </p>
                   </div>
-                  <UMLLoadingProgress color={umlTheme.accent} trackColor={umlTheme.primaryBorder} />
+                  <div
+                    role="progressbar"
+                    aria-label="Schema diagram generation progress"
+                    aria-valuemin={1}
+                    aria-valuemax={100}
+                    aria-valuenow={loadingProgress.value}
+                    style={{ width: '240px', maxWidth: '100%' }}
+                  >
+                    <UMLLoadingProgress
+                      value={loadingProgress.value}
+                      color={umlTheme.accent}
+                      trackColor={umlTheme.primaryBorder}
+                    />
+                  </div>
+                  <p style={{ margin: '-6px 0 0', color: umlTheme.muted, fontSize: '12px', fontWeight: 700 }}>
+                    {loadingProgress.value + '%'}
+                  </p>
                 </div>
               ) : null}
 
