@@ -70,7 +70,6 @@ var UML_LAYOUT = {
   boxPaddingX: 16,
   headerHeight: 34,
   rowHeight: 21,
-  fieldlessBodyHeight: 14,
   boxGapY: 26,
   columnGap: 131,
   edgeBusOffset: 44,
@@ -1005,8 +1004,7 @@ function resolveOpenApiSchemaSelector(openApiDocument, selector, memo) {
 }
 
 function umlNodeHeight(fieldCount) {
-  var bodyHeight = fieldCount ? fieldCount * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX : UML_LAYOUT.fieldlessBodyHeight;
-  return UML_LAYOUT.headerHeight + bodyHeight;
+  return fieldCount ? UML_LAYOUT.headerHeight + fieldCount * UML_LAYOUT.rowHeight + UML_LAYOUT.boxPaddingX : UML_LAYOUT.headerHeight;
 }
 
 function umlBuildNode(openApiDocument, schema, title, refPath, ancestors, ancestorRefs, memo) {
@@ -1132,7 +1130,6 @@ function umlWalkNodes(node, callback) {
 function umlRenderNode(node) {
   var parts = [];
   var hasFields = node.fields.length > 0;
-  var hasBody = node.height > UML_LAYOUT.headerHeight;
   var titleY = node.y + 22;
 
   parts.push(
@@ -1160,7 +1157,7 @@ function umlRenderNode(node) {
       '" height="' +
       UML_LAYOUT.headerHeight +
       '" rx="8"/>' +
-      (hasBody
+      (hasFields
         ? '<path class="uml-header-seam" d="M ' +
           node.x +
           ' ' +
@@ -1947,7 +1944,7 @@ function UMLGeneratorButtonRuntime(props) {
               flexDirection: 'column',
               width: '100%',
               maxWidth: '2560px',
-              height: '95vh',
+              height: '90vh',
               background: umlTheme.modalBackground,
               color: umlTheme.text,
               borderRadius: '12px',
