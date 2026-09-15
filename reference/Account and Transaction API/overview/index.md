@@ -103,8 +103,6 @@ Step 4: Request Data
 
 ![](./images/AccountsOverviewwithCIBA.png)
 
-<MermaidExistingBlockPopoutV2 title="Mermaid popup" openLabel="Open diagram" />
-
 <Accordion title="Diagram source" icon="code">
   ```
   participant PSU
