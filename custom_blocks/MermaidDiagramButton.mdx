@@ -1,0 +1,1303 @@
+---
+name: MermaidDiagramButton
+---
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export const MermaidDiagramButton = function (props) {
+  var MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11.12.2/+esm";
+  var MERMAID_MIN_ZOOM = 0.35;
+  var MERMAID_MAX_ZOOM = 4;
+  var MERMAID_INITIAL_ZOOM = 1;
+
+  var MERMAID_THEMES = {
+    light: {
+      primary: "#51509e",
+      primaryBorder: "#00167a",
+      primaryText: "#ffffff",
+      text: "#1a1a1a",
+      muted: "#64748b",
+      modalBackground: "#ffffff",
+      modalBorder: "#e2e8f0",
+      viewerBackground: "#f8fafc",
+      controlBackground: "#ffffff",
+      controlBorder: "#cbd5e1",
+      error: "#be123c",
+      warning: "#b45309",
+      warningBackground: "#fffbeb",
+      warningBorder: "#f59e0b",
+      diagram: {
+        darkMode: false,
+        background: "#ffffff",
+        fontFamily: "Metropolis, Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryColor: "#51509e",
+        primaryTextColor: "#ffffff",
+        primaryBorderColor: "#00167a",
+        secondaryColor: "#cceef4",
+        secondaryTextColor: "#1a1a1a",
+        secondaryBorderColor: "#0097b2",
+        tertiaryColor: "#f0eff8",
+        tertiaryTextColor: "#1a1a1a",
+        tertiaryBorderColor: "#51509e",
+        lineColor: "#00167a",
+        textColor: "#1a1a1a",
+        noteBkgColor: "#e3a941",
+        noteTextColor: "#1a1a1a",
+        noteBorderColor: "#b57c15",
+        actorBkg: "#51509e",
+        actorBorder: "#00167a",
+        actorTextColor: "#ffffff",
+        actorLineColor: "#00167a",
+        signalColor: "#1a1a1a",
+        signalTextColor: "#1a1a1a",
+        labelBoxBkgColor: "#f0eff8",
+        labelBoxBorderColor: "#51509e",
+        labelTextColor: "#51509e",
+        loopTextColor: "#51509e",
+        activationBorderColor: "#0097b2",
+        activationBkgColor: "#cceef4",
+        sequenceNumberColor: "#ffffff",
+      },
+    },
+    dark: {
+      primary: "#51509e",
+      primaryBorder: "#b9b7ff",
+      primaryText: "#ffffff",
+      text: "#f8fafc",
+      muted: "#94a3b8",
+      modalBackground: "#0f172a",
+      modalBorder: "#334155",
+      viewerBackground: "#020617",
+      controlBackground: "#15172b",
+      controlBorder: "#475569",
+      error: "#fb7185",
+      warning: "#fbbf24",
+      warningBackground: "#422006",
+      warningBorder: "#f59e0b",
+      diagram: {
+        darkMode: true,
+        background: "#020617",
+        fontFamily: "Metropolis, Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryColor: "#51509e",
+        primaryTextColor: "#ffffff",
+        primaryBorderColor: "#b9b7ff",
+        secondaryColor: "#083747",
+        secondaryTextColor: "#f8fafc",
+        secondaryBorderColor: "#00a8c6",
+        tertiaryColor: "#211f46",
+        tertiaryTextColor: "#f8fafc",
+        tertiaryBorderColor: "#8382c3",
+        lineColor: "#b9b7ff",
+        textColor: "#f8fafc",
+        noteBkgColor: "#7c5b18",
+        noteTextColor: "#ffffff",
+        noteBorderColor: "#e3a941",
+        actorBkg: "#51509e",
+        actorBorder: "#b9b7ff",
+        actorTextColor: "#ffffff",
+        actorLineColor: "#b9b7ff",
+        signalColor: "#f8fafc",
+        signalTextColor: "#f8fafc",
+        labelBoxBkgColor: "#211f46",
+        labelBoxBorderColor: "#8382c3",
+        labelTextColor: "#f8fafc",
+        loopTextColor: "#d7d6ff",
+        activationBorderColor: "#00a8c6",
+        activationBkgColor: "#083747",
+        sequenceNumberColor: "#ffffff",
+      },
+    },
+  };
+
+  function mermaidClamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function mermaidNumberOrDefault(value, fallback) {
+    return typeof value === "number" && Number.isFinite(value)
+      ? value
+      : fallback;
+  }
+
+  function mermaidSharedState() {
+    var host =
+      typeof globalThis !== "undefined"
+        ? globalThis
+        : typeof window !== "undefined"
+          ? window
+          : {};
+    var key = "__obReadMeMermaidDiagramSharedStateV1";
+
+    if (!host[key]) {
+      host[key] = {
+        modulePromise: null,
+        renderQueue: Promise.resolve(),
+        nextRenderId: 0,
+      };
+    }
+
+    return host[key];
+  }
+
+  function mermaidLoadModule() {
+    var shared = mermaidSharedState();
+    if (shared.modulePromise) return shared.modulePromise;
+
+    shared.modulePromise = import(
+      "https://cdn.jsdelivr.net/npm/mermaid@11.12.2/+esm"
+    )
+      .then(function (module) {
+        var mermaid = module && (module.default || module);
+        if (
+          !mermaid ||
+          typeof mermaid.initialize !== "function" ||
+          typeof mermaid.render !== "function"
+        ) {
+          throw new Error(
+            "The Mermaid module did not expose the expected browser API.",
+          );
+        }
+        return mermaid;
+      })
+      .catch(function (error) {
+        shared.modulePromise = null;
+        throw new Error(
+          "Could not load Mermaid " +
+            MERMAID_MODULE_URL.replace(/^.*mermaid@/, "").replace(
+              /\/\+esm$/,
+              "",
+            ) +
+            ". " +
+            ((error && error.message) || "The module request failed."),
+        );
+      });
+
+    return shared.modulePromise;
+  }
+
+  function mermaidQueueRender(renderOperation) {
+    var shared = mermaidSharedState();
+    var operation = shared.renderQueue
+      .catch(function () {})
+      .then(renderOperation);
+    shared.renderQueue = operation.catch(function () {});
+    return operation;
+  }
+
+  function mermaidNextRenderId() {
+    var shared = mermaidSharedState();
+    shared.nextRenderId += 1;
+    return "ob-mermaid-diagram-" + shared.nextRenderId;
+  }
+
+  function mermaidMergeTheme(baseTheme, overrideTheme) {
+    var merged = Object.assign({}, baseTheme || {}, overrideTheme || {});
+    merged.diagram = Object.assign(
+      {},
+      (baseTheme && baseTheme.diagram) || {},
+      (overrideTheme && overrideTheme.diagram) || {},
+    );
+    return merged;
+  }
+
+  function mermaidThemeFromMode(mode, componentProps) {
+    var selectedMode = mode === "dark" ? "dark" : "light";
+    var baseTheme = MERMAID_THEMES[selectedMode];
+    var modeOverride =
+      selectedMode === "dark"
+        ? componentProps && componentProps.darkTheme
+        : componentProps && componentProps.lightTheme;
+    return mermaidMergeTheme(
+      mermaidMergeTheme(baseTheme, modeOverride),
+      componentProps && componentProps.themeOverrides,
+    );
+  }
+
+  function mermaidAvailableDocuments() {
+    if (typeof document === "undefined") return [];
+
+    var docs = [document];
+    if (typeof window !== "undefined") {
+      try {
+        if (window.parent && window.parent.document)
+          docs.push(window.parent.document);
+      } catch (error) {
+        // ReadMe previews can place the component in a cross-origin frame.
+      }
+
+      try {
+        if (window.top && window.top.document) docs.push(window.top.document);
+      } catch (error) {
+        // ReadMe previews can place the component in a cross-origin frame.
+      }
+    }
+
+    return docs.filter(function (doc, index) {
+      return doc && docs.indexOf(doc) === index;
+    });
+  }
+
+  function mermaidThemeModeFromText(value) {
+    var text = String(value || "").toLowerCase();
+    if (/(^|[\s_-])light($|[\s_-])/.test(text)) return "light";
+    if (/(^|[\s_-])dark($|[\s_-])/.test(text) || text.indexOf("night") !== -1)
+      return "dark";
+    return "";
+  }
+
+  function mermaidThemeModeFromElementAttributes(element) {
+    if (!element || !element.getAttribute) return "";
+
+    var explicitAttributes = [
+      "data-theme",
+      "data-color-mode",
+      "data-color-scheme",
+      "data-readme-color-scheme",
+      "color-scheme",
+    ];
+    for (var index = 0; index < explicitAttributes.length; index += 1) {
+      var mode = mermaidThemeModeFromText(
+        element.getAttribute(explicitAttributes[index]),
+      );
+      if (mode) return mode;
+    }
+
+    return mermaidThemeModeFromText(element.style && element.style.colorScheme);
+  }
+
+  function mermaidThemeModeFromElementClasses(element) {
+    if (!element || !element.className) return "";
+    return mermaidThemeModeFromText(String(element.className));
+  }
+
+  function mermaidParseRgbColor(value) {
+    var match = String(value || "").match(
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/i,
+    );
+    if (!match || match[4] === "0") return null;
+
+    return {
+      red: Number(match[1]),
+      green: Number(match[2]),
+      blue: Number(match[3]),
+    };
+  }
+
+  function mermaidRelativeLuminance(color) {
+    if (!color) return null;
+
+    function channel(value) {
+      var normalized = value / 255;
+      return normalized <= 0.03928
+        ? normalized / 12.92
+        : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    }
+
+    return (
+      0.2126 * channel(color.red) +
+      0.7152 * channel(color.green) +
+      0.0722 * channel(color.blue)
+    );
+  }
+
+  function mermaidThemeModeFromDocumentPaint(doc) {
+    var docWindow =
+      doc && doc.defaultView
+        ? doc.defaultView
+        : typeof window !== "undefined"
+          ? window
+          : null;
+    if (!doc || !docWindow || !docWindow.getComputedStyle) return "";
+
+    var elements = [doc.body, doc.documentElement].filter(Boolean);
+    for (var index = 0; index < elements.length; index += 1) {
+      try {
+        var styles = docWindow.getComputedStyle(elements[index]);
+        var background = mermaidParseRgbColor(styles && styles.backgroundColor);
+        var luminance = mermaidRelativeLuminance(background);
+        if (luminance !== null) return luminance < 0.5 ? "dark" : "light";
+      } catch (error) {
+        // Continue when a parent ReadMe document cannot expose computed styles.
+      }
+    }
+
+    return "";
+  }
+
+  function mermaidDetectReadMeThemeMode(componentProps) {
+    var requested =
+      componentProps && componentProps.theme
+        ? String(componentProps.theme).toLowerCase()
+        : "auto";
+    if (requested === "light" || requested === "dark") return requested;
+
+    var documents = mermaidAvailableDocuments();
+
+    for (var index = 0; index < documents.length; index += 1) {
+      var elements = [
+        documents[index].documentElement,
+        documents[index].body,
+      ].filter(Boolean);
+      for (var attrIndex = 0; attrIndex < elements.length; attrIndex += 1) {
+        var attributeMode = mermaidThemeModeFromElementAttributes(
+          elements[attrIndex],
+        );
+        if (attributeMode) return attributeMode;
+      }
+    }
+
+    for (var paintIndex = 0; paintIndex < documents.length; paintIndex += 1) {
+      var paintMode = mermaidThemeModeFromDocumentPaint(documents[paintIndex]);
+      if (paintMode) return paintMode;
+    }
+
+    for (
+      var classDocIndex = 0;
+      classDocIndex < documents.length;
+      classDocIndex += 1
+    ) {
+      var classElements = [
+        documents[classDocIndex].documentElement,
+        documents[classDocIndex].body,
+      ].filter(Boolean);
+      for (
+        var classIndex = 0;
+        classIndex < classElements.length;
+        classIndex += 1
+      ) {
+        var classMode = mermaidThemeModeFromElementClasses(
+          classElements[classIndex],
+        );
+        if (classMode) return classMode;
+      }
+    }
+
+    if (typeof window !== "undefined" && window.matchMedia) {
+      try {
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+          return "dark";
+      } catch (error) {
+        // Fall through to the light theme when media queries are unavailable.
+      }
+    }
+
+    return "light";
+  }
+
+  function mermaidApplyTheme(source, themeVariables) {
+    var themeDirective = {
+      theme: "base",
+      themeVariables: themeVariables,
+    };
+
+    return (
+      String(source || "").trim() +
+      "\n%%{init: " +
+      JSON.stringify(themeDirective) +
+      "}%%"
+    );
+  }
+
+  function mermaidPrepareSvg(svg) {
+    if (
+      !svg ||
+      typeof DOMParser === "undefined" ||
+      typeof XMLSerializer === "undefined"
+    )
+      return svg;
+
+    var parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
+    var parseError = parsed.querySelector("parsererror");
+    var root = parsed.documentElement;
+    if (parseError || !root || String(root.tagName).toLowerCase() !== "svg") {
+      throw new Error("Mermaid returned an invalid SVG document.");
+    }
+
+    var viewBox = String(root.getAttribute("viewBox") || "")
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
+
+    root.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    root.style.maxWidth = "none";
+    if (
+      viewBox.length === 4 &&
+      viewBox.every(Number.isFinite) &&
+      viewBox[2] > 0 &&
+      viewBox[3] > 0
+    ) {
+      root.setAttribute("width", String(viewBox[2]));
+      root.setAttribute("height", String(viewBox[3]));
+    }
+
+    return new XMLSerializer().serializeToString(root);
+  }
+
+  function mermaidCleanupRenderNodes(renderId) {
+    if (typeof document === "undefined") return;
+
+    [renderId, "d" + renderId].forEach(function (id) {
+      var element = document.getElementById(id);
+      if (element && element.parentNode)
+        element.parentNode.removeChild(element);
+    });
+  }
+
+  function mermaidErrorMessage(error) {
+    var message = error && error.message ? error.message : String(error || "");
+    return message.trim() || "Mermaid could not render this diagram.";
+  }
+
+  function mermaidDownloadFilename(value) {
+    return (
+      String(value || "mermaid-diagram")
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "mermaid-diagram"
+    );
+  }
+
+  function MermaidLoadingSpinner(spinnerProps) {
+    var size = (spinnerProps && spinnerProps.size) || 18;
+    var color =
+      (spinnerProps && spinnerProps.color) || MERMAID_THEMES.light.primaryText;
+    var accentColor =
+      (spinnerProps && spinnerProps.accentColor) ||
+      MERMAID_THEMES.light.diagram.activationBorderColor;
+    var trackColor = (spinnerProps && spinnerProps.trackColor) || color;
+
+    return (
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        style={{ display: "inline-block", flex: "0 0 auto" }}
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="9"
+          fill="none"
+          stroke={trackColor}
+          strokeWidth="3"
+          opacity="0.25"
+        />
+        <g>
+          <path
+            d="M 12 3 A 9 9 0 0 1 21 12"
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <circle cx="12" cy="3" r="2" fill={accentColor} />
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0 12 12"
+            to="360 12 12"
+            dur="0.85s"
+            repeatCount="indefinite"
+          />
+        </g>
+      </svg>
+    );
+  }
+
+  var code =
+    props && typeof props.code !== "undefined" ? String(props.code) : "";
+  var hasCode = !!code.trim();
+  var title = (props && props.title) || "Mermaid Diagram";
+  var openLabel = (props && props.openLabel) || "View diagram";
+  var loadingLabel = (props && props.loadingLabel) || "Rendering diagram...";
+  var prefetch = !(props && props.prefetch === false);
+  var minZoom = mermaidNumberOrDefault(
+    props && props.minZoom,
+    MERMAID_MIN_ZOOM,
+  );
+  var maxZoom = mermaidNumberOrDefault(
+    props && props.maxZoom,
+    MERMAID_MAX_ZOOM,
+  );
+  var initialZoom = mermaidNumberOrDefault(
+    props && props.initialZoom,
+    MERMAID_INITIAL_ZOOM,
+  );
+  var safeMinZoom = Math.min(minZoom, maxZoom);
+  var safeMaxZoom = Math.max(minZoom, maxZoom);
+
+  var themeModeState = useState(mermaidDetectReadMeThemeMode(props));
+  var themeMode = themeModeState[0];
+  var setThemeMode = themeModeState[1];
+  var viewerTheme = mermaidThemeFromMode(themeMode, props);
+  var themeVariablesJson = JSON.stringify(viewerTheme.diagram);
+
+  var overlayRef = useRef(null);
+  var viewerRef = useRef(null);
+  var triggerRef = useRef(null);
+  var closeButtonRef = useRef(null);
+  var dragStartRef = useRef({ pointerX: 0, pointerY: 0, x: 0, y: 0 });
+  var mountedRef = useRef(false);
+  var renderRequestRef = useRef(0);
+  var svgRef = useRef("");
+  var svgCacheKeyRef = useRef("");
+  var inFlightKeyRef = useRef("");
+  var inFlightPromiseRef = useRef(null);
+
+  var openState = useState(false);
+  var isOpen = openState[0];
+  var setIsOpen = openState[1];
+
+  var loadingState = useState(false);
+  var isLoading = loadingState[0];
+  var setIsLoading = loadingState[1];
+
+  var errorState = useState("");
+  var error = errorState[0];
+  var setError = errorState[1];
+
+  var svgState = useState("");
+  var svg = svgState[0];
+  var setSvg = svgState[1];
+
+  var svgObjectUrlState = useState("");
+  var svgObjectUrl = svgObjectUrlState[0];
+  var setSvgObjectUrl = svgObjectUrlState[1];
+
+  var zoomState = useState(mermaidClamp(initialZoom, safeMinZoom, safeMaxZoom));
+  var zoom = zoomState[0];
+  var setZoom = zoomState[1];
+
+  var panState = useState({ x: 0, y: 0 });
+  var pan = panState[0];
+  var setPan = panState[1];
+
+  var draggingState = useState(false);
+  var isDragging = draggingState[0];
+  var setIsDragging = draggingState[1];
+
+  var resetView = useCallback(
+    function () {
+      setZoom(mermaidClamp(initialZoom, safeMinZoom, safeMaxZoom));
+      setPan({ x: 0, y: 0 });
+    },
+    [initialZoom, safeMinZoom, safeMaxZoom],
+  );
+
+  var closeModal = useCallback(function () {
+    setIsOpen(false);
+    setIsDragging(false);
+
+    if (typeof window !== "undefined") {
+      window.setTimeout(function () {
+        if (triggerRef.current && triggerRef.current.focus)
+          triggerRef.current.focus();
+      }, 0);
+    }
+  }, []);
+
+  var openModal = useCallback(
+    function () {
+      if (!hasCode) return;
+      setError("");
+      resetView();
+      setIsOpen(true);
+    },
+    [hasCode, resetView],
+  );
+
+  var renderDiagram = useCallback(
+    function () {
+      var nextCacheKey = themeMode + "\n" + themeVariablesJson + "\n" + code;
+      if (
+        !hasCode ||
+        (svgRef.current && svgCacheKeyRef.current === nextCacheKey)
+      )
+        return Promise.resolve();
+      if (
+        inFlightKeyRef.current === nextCacheKey &&
+        inFlightPromiseRef.current
+      ) {
+        return inFlightPromiseRef.current;
+      }
+
+      renderRequestRef.current += 1;
+      var requestId = renderRequestRef.current;
+      setIsLoading(true);
+      setError("");
+      svgRef.current = "";
+      svgCacheKeyRef.current = "";
+      setSvg("");
+
+      var operation = mermaidQueueRender(async function () {
+        var renderId = mermaidNextRenderId();
+
+        try {
+          var mermaid = await mermaidLoadModule();
+          var renderThemeVariables = JSON.parse(themeVariablesJson);
+          mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: "strict",
+            suppressErrorRendering: true,
+            theme: "base",
+            themeVariables: renderThemeVariables,
+          });
+
+          var themedCode = mermaidApplyTheme(code, renderThemeVariables);
+          if (typeof mermaid.parse === "function")
+            await mermaid.parse(themedCode);
+
+          var result = await mermaid.render(renderId, themedCode);
+          var preparedSvg = mermaidPrepareSvg(result && result.svg);
+          if (!preparedSvg)
+            throw new Error("Mermaid returned an empty SVG document.");
+
+          if (mountedRef.current && requestId === renderRequestRef.current) {
+            svgRef.current = preparedSvg;
+            svgCacheKeyRef.current = nextCacheKey;
+            setSvg(preparedSvg);
+          }
+        } catch (renderError) {
+          if (mountedRef.current && requestId === renderRequestRef.current) {
+            setError(mermaidErrorMessage(renderError));
+          }
+        } finally {
+          mermaidCleanupRenderNodes(renderId);
+          if (mountedRef.current && requestId === renderRequestRef.current) {
+            setIsLoading(false);
+          }
+        }
+      });
+
+      inFlightKeyRef.current = nextCacheKey;
+      inFlightPromiseRef.current = operation;
+      operation.then(
+        function () {
+          if (inFlightKeyRef.current === nextCacheKey) {
+            inFlightKeyRef.current = "";
+            inFlightPromiseRef.current = null;
+          }
+        },
+        function () {
+          if (inFlightKeyRef.current === nextCacheKey) {
+            inFlightKeyRef.current = "";
+            inFlightPromiseRef.current = null;
+          }
+        },
+      );
+
+      return operation;
+    },
+    [code, hasCode, themeMode, themeVariablesJson],
+  );
+
+  var zoomIn = useCallback(
+    function () {
+      setZoom(function (value) {
+        return mermaidClamp(
+          Number((value + 0.2).toFixed(2)),
+          safeMinZoom,
+          safeMaxZoom,
+        );
+      });
+    },
+    [safeMinZoom, safeMaxZoom],
+  );
+
+  var zoomOut = useCallback(
+    function () {
+      setZoom(function (value) {
+        return mermaidClamp(
+          Number((value - 0.2).toFixed(2)),
+          safeMinZoom,
+          safeMaxZoom,
+        );
+      });
+    },
+    [safeMinZoom, safeMaxZoom],
+  );
+
+  var onOverlayMouseDown = useCallback(
+    function (event) {
+      if (event.target === overlayRef.current) closeModal();
+    },
+    [closeModal],
+  );
+
+  var onWheel = useCallback(
+    function (event) {
+      event.preventDefault();
+
+      var viewer = viewerRef.current;
+      if (!viewer) return;
+
+      var rect = viewer.getBoundingClientRect();
+      var pointX = event.clientX - rect.left;
+      var pointY = event.clientY - rect.top;
+      var delta = event.deltaY > 0 ? -0.15 : 0.15;
+      var nextZoom = mermaidClamp(
+        Number((zoom + delta).toFixed(2)),
+        safeMinZoom,
+        safeMaxZoom,
+      );
+      if (nextZoom === zoom) return;
+
+      var scaleRatio = nextZoom / zoom;
+      setZoom(nextZoom);
+      setPan({
+        x: pointX - (pointX - pan.x) * scaleRatio,
+        y: pointY - (pointY - pan.y) * scaleRatio,
+      });
+    },
+    [zoom, pan.x, pan.y, safeMinZoom, safeMaxZoom],
+  );
+
+  var onPointerDown = useCallback(
+    function (event) {
+      event.preventDefault();
+      setIsDragging(true);
+      dragStartRef.current = {
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        x: pan.x,
+        y: pan.y,
+      };
+
+      if (event.currentTarget && event.currentTarget.setPointerCapture) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    },
+    [pan.x, pan.y],
+  );
+
+  var onPointerMove = useCallback(
+    function (event) {
+      if (!isDragging) return;
+      setPan({
+        x:
+          dragStartRef.current.x +
+          event.clientX -
+          dragStartRef.current.pointerX,
+        y:
+          dragStartRef.current.y +
+          event.clientY -
+          dragStartRef.current.pointerY,
+      });
+    },
+    [isDragging],
+  );
+
+  var onPointerUp = useCallback(function () {
+    setIsDragging(false);
+  }, []);
+
+  var downloadSvg = useCallback(
+    function () {
+      if (!svg || typeof document === "undefined") return;
+
+      var temporaryUrl = "";
+      var url = svgObjectUrl;
+      if (!url) {
+        temporaryUrl = URL.createObjectURL(
+          new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+        );
+        url = temporaryUrl;
+      }
+
+      var link = document.createElement("a");
+      link.download =
+        mermaidDownloadFilename((props && props.downloadFilename) || title) +
+        ".svg";
+      link.href = url;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      if (link.parentNode) link.parentNode.removeChild(link);
+
+      if (temporaryUrl) {
+        window.setTimeout(function () {
+          URL.revokeObjectURL(temporaryUrl);
+        }, 30000);
+      }
+    },
+    [svg, svgObjectUrl, props && props.downloadFilename, title],
+  );
+
+  useEffect(function () {
+    mountedRef.current = true;
+    return function () {
+      mountedRef.current = false;
+      renderRequestRef.current += 1;
+    };
+  }, []);
+
+  useEffect(
+    function () {
+      if (!prefetch || !hasCode || typeof window === "undefined")
+        return undefined;
+
+      var cancelled = false;
+      var idleHandle = null;
+
+      function prewarm() {
+        if (cancelled) return;
+        mermaidLoadModule().catch(function () {
+          // Click-time rendering reports module failures in the viewer.
+        });
+      }
+
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(prewarm, { timeout: 1500 });
+        return function () {
+          cancelled = true;
+          if (
+            idleHandle !== null &&
+            typeof window.cancelIdleCallback === "function"
+          ) {
+            window.cancelIdleCallback(idleHandle);
+          }
+        };
+      }
+
+      idleHandle = window.setTimeout(prewarm, 200);
+      return function () {
+        cancelled = true;
+        if (idleHandle !== null) window.clearTimeout(idleHandle);
+      };
+    },
+    [prefetch, hasCode],
+  );
+
+  useEffect(
+    function () {
+      if (!svg) {
+        setSvgObjectUrl("");
+        return undefined;
+      }
+
+      var nextUrl = URL.createObjectURL(
+        new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+      );
+      setSvgObjectUrl(nextUrl);
+
+      return function () {
+        URL.revokeObjectURL(nextUrl);
+      };
+    },
+    [svg],
+  );
+
+  useEffect(
+    function () {
+      if (!isOpen) return undefined;
+      renderDiagram();
+      return undefined;
+    },
+    [isOpen, renderDiagram],
+  );
+
+  useEffect(
+    function () {
+      if (!isOpen) return undefined;
+
+      var previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+
+      if (closeButtonRef.current && closeButtonRef.current.focus)
+        closeButtonRef.current.focus();
+
+      function onKeyDown(event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeModal();
+          return;
+        }
+        if (event.key === "+" || event.key === "=") {
+          event.preventDefault();
+          zoomIn();
+          return;
+        }
+        if (event.key === "-") {
+          event.preventDefault();
+          zoomOut();
+          return;
+        }
+        if (event.key === "0") {
+          event.preventDefault();
+          resetView();
+        }
+      }
+
+      window.addEventListener("keydown", onKeyDown);
+
+      return function () {
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener("keydown", onKeyDown);
+      };
+    },
+    [isOpen, closeModal, zoomIn, zoomOut, resetView],
+  );
+
+  useEffect(
+    function () {
+      function syncThemeMode() {
+        var nextThemeMode = mermaidDetectReadMeThemeMode(props);
+        setThemeMode(function (currentThemeMode) {
+          return currentThemeMode === nextThemeMode
+            ? currentThemeMode
+            : nextThemeMode;
+        });
+      }
+
+      syncThemeMode();
+
+      var observers = [];
+      if (typeof MutationObserver !== "undefined") {
+        mermaidAvailableDocuments().forEach(function (doc) {
+          [doc.documentElement, doc.body]
+            .filter(Boolean)
+            .forEach(function (element) {
+              var observer = new MutationObserver(syncThemeMode);
+              observer.observe(element, {
+                attributes: true,
+                attributeFilter: [
+                  "class",
+                  "style",
+                  "data-theme",
+                  "data-color-mode",
+                  "data-color-scheme",
+                  "data-readme-color-scheme",
+                  "color-scheme",
+                ],
+              });
+              observers.push(observer);
+            });
+        });
+      }
+
+      var mediaQuery = null;
+      try {
+        mediaQuery =
+          typeof window !== "undefined" && window.matchMedia
+            ? window.matchMedia("(prefers-color-scheme: dark)")
+            : null;
+        if (mediaQuery && mediaQuery.addEventListener)
+          mediaQuery.addEventListener("change", syncThemeMode);
+        else if (mediaQuery && mediaQuery.addListener)
+          mediaQuery.addListener(syncThemeMode);
+      } catch (themeError) {
+        mediaQuery = null;
+      }
+
+      return function () {
+        observers.forEach(function (observer) {
+          observer.disconnect();
+        });
+        if (mediaQuery && mediaQuery.removeEventListener)
+          mediaQuery.removeEventListener("change", syncThemeMode);
+        else if (mediaQuery && mediaQuery.removeListener)
+          mediaQuery.removeListener(syncThemeMode);
+      };
+    },
+    [props && props.theme],
+  );
+
+  var controlStyle = {
+    border: "1px solid " + viewerTheme.controlBorder,
+    borderRadius: "6px",
+    background: viewerTheme.controlBackground,
+    color: viewerTheme.text,
+    padding: "6px 9px",
+    fontSize: "12px",
+    fontWeight: 700,
+    cursor: svg ? "pointer" : "not-allowed",
+    opacity: svg ? 1 : 0.55,
+  };
+
+  var closeControlStyle = Object.assign({}, controlStyle, {
+    borderColor: viewerTheme.primaryBorder,
+    background: viewerTheme.primary,
+    color: viewerTheme.primaryText,
+    cursor: "pointer",
+    opacity: 1,
+  });
+
+  return (
+    <div className="my-4">
+      {!hasCode ? (
+        <div
+          role="alert"
+          style={{
+            display: "inline-block",
+            maxWidth: "720px",
+            border: "1px solid " + viewerTheme.warningBorder,
+            borderRadius: "8px",
+            background: viewerTheme.warningBackground,
+            color: viewerTheme.warning,
+            padding: "10px 12px",
+            fontSize: "13px",
+            fontWeight: 600,
+            lineHeight: 1.45,
+          }}
+        >
+          <strong>Mermaid diagram is not configured.</strong>
+          <p style={{ margin: "6px 0 0" }}>
+            Add a multiline Mermaid string with the <code>code</code> prop.
+          </p>
+          <pre
+            style={{
+              margin: "10px 0 0",
+              border: "1px solid " + viewerTheme.warningBorder,
+              borderRadius: "6px",
+              background: viewerTheme.modalBackground,
+              color: viewerTheme.text,
+              padding: "8px",
+              overflowX: "auto",
+              fontSize: "12px",
+              fontWeight: 500,
+            }}
+          >
+            {
+              "<MermaidDiagramButton code={`sequenceDiagram\\n  Alice->>Bob: Hello`} />"
+            }
+          </pre>
+        </div>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={openModal}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            border: "1px solid " + viewerTheme.primaryBorder,
+            borderRadius: "8px",
+            background: viewerTheme.primary,
+            color: viewerTheme.primaryText,
+            padding: "9px 14px",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <span>{openLabel}</span>
+        </button>
+      )}
+
+      {isOpen ? (
+        <div
+          ref={overlayRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title + " viewer"}
+          onMouseDown={onOverlayMouseDown}
+          style={{
+            position: "fixed",
+            zIndex: 2147483647,
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px",
+            background: "rgba(0, 0, 0, 0.75)",
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              maxWidth: "2560px",
+              height: "95vh",
+              background: viewerTheme.modalBackground,
+              color: viewerTheme.text,
+              borderRadius: "12px",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.35)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px",
+                borderBottom: "1px solid " + viewerTheme.modalBorder,
+                padding: "10px 12px",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  color: viewerTheme.text,
+                  fontSize: "14px",
+                  fontWeight: 700,
+                }}
+              >
+                {title}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={zoomOut}
+                  disabled={!svg}
+                  style={controlStyle}
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  onClick={zoomIn}
+                  disabled={!svg}
+                  style={controlStyle}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={resetView}
+                  disabled={!svg}
+                  style={controlStyle}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadSvg}
+                  disabled={!svg}
+                  style={controlStyle}
+                >
+                  Download SVG
+                </button>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={closeModal}
+                  style={closeControlStyle}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={viewerRef}
+              onWheel={svg ? onWheel : undefined}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+              style={{
+                position: "relative",
+                flex: 1,
+                overflow: "hidden",
+                background: viewerTheme.viewerBackground,
+              }}
+            >
+              {isLoading ? (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "14px",
+                    padding: "24px",
+                    color: viewerTheme.primaryBorder,
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    textAlign: "center",
+                  }}
+                >
+                  <MermaidLoadingSpinner
+                    size={42}
+                    color={viewerTheme.primaryBorder}
+                    accentColor={viewerTheme.diagram.activationBorderColor}
+                    trackColor={viewerTheme.primaryBorder}
+                  />
+                  <div>
+                    <p style={{ margin: 0 }}>{loadingLabel}</p>
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        color: viewerTheme.muted,
+                        fontSize: "12px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      The first diagram may take a moment while Mermaid loads.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {error ? (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "18px",
+                    color: viewerTheme.error,
+                    fontSize: "14px",
+                    textAlign: "center",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {error}
+                </div>
+              ) : null}
+
+              {svgObjectUrl && !error ? (
+                <img
+                  src={svgObjectUrl}
+                  alt={title}
+                  draggable={false}
+                  onPointerDown={onPointerDown}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    maxWidth: "none",
+                    userSelect: "none",
+                    touchAction: "none",
+                    cursor: isDragging ? "grabbing" : "grab",
+                    transform:
+                      "translate(" +
+                      pan.x +
+                      "px, " +
+                      pan.y +
+                      "px) scale(" +
+                      zoom +
+                      ")",
+                    transformOrigin: "top left",
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+<MermaidDiagramButton />
