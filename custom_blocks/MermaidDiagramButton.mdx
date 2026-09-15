@@ -1086,6 +1086,29 @@ export const MermaidDiagramButton = function (props) {
     opacity: 1,
   });
 
+  var configurationExample = [
+    "<MermaidDiagramButton",
+    '  title="Payment authorisation sequence"',
+    '  openLabel="View payment sequence"',
+    "  code={`",
+    "",
+    "sequenceDiagram",
+    "  autonumber",
+    "  actor PSU as Payment Service User",
+    "  participant TPP as Third Party Provider",
+    "  participant ASPSP as Account Provider",
+    "",
+    "PSU->>TPP: Start payment",
+    "TPP->>ASPSP: Create consent",
+    "ASPSP-->>TPP: Return consent",
+    "TPP-->>PSU: Redirect for authorisation",
+    "PSU->>ASPSP: Authorise consent",
+    "ASPSP-->>TPP: Return authorisation result",
+    "",
+    "`}",
+    "/>",
+  ].join("\n");
+
   return (
     <div
       ref={rootRef}
@@ -1109,9 +1132,18 @@ export const MermaidDiagramButton = function (props) {
           }}
         >
           <strong>Mermaid diagram is not configured.</strong>
-          <p style={{ margin: "6px 0 0" }}>
-            Add a multiline Mermaid string with the <code>code</code> prop.
-          </p>
+          <p style={{ margin: "6px 0 0" }}>Configure the button with:</p>
+          <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
+            <li>
+              <code>title</code>: the diagram heading shown in the viewer.
+            </li>
+            <li>
+              <code>openLabel</code>: the label shown on the page button.
+            </li>
+            <li>
+              <code>code</code>: the multiline Mermaid diagram source.
+            </li>
+          </ul>
           <pre
             style={{
               margin: "10px 0 0",
@@ -1125,10 +1157,20 @@ export const MermaidDiagramButton = function (props) {
               fontWeight: 500,
             }}
           >
-            {
-              "<MermaidDiagramButton code={`sequenceDiagram\\n  Alice->>Bob: Hello`} />"
-            }
+            {configurationExample}
           </pre>
+          <p style={{ margin: "8px 0 0" }}>
+            See the{" "}
+            <a
+              href="https://github.com/OpenBankingUK/ReadMe-Custom-Components/blob/main/mermaid-advanced-viewer/README.md#use-on-a-docs-page"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              Mermaid advanced viewer README
+            </a>{" "}
+            for ReadMe setup instructions and more examples.
+          </p>
         </div>
       ) : (
         <button
