@@ -35,8 +35,8 @@ sequenceDiagram
 <br />
 
 <MermaidDiagramButton 
-title="Missing or Expired Access Token"
-openLabel="View Token Issues Sequence Diagram"
+title="Domestic Payment Flow"
+openLabel="View Domestic Payment Sequence Diagram"
 code={`
 sequenceDiagram
     participant PSU as PSU
