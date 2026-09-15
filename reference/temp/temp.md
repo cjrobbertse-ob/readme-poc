@@ -11,8 +11,6 @@ metadata:
 
 <br />
 
-<MermaidDiagramButton />
-
 <MermaidDiagramButton code={`
 sequenceDiagram
   Alice->>Bob: Hello
