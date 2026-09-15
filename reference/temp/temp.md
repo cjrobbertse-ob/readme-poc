@@ -11,7 +11,10 @@ metadata:
 
 <br />
 
-<MermaidDiagramButton code={`
+<MermaidDiagramButton 
+title="Payment authorisation sequence"
+openLabel="View payment sequence"
+code={`
 sequenceDiagram
     participant PSU as PSU
     participant AISP as AISP
@@ -27,7 +30,6 @@ sequenceDiagram
     ASPSP_Resource_Server->>AISP: HTTP 401 (Unauthorized)
 
     end
-
 `} />
 
 <br />
