@@ -8,6 +8,8 @@ export const MermaidDiagramButton = function (props) {
   var MERMAID_MIN_ZOOM = 0.35;
   var MERMAID_MAX_ZOOM = 4;
   var MERMAID_INITIAL_ZOOM = 1;
+  var MERMAID_FONT_FALLBACK =
+    "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
 
   var MERMAID_THEMES = {
     light: {
@@ -28,7 +30,6 @@ export const MermaidDiagramButton = function (props) {
       diagram: {
         darkMode: false,
         background: "#ffffff",
-        fontFamily: "Metropolis, Inter, ui-sans-serif, system-ui, sans-serif",
         primaryColor: "#51509e",
         primaryTextColor: "#ffffff",
         primaryBorderColor: "#00167a",
@@ -76,7 +77,6 @@ export const MermaidDiagramButton = function (props) {
       diagram: {
         darkMode: true,
         background: "#020617",
-        fontFamily: "Metropolis, Inter, ui-sans-serif, system-ui, sans-serif",
         primaryColor: "#51509e",
         primaryTextColor: "#ffffff",
         primaryBorderColor: "#b9b7ff",
@@ -236,6 +236,47 @@ export const MermaidDiagramButton = function (props) {
     });
   }
 
+  function mermaidUsableFontFamily(value) {
+    var fontFamily = String(value || "").trim();
+    if (
+      !fontFamily ||
+      /^(inherit|initial|revert|revert-layer|unset)$/i.test(fontFamily)
+    )
+      return "";
+    return fontFamily;
+  }
+
+  function mermaidDetectReadMeFontFamily(componentParent) {
+    var candidates = componentParent ? [componentParent] : [];
+
+    mermaidAvailableDocuments().forEach(function (doc) {
+      candidates.push(doc.body, doc.documentElement);
+    });
+
+    for (var index = 0; index < candidates.length; index += 1) {
+      var element = candidates[index];
+      var doc = element && element.ownerDocument;
+      var docWindow =
+        doc && doc.defaultView
+          ? doc.defaultView
+          : typeof window !== "undefined"
+            ? window
+            : null;
+      if (!element || !docWindow || !docWindow.getComputedStyle) continue;
+
+      try {
+        var fontFamily = mermaidUsableFontFamily(
+          docWindow.getComputedStyle(element).fontFamily,
+        );
+        if (fontFamily) return fontFamily;
+      } catch (error) {
+        // ReadMe previews can prevent access to a parent document's styles.
+      }
+    }
+
+    return MERMAID_FONT_FALLBACK;
+  }
+
   function mermaidThemeModeFromText(value) {
     var text = String(value || "").toLowerCase();
     if (/(^|[\s_-])light($|[\s_-])/.test(text)) return "light";
@@ -386,6 +427,7 @@ export const MermaidDiagramButton = function (props) {
   function mermaidApplyTheme(source, themeVariables) {
     var themeDirective = {
       theme: "base",
+      fontFamily: themeVariables.fontFamily,
       themeVariables: themeVariables,
     };
 
@@ -530,9 +572,19 @@ export const MermaidDiagramButton = function (props) {
   var themeModeState = useState(mermaidDetectReadMeThemeMode(props));
   var themeMode = themeModeState[0];
   var setThemeMode = themeModeState[1];
+  var fontFamilyState = useState(mermaidDetectReadMeFontFamily());
+  var detectedFontFamily = fontFamilyState[0];
+  var setDetectedFontFamily = fontFamilyState[1];
   var viewerTheme = mermaidThemeFromMode(themeMode, props);
+  var requestedFontFamily = mermaidUsableFontFamily(props && props.fontFamily);
+  var viewerFontFamily =
+    requestedFontFamily ||
+    mermaidUsableFontFamily(viewerTheme.diagram.fontFamily) ||
+    detectedFontFamily;
+  viewerTheme.diagram.fontFamily = viewerFontFamily;
   var themeVariablesJson = JSON.stringify(viewerTheme.diagram);
 
+  var rootRef = useRef(null);
   var overlayRef = useRef(null);
   var viewerRef = useRef(null);
   var triggerRef = useRef(null);
@@ -641,6 +693,7 @@ export const MermaidDiagramButton = function (props) {
             securityLevel: "strict",
             suppressErrorRendering: true,
             theme: "base",
+            fontFamily: renderThemeVariables.fontFamily,
             themeVariables: renderThemeVariables,
           });
 
@@ -941,16 +994,25 @@ export const MermaidDiagramButton = function (props) {
 
   useEffect(
     function () {
-      function syncThemeMode() {
+      function syncReadMeAppearance() {
         var nextThemeMode = mermaidDetectReadMeThemeMode(props);
         setThemeMode(function (currentThemeMode) {
           return currentThemeMode === nextThemeMode
             ? currentThemeMode
             : nextThemeMode;
         });
+
+        var nextFontFamily = mermaidDetectReadMeFontFamily(
+          rootRef.current && rootRef.current.parentElement,
+        );
+        setDetectedFontFamily(function (currentFontFamily) {
+          return currentFontFamily === nextFontFamily
+            ? currentFontFamily
+            : nextFontFamily;
+        });
       }
 
-      syncThemeMode();
+      syncReadMeAppearance();
 
       var observers = [];
       if (typeof MutationObserver !== "undefined") {
@@ -958,7 +1020,7 @@ export const MermaidDiagramButton = function (props) {
           [doc.documentElement, doc.body]
             .filter(Boolean)
             .forEach(function (element) {
-              var observer = new MutationObserver(syncThemeMode);
+              var observer = new MutationObserver(syncReadMeAppearance);
               observer.observe(element, {
                 attributes: true,
                 attributeFilter: [
@@ -983,9 +1045,9 @@ export const MermaidDiagramButton = function (props) {
             ? window.matchMedia("(prefers-color-scheme: dark)")
             : null;
         if (mediaQuery && mediaQuery.addEventListener)
-          mediaQuery.addEventListener("change", syncThemeMode);
+          mediaQuery.addEventListener("change", syncReadMeAppearance);
         else if (mediaQuery && mediaQuery.addListener)
-          mediaQuery.addListener(syncThemeMode);
+          mediaQuery.addListener(syncReadMeAppearance);
       } catch (themeError) {
         mediaQuery = null;
       }
@@ -995,12 +1057,12 @@ export const MermaidDiagramButton = function (props) {
           observer.disconnect();
         });
         if (mediaQuery && mediaQuery.removeEventListener)
-          mediaQuery.removeEventListener("change", syncThemeMode);
+          mediaQuery.removeEventListener("change", syncReadMeAppearance);
         else if (mediaQuery && mediaQuery.removeListener)
-          mediaQuery.removeListener(syncThemeMode);
+          mediaQuery.removeListener(syncReadMeAppearance);
       };
     },
-    [props && props.theme],
+    [props && props.theme, props && props.fontFamily],
   );
 
   var controlStyle = {
@@ -1010,6 +1072,7 @@ export const MermaidDiagramButton = function (props) {
     color: viewerTheme.text,
     padding: "6px 9px",
     fontSize: "12px",
+    fontFamily: viewerFontFamily,
     fontWeight: 700,
     cursor: svg ? "pointer" : "not-allowed",
     opacity: svg ? 1 : 0.55,
@@ -1024,7 +1087,11 @@ export const MermaidDiagramButton = function (props) {
   });
 
   return (
-    <div className="my-4">
+    <div
+      ref={rootRef}
+      className="my-4"
+      style={{ fontFamily: viewerFontFamily }}
+    >
       {!hasCode ? (
         <div
           role="alert"
@@ -1078,6 +1145,7 @@ export const MermaidDiagramButton = function (props) {
             color: viewerTheme.primaryText,
             padding: "9px 14px",
             fontSize: "13px",
+            fontFamily: viewerFontFamily,
             fontWeight: 700,
             cursor: "pointer",
           }}
@@ -1300,4 +1368,4 @@ export const MermaidDiagramButton = function (props) {
   );
 };
 
-<MermaidDiagramButton />
+<MermaidDiagramButton />;
