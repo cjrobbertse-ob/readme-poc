@@ -13,7 +13,21 @@ metadata:
 
 <MermaidDiagramButton code={`
 sequenceDiagram
-  Alice->>Bob: Hello
+    participant PSU as PSU
+    participant AISP as AISP
+    participant ASPSP_Authorisation_Server as ASPSP Authorisation Server
+    participant ASPSP_Resource_Server as ASPSP Resource Server
+
+    alt Request data with a missing or expired access-token
+    AISP->>ASPSP_Resource_Server: Establish TLS 1.2 MA (mutual)
+    AISP->>ASPSP_Resource_Server: GET /accounts
+    ASPSP_Resource_Server->>AISP: HTTP 401 (Unauthorized)
+
+    AISP->>ASPSP_Resource_Server: GET /accounts/{AccountId}/transactions
+    ASPSP_Resource_Server->>AISP: HTTP 401 (Unauthorized)
+
+    end
+
 `} />
 
 <br />
