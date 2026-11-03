@@ -11,7 +11,7 @@ Check your customer journeys against the CEG requirements for your participant r
 2. Within each topic, review the checks for your participant role.
 3. Compare your journey with the **Expected answer**, including any exceptions, and consult the references below each table.
 
-The **Expected answer** and **OBL requirement** columns retain their separate meanings: a check labelled Required may still specify that an answer *should* be Yes. References are listed only where supplied in the original checklist.
+The **Expected answer** and **OBL requirement** columns retain their separate meanings: a check labelled Required may still specify that an answer _should_ be Yes.&#x20;
 
 ## General
 
