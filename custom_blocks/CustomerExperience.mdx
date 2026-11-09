@@ -1,0 +1,1144 @@
+---
+name: CustomerExperience
+---
+import { useState, useEffect, useRef, useId } from "react";
+
+export const CEGMeta = {
+  version: "4.0.1",
+  published: "18 March 2026",
+  reviewed: "9 November 2026",
+  sampleDate: "2026-11-09",
+  base: "https://standards.openbanking.org.uk/customer-experience-guidelines/",
+};
+
+export const CEGSources = {
+  introduction: { title: "Customer journey: set-up, consent and off-boarding", path: "introduction/customer-journey/latest/" },
+  principles: { title: "Customer experience principles", path: "introduction/design-and-experience-principles/latest/" },
+  communication: { title: "Customer communication", path: "introduction/customer-communication/latest/" },
+  comprehension: { title: "Improving comprehension", path: "introduction/improving-comprehension/latest/" },
+  onward: { title: "Consent and data sharing management", path: "introduction/consent-mgmt/latest/" },
+  ais: { title: "Account information consent", path: "account-information-services/account-information-consent/latest/" },
+  corporate: { title: "AIS access for corporate entities", path: "account-information-services/ais-access-corporate-entities/latest/" },
+  clusters: { title: "Permissions and data clusters", path: "account-information-services/permissions-and-data-clusters/latest/" },
+  payments: { title: "Payment initiation services overview", path: "payment-initiation-services/latest/" },
+  domestic: { title: "Single domestic payment: account at PISP", path: "payment-initiation-services/single-domestic-payments-acc-selection-pisp/latest/" },
+  bankAccount: { title: "Single domestic payment: account at ASPSP", path: "payment-initiation-services/single-domestic-payments-acc-selection-aspsp/latest/" },
+  supplementary: { title: "Supplementary information, Bacs and CHAPS", path: "payment-initiation-services/single-domestic-payments-supplementary-information/latest/" },
+  scheduled: { title: "Scheduled payments: future dated", path: "payment-initiation-services/single-domestic-scheduled-payments/latest/" },
+  standing: { title: "Standing orders", path: "payment-initiation-services/standing-orders/latest/" },
+  international: { title: "International payments and schedule variants", path: "payment-initiation-services/international-payments/latest/" },
+  bulk: { title: "Bulk and batch payments", path: "payment-initiation-services/bulk-batch-payments/latest/" },
+  multi: { title: "Multi-authorisation payments", path: "payment-initiation-services/multi-authorisation-payments/latest/" },
+  refund: { title: "Payment refunds: synchronous account information", path: "payment-initiation-services/payment-refunds/latest/" },
+  pisFunds: { title: "Confirmation of funds for PISPs", path: "payment-initiation-services/confirmation-of-funds-pisp/latest/" },
+  sweeping: { title: "VRP payments under sweeping access", path: "payment-initiation-services/vrp-payments-under-sweeping-access/latest/" },
+  vrpExempt: { title: "VRP payments with an SCA exemption", path: "payment-initiation-services/vrp-payments-with-an-sca-exemption/latest/" },
+  vrpDelegated: { title: "VRP payments with delegated SCA", path: "payment-initiation-services/vrp-payments-with-delegated-sca/latest/" },
+  auth: { title: "Authentication methods and parity", path: "authentication-methods/latest/" },
+  redirects: { title: "Redirection messaging and error handling", path: "authentication-methods/redirection-section-b/latest/", version: "3.1.11", note: "The supplied latest URL resolves to the section published 16 March 2023." },
+  appAis: { title: "App-based redirection: AIS", path: "authentication-methods/redirection-app-based-redirection-ais/latest/" },
+  appPis: { title: "App-based redirection: PIS", path: "authentication-methods/redirection-app-based-redirection-pis/latest/" },
+  browserAis: { title: "Browser-based redirection: AIS", path: "authentication-methods/redirection-browser-based-redirection-ais/latest/" },
+  browserPis: { title: "Browser-based redirection: PIS", path: "authentication-methods/redirection-browser-based-redirection-pis/latest/" },
+  qr: { title: "Redirection with a TPP-generated QR code", path: "authentication-methods/redirection-tpp-generated-qrcode/latest/" },
+  modelA: { title: "Decoupled A: static customer identifier", path: "authentication-methods/decoupled-model-a-static-psu-identifier/latest/" },
+  modelB: { title: "Decoupled B: bank-generated identifier (historical)", path: "authentication-methods/decoupled-model-b-aspsp-generated-identifier/v3-1-11/", version: "3.1.11", note: "The linked latest page returned 404 during review. This example uses the explicitly historical 16 March 2023 version, not verified current guidance." },
+  modelC: { title: "Decoupled C: TPP-generated identifier", path: "authentication-methods/decoupled-model-c-tpp-generated-identifier/latest/" },
+  modelD: { title: "Decoupled D: previously stored identifier", path: "authentication-methods/decoupled-model-d-psu-with-a-tpp-account/latest/" },
+  exemption: { title: "ASPSP applies an available exemption", path: "authentication-methods/rts-sca-exemptions-aspsp-applies-an-available-exemption/latest/" },
+  hint: { title: "Exemption with a customer identifier", path: "authentication-methods/rts-sca-exemptions-using-an-available-exemption-with-a-customer-identifier/latest/" },
+  deepLink: { title: "Deep linking for app-to-app redirection", path: "appendices/deep-linking-for-app-to-app-redirection/latest/", version: "Supporting appendix" },
+  cof: { title: "Consent for confirmation of funds", path: "card-based-payment-instrument-issuers-cbpiis/consent-for-confirmation-of-funds/latest/" },
+  cofCheck: { title: "Confirmation of funds: yes/no response", path: "card-based-payment-instrument-issuers-cbpiis/confirmation-of-funds-y-n-response/latest/" },
+  cofReauth: { title: "Re-authentication of funds-check access", path: "card-based-payment-instrument-issuers-cbpiis/re-authentication-of-cof-access/latest/" },
+  dashboards: { title: "Dashboards overview and combined services", path: "dashboards/about/latest/" },
+  aisConsent: { title: "AIS consent dashboard, revocation and reconfirmation", path: "dashboards/ais-consent-dashboard-revocation-refresh/latest/" },
+  aisAccess: { title: "AIS access dashboard and revocation", path: "dashboards/ais-access-dashboard-revocation/latest/" },
+  vrpConsent: { title: "VRP consent dashboard, changes and revocation", path: "dashboards/vrp-consent-dashboard-revocation/latest/" },
+  vrpAccess: { title: "VRP access dashboard and revocation", path: "dashboards/pis-vrp-access-dashboard-revocation/latest/" },
+  cofConsent: { title: "CBPII consent dashboard and revocation", path: "dashboards/cbpii-consent-dashboard-revocation/latest/" },
+  cofAccess: { title: "CBPII access dashboard and revocation", path: "dashboards/cbpii-access-dashboard-revocation/latest/" },
+  notifications: { title: "Customer notifications and status synchronisation", path: "dashboards/psu-notifications/latest/" },
+  status: { title: "Information flow: payment statuses", path: "appendices/info-flow-payment-status/latest/" },
+  errors: { title: "Common error scenarios and preferred reasons", path: "appendices/common-errors/latest/" },
+  risk: { title: "Transaction risk indicators and purpose codes", path: "appendices/tri-guidance/latest/" },
+  checklist: { title: "Customer Experience Checklist", path: "customer-experience-checklist/latest/" },
+  changes: { title: "Change log: version 4.0.1", path: "change-log/latest/" },
+};
+
+export const CEGClusters = [
+  { id: "accounts", name: "Your Account Details", permissions: ["Your account name, number and sort-code", "Your account balance"], purpose: "Identify your accounts and show your available balances.", required: true },
+  { id: "transactions", name: "Your Account Transactions", permissions: ["Details of your transactions"], purpose: "Understand income and spending over the last 90 days.", required: true },
+  { id: "regular", name: "Your Regular Payments", permissions: ["Your Standing Orders", "Your Direct Debits"], purpose: "Add upcoming regular payments to your budget forecast.", required: false },
+];
+
+export const CEGRules = {
+  benefit: { level: "Recommended", title: "Start with the customer benefit", text: "Explain the outcome and value before asking for data or an action. Use plain language and just-in-time explanations.", source: "communication" },
+  setup: { level: "Required", title: "Explain the service and data use", text: "Set-up disclosures should explain the service, processing basis, onward recipients, terms, privacy notice and how to get help before personal data is processed.", source: "introduction" },
+  identity: { level: "Required", title: "Make the provider identifiable", text: "Show the trading name of the regulated provider. Where an agent or customer-facing service is involved, accurately show the relationship; do not substitute the technical service provider.", ref: "8 / 8f" },
+  bank: { level: "Required", title: "Choose the bank before AIS consent", text: "Identify the ASPSP before constructing an AIS consent so the data request matches the bank's published capabilities.", source: "ais", ref: "8" },
+  payer: { level: "Required", title: "Identify the paying account", text: "Offer a supported account identification method, saved account selection, or bank selection followed by account selection at that bank.", ref: "24" },
+  aisConsent: { level: "Required", title: "Make the data agreement specific", text: "Explain purpose, benefit, data, transaction-history period, duration and any onward sharing. Obtain explicit AIS consent at the AISP.", source: "ais", ref: "8 / 12" },
+  clusters: { level: "Required", title: "Use expandable data clusters", text: "Present the relevant OBL data-cluster names with a drill-down to the permissions requested. Ask only for data required by the service and supported by the product.", source: "clusters", ref: "13a / 13b" },
+  optional: { level: "Recommended", title: "Keep non-essential sharing optional", text: "Where a reduced service is possible, allow non-essential data to be deselected and explain the impact on the service.", source: "principles" },
+  reconfirmNotice: { level: "Recommended", title: "Distinguish reconfirmation from re-authentication", text: "Explain reconfirmation at the AISP at least every 90 days. Do not describe this as automatic consent expiry or mandatory bank SCA every 90 days.", source: "aisConsent", ref: "16a / 16d" },
+  redirect: { level: "Recommended", title: "Explain the hand-off", text: "Identify the destination bank and why the customer is moving there. After authentication, identify the return destination and close the bank session.", source: "redirects" },
+  sca: { level: "Required", title: "Use familiar bank authentication", text: "Authentication belongs at the ASPSP. Offer the customer's usual methods with no extra obstacles. For payments, apply SCA with dynamic linking unless a permitted exemption applies.", source: "auth", ref: "1 / 19" },
+  noReplay: { level: "Required", title: "Do not request AIS consent twice", text: "The bank must not seek confirmation of consent already given to the AISP. Account selection is not a second consent request; requested data may be viewed optionally, not replayed by default.", source: "ais", ref: "13a" },
+  accounts: { level: "Required", title: "Select accounts in the bank domain", text: "After authentication, allow the customer to choose the accounts to share without unnecessary screens or repeated authentication.", source: "appAis", ref: "1" },
+  corporate: { level: "Required", title: "Respect corporate authority", text: "If further internal authority is required, tell the customer that the bank received the request but access is subject to internal authorisation. Do not imply data is already available.", source: "corporate" },
+  payment: { level: "Required", title: "Show the payment instruction", text: "At PISP consent, show amount and currency, payee, reference if provided, and payer account or bank. If account identifiers were entered by the customer, display them for checking.", ref: "8 / 22" },
+  bankPayment: { level: "Required", title: "Link authentication to the payment", text: "The bank presents amount, currency and payee in the authentication journey without adding redundant confirmation screens for a complete order.", source: "domestic", ref: "19 / 28" },
+  bankSelect: { level: "Required", title: "Complete missing account information", text: "Allow payment account selection at the bank when absent from the order. Do not re-apply SCA merely because the customer selects an account or sees a balance.", source: "bankAccount", ref: "23" },
+  noReturn: { level: "Recommended", title: "Explain the committing action", text: "Use an explicit action and explain when the instruction becomes committed. Never imply a post-initiation Back button reverses a payment.", source: "domestic" },
+  supplementary: { level: "Required", title: "Disclose relevant supplementary information", text: "Where applicable, show fees, changed execution timing or other information provided in the bank's own journey. Let the customer review it and proceed or cancel with equal prominence.", source: "supplementary", ref: "20" },
+  schedule: { level: "Required", title: "Show the execution date", text: "Capture or prepopulate the requested payment date and include it in PISP consent. The bank displays the actual date and any difference.", source: "scheduled", ref: "21" },
+  standing: { level: "Required", title: "Show the full standing-order schedule", text: "Include first payment, recurring amount/date, frequency and final payment or payment count if not open-ended. Display the schedule in consent and at the bank.", source: "standing", ref: "21" },
+  amendAtBank: { level: "Required", title: "Manage scheduled orders at the bank", text: "Explain that amendment or cancellation of future-dated payments and standing orders must be performed through the bank's supported direct channel, not an invented PISP amendment API.", ref: "27" },
+  fx: { level: "Required", title: "Make FX and charges transparent", text: "Show country, priority, currency, charges model and execution date. Label indicative rates clearly; actual quotes require a validity window. Let customers proceed or cancel with equal prominence.", source: "international", ref: "20 / 23" },
+  bulk: { level: "Required", title: "Review the file as an instruction", text: "Show the supplied total, count, reference, scheme, dates and debtor accounts. Do not overwrite account, scheme or date values already supplied in the file.", source: "bulk", ref: "8 / 21 / 22" },
+  multi: { level: "Required", title: "Do not confuse approval with execution", text: "Show that multiple authorisations are required and surface the bank's authorisation status, completed/required counts, last update and deadline where supplied.", source: "multi", ref: "25 / 26" },
+  refund: { level: "Required", title: "Obtain refund-information permission", text: "Request explicit permission for the debit account details within the payment-consent step. Explain that they are used or shared with the payee only for refunds, and do not request them when refunds are not realistically offered.", source: "refund", ref: "8a" },
+  pisFunds: { level: "Required", title: "Check funds after bank authentication", text: "A PISP funds check concerns the authorised payment amount before initiation. On a No result, explain insufficient funds and whether the payment was initiated. Do not treat a Yes as settlement.", source: "pisFunds", ref: "29a / 29b" },
+  status: { level: "Required", title: "Show the actual status, not assumed success", text: "Distinguish initiation, pending processing and settlement. RCVD or ACSP is not payment completion; ACSC is debtor-side settlement, not creditor receipt. Only an appropriate creditor-completion status supports that claim.", source: "status", ref: "25 / 26 / 27" },
+  vrp: { level: "Required", title: "Define amendable payment rules", text: "Let the customer set or amend the consent parameters: per-payment maximum, cumulative periodic limits and alignment, currency, expiry, and a fixed payee for exemption-based or sweeping consent.", ref: "22a / 22b" },
+  vrpBank: { level: "Required", title: "Authenticate the consent parameters", text: "Display the agreed VRP parameters in the bank authentication journey without an extra confirmation screen. Subsequent payments are still constrained by these parameters.", ref: "19 / 28a / 28e" },
+  sweep: { level: "Required", title: "Keep sweeping within its definition", text: "This example transfers between the customer's own accounts. The PISP attests the sweeping use case and the ASPSP applies the applicable trusted-beneficiary or transfer-to-self exemption.", source: "sweeping", ref: "28b / 28c" },
+  exemption: { level: "Conditional", title: "The bank decides whether an exemption applies", text: "An available exemption is not a promise from the PISP. The ASPSP assesses applicability and may require SCA. This demonstration models a bank decision; it does not implement an exemption.", source: "exemption" },
+  delegated: { level: "Required", title: "Dynamically link each delegated-SCA payment", text: "Following initial bank SCA for the consent, each payment requires customer-in-session delegated SCA linked to its amount and payee. This is not an unattended exemption-based payment.", source: "vrpDelegated", ref: "19b" },
+  limits: { level: "Required", title: "Enforce the consent on every VRP payment", text: "The bank must reject payments outside the agreed parameters or where access has been revoked. This example checks the per-payment and remaining calendar-month limits.", ref: "28d" },
+  cof: { level: "Required", title: "A funds check is only yes or no", text: "Explain purpose, duration and account. The issuer receives only availability for the transaction amount, not the balance. Do not store the response, reserve funds, use it for another purpose or imply that it moves money.", source: "cof", ref: "8 / 32 / 34" },
+  cofBank: { level: "Required", title: "Obtain the separate bank CoF consent", text: "Unlike AIS, the bank must obtain its own explicit consent before the first funds-check response for this issuer and account. Identify the issuer, account and expiry.", source: "cof", ref: "31" },
+  cofCheck: { level: "Required", title: "Only check an initiated card transaction", text: "The background request must relate to a card transaction initiated by the customer, its amount/currency and the existing consent identifier. A yes/no snapshot neither reserves funds nor guarantees settlement.", source: "cofCheck", ref: "33 / 34" },
+  cofReauth: { level: "Recommended", title: "Explain why funds-check access needs restoring", text: "Notify the customer that bank re-authentication is needed, for example after a token is invalidated for suspected fraud. Present the original funding account and consent duration. This restores access with a new token, not a routine 90-day renewal.", source: "cofReauth", ref: "1 / 32" },
+  dashboard: { level: "Required", title: "Make connection controls easy to find", text: "Use clear Open Banking connection names and make live consents or accesses easy to view and revoke. Provide per-connection detail and distinguish current arrangements from history.", ref: "9a / 9b / 10a / 10b" },
+  dashboardDetail: { level: "Required", title: "Show the terms of this connection", text: "Show the relevant provider/bank, account identifiers, type, grant date, expiry or ongoing duration, purpose and data clusters or payment rules. Use service-appropriate statuses.", ref: "9d / 10d" },
+  disconnect: { level: "Required", title: "Allow revocation without obstruction", text: "Provide an easy, per-connection cancellation route. A TPP must notify the bank through deletion of the appropriate consent resource as soon as practical; an ASPSP updates access status and reasons.", ref: "9c / 10c" },
+  consequences: { level: "Recommended", title: "Explain the consequences of stopping", text: "Explain which service will stop without coercion. Funds-check revocation may cause card transactions to be declined; VRP revocation does not cancel a separate merchant contract.", ref: "9c / 10f" },
+  retained: { level: "Required", title: "Explain what happens to existing data", text: "AIS/VRP TPP cancellation confirmation must explain handling of already obtained data. Delete data no longer required where appropriate; do not promise to erase records that lawfully must be retained.", source: "aisConsent", ref: "8g" },
+  contactTpp: { level: "Required", title: "Explain the bank-side boundary", text: "After bank-side revocation, advise the customer to contact the associated TPP about cancellation and consequences. Stopping bank access does not itself erase previously shared data or close a service contract.", ref: "10f" },
+  reconfirm: { level: "Required", title: "Reconfirm unchanged consent at the AISP", text: "Show unchanged purpose, permissions, history period and consent duration. Make continue and discontinue equally prominent. No new bank redirect is needed for a still-valid consent, and data access must stop if not reconfirmed.", source: "aisConsent", ref: "16a / 16b / 16d" },
+  reauth: { level: "Conditional", title: "Re-authenticate only for a permitted reason", text: "Explain the bank's proportionate, objective reason and show the unchanged agreement before redirecting. Routine 90-day AIS reconfirmation is not this journey.", source: "aisConsent", ref: "17 / 17c" },
+  vrpReauth: { level: "Conditional", title: "Restore VRP access without changing the consent", text: "In permitted, proportionate circumstances, summarise the original VRP parameters before bank re-authentication. The bank must not replay the VRP or seek consent again by default. All other consent terms remain unchanged.", source: "vrpConsent", ref: "16 / 19a / 17" },
+  vrpChange: { level: "Required", title: "Replace, do not silently edit, VRP consent", text: "The API does not support editing individual consent parameters. Clearly cancel the existing consent, notify the bank using DELETE, and set up and authenticate a new consent.", source: "vrpConsent" },
+  onward: { level: "Recommended", title: "Separate optional onward sharing", text: "Explain the impact of stopping onward sharing and distinguish the PSD2 service agreement from rights and processing bases under GDPR. This is a suggested journey, not a universal legal workflow.", source: "onward" },
+  history: { level: "Required", title: "Keep ended arrangements discoverable", text: "Make cancelled and expired connection details available. An AIS consent merely awaiting 90-day reconfirmation stays in the current list, not cancelled/expired history.", ref: "9e / 10e" },
+  notification: { level: "Recommended", title: "Use useful, controllable notifications", text: "Offer relevant reminders and confirmation, teach customers where connections are managed and let them opt out of optional notifications. Do not suppress necessary service or reconfirmation information.", source: "notifications" },
+  code: { level: "Required", title: "Explain the identifier and its direction", text: "Use the supported authentication model and clearly explain where an identifier comes from and where to use it. A code is not a bank password. Avoid unnecessary manual entry.", ref: "1 / 28" },
+  qr: { level: "Required", title: "Keep QR redirection usable", text: "Explain scanning on another device and open the bank app directly. Offer the desktop browser route if the customer does not wish to use their phone.", source: "qr", ref: "1 / 23" },
+  hint: { level: "Conditional", title: "Use a previously agreed identity hint", text: "A stored customer identifier can reduce friction on a subsequent transaction if the bank applies an available exemption. It does not authenticate a customer or guarantee the exemption.", source: "hint" },
+  errors: { level: "Required", title: "Return user errors, stop unsafe requests", text: "For user-interaction errors, the bank returns an appropriate error to the TPP. For malformed authorisation requests, it displays an error and must not redirect to an untrusted return URL.", source: "redirects" },
+};
+
+export const CEGFamilies = [
+  { id: "AIS", title: "Account information", short: "AIS", icon: "wallet", description: "Share data, with clear consent" },
+  { id: "PIS", title: "Payments", short: "PIS", icon: "arrow", description: "One-off, scheduled and business" },
+  { id: "VRP", title: "Recurring payments", short: "VRP", icon: "repeat", description: "Set rules, then pay within them" },
+  { id: "CoF", title: "Funds checks", short: "CoF", icon: "card", description: "Card issuer consent and checks" },
+  { id: "AUTH", title: "Authentication", short: "Auth", icon: "lock", description: "Redirection, decoupled and SCA" },
+  { id: "MANAGE", title: "Connections & lifecycle", short: "Manage", icon: "sliders", description: "Review, reconfirm and disconnect" },
+];
+
+export const CEGJourneys = [
+  { id: "ais-connect", family: "AIS", title: "Connect accounts", subtitle: "Ongoing personal finance service", type: "ais", source: "ais" },
+  { id: "ais-once", family: "AIS", title: "One-off data sharing", subtitle: "A single financial snapshot", type: "ais", once: true, source: "ais" },
+  { id: "ais-corporate", family: "AIS", title: "Corporate account access", subtitle: "Delegated authority and internal approval", type: "ais", corporate: true, source: "corporate" },
+  { id: "pis-bank", family: "PIS", title: "Pay from a bank-selected account", subtitle: "Account selection at the ASPSP", type: "payment", bankSelect: true, source: "bankAccount" },
+  { id: "pis-saved", family: "PIS", title: "Pay from a saved account", subtitle: "Complete order; no repeated consent", type: "payment", source: "domestic" },
+  { id: "pis-extra", family: "PIS", title: "Payment with supplementary information", subtitle: "Bank fees and execution details", type: "payment", extra: true, source: "supplementary" },
+  { id: "pis-chaps", family: "PIS", title: "CHAPS payment", subtitle: "Scheme, charges and cut-off timing", type: "payment", extra: true, scheme: "CHAPS", source: "supplementary" },
+  { id: "pis-bacs", family: "PIS", title: "Bacs payment", subtitle: "Scheme and later execution", type: "payment", extra: true, scheme: "Bacs", source: "supplementary" },
+  { id: "pis-future", family: "PIS", title: "Future-dated payment", subtitle: "One payment on a specified date", type: "payment", scheduled: true, extra: true, source: "scheduled" },
+  { id: "pis-standing", family: "PIS", title: "Standing order", subtitle: "Fixed amounts on a regular schedule", type: "payment", standing: true, extra: true, source: "standing" },
+  { id: "pis-international", family: "PIS", title: "International payment", subtitle: "Currency, FX, priority and charges", type: "payment", international: true, extra: true, source: "international" },
+  { id: "pis-international-future", family: "PIS", title: "Future-dated international payment", subtitle: "International instruction and schedule", type: "payment", international: true, scheduled: true, extra: true, source: "international" },
+  { id: "pis-international-standing", family: "PIS", title: "International standing order", subtitle: "Recurring foreign-currency payments", type: "payment", international: true, standing: true, extra: true, source: "international" },
+  { id: "pis-bulk", family: "PIS", title: "Bulk payments", subtitle: "One debtor, date, currency and scheme", type: "payment", file: "bulk", extra: true, source: "bulk" },
+  { id: "pis-batch", family: "PIS", title: "Batch payments", subtitle: "Multiple file-defined debtor accounts", type: "payment", file: "batch", extra: true, source: "bulk" },
+  { id: "pis-multi", family: "PIS", title: "Multiple authorisers", subtitle: "Initiation is not full approval", type: "payment", multi: true, extra: true, source: "multi" },
+  { id: "pis-refund", family: "PIS", title: "Payment with refund information", subtitle: "Permission within payment consent", type: "payment", bankSelect: true, refund: true, source: "refund" },
+  { id: "pis-funds", family: "PIS", title: "PISP confirmation of funds", subtitle: "Check after authentication, before initiation", type: "payment", funds: true, source: "pisFunds" },
+  { id: "vrp-sweep-setup", family: "VRP", title: "Set up sweeping", subtitle: "Move money between your own accounts", type: "vrpSetup", sweep: true, source: "sweeping" },
+  { id: "vrp-sweep-pay", family: "VRP", title: "A payment under sweeping consent", subtitle: "Background execution within agreed limits", type: "vrpPay", sweep: true, source: "sweeping" },
+  { id: "vrp-exempt-setup", family: "VRP", title: "Set up SCA-exempt VRP", subtitle: "Fixed payee and bounded variable amounts", type: "vrpSetup", source: "vrpExempt" },
+  { id: "vrp-exempt-pay", family: "VRP", title: "An SCA-exempt VRP payment", subtitle: "No new customer authorisation if exemption applies", type: "vrpPay", source: "vrpExempt" },
+  { id: "vrp-delegated-setup", family: "VRP", title: "Set up delegated-SCA VRP", subtitle: "Bank authenticates the initial consent", type: "vrpSetup", delegated: true, source: "vrpDelegated" },
+  { id: "vrp-delegated-pay", family: "VRP", title: "A delegated-SCA VRP payment", subtitle: "Customer-in-session SCA for each payment", type: "vrpPay", delegated: true, source: "vrpDelegated" },
+  { id: "cof-setup", family: "CoF", title: "Set up card funds checks", subtitle: "Separate issuer and bank consents", type: "cofSetup", source: "cof" },
+  { id: "cof-check", family: "CoF", title: "Card transaction funds check", subtitle: "Observe a background yes/no request", type: "cofCheck", source: "cofCheck" },
+  { id: "cof-reauth", family: "CoF", title: "Restore funds-check access", subtitle: "Re-authentication for a bank security reason", type: "cofSetup", reauth: true, source: "cofReauth" },
+  { id: "auth-app-ais", family: "AUTH", title: "App redirection / AIS", subtitle: "Deep-link to bank app and back", type: "ais", channel: "app", source: "appAis" },
+  { id: "auth-browser-ais", family: "AUTH", title: "Browser redirection / AIS", subtitle: "The bank app is unavailable or not used", type: "ais", channel: "browser", source: "browserAis" },
+  { id: "auth-app-pis", family: "AUTH", title: "App redirection / PIS", subtitle: "Familiar bank methods; complete payment order", type: "payment", channel: "app", source: "appPis" },
+  { id: "auth-browser-pis", family: "AUTH", title: "Browser redirection / PIS", subtitle: "Mobile-optimised bank web authentication", type: "payment", channel: "browser", source: "browserPis" },
+  { id: "auth-qr", family: "AUTH", title: "Desktop QR redirection", subtitle: "Camera scan opens the bank app", type: "payment", bankSelect: true, channel: "qr", source: "qr" },
+  { id: "auth-a", family: "AUTH", title: "Decoupled A / static identifier", subtitle: "Customer gives an identifier to the TPP", type: "payment", channel: "modelA", source: "modelA" },
+  { id: "auth-b", family: "AUTH", title: "Decoupled B / bank-generated code", subtitle: "Historical example: latest page unavailable", type: "payment", channel: "modelB", source: "modelB", historical: true },
+  { id: "auth-c", family: "AUTH", title: "Decoupled C / TPP-generated code", subtitle: "Use the TPP code inside the bank app", type: "payment", channel: "modelC", source: "modelC" },
+  { id: "auth-d", family: "AUTH", title: "Decoupled D / stored identifier", subtitle: "A previously agreed identifier prompts the bank app", type: "payment", channel: "modelD", source: "modelD" },
+  { id: "auth-exempt", family: "AUTH", title: "Bank-applied SCA exemption", subtitle: "A bank decision, never a PISP guarantee", type: "payment", exemption: true, source: "exemption" },
+  { id: "auth-hint", family: "AUTH", title: "Exemption with an identity hint", subtitle: "Subsequent payment using saved details", type: "payment", exemption: true, hint: true, source: "hint" },
+  { id: "manage-ais", family: "MANAGE", title: "AIS consent dashboard & disconnect", subtitle: "Manage connected accounts at the AISP", type: "manage", service: "AIS", source: "aisConsent" },
+  { id: "manage-reconfirm", family: "MANAGE", title: "Reconfirm AIS consent", subtitle: "At the AISP, without a routine bank redirect", type: "manage", service: "AIS", reconfirm: true, source: "aisConsent" },
+  { id: "manage-reauth", family: "MANAGE", title: "Re-authenticate AIS access", subtitle: "Permitted security reason; agreement unchanged", type: "manage", service: "AIS", reauth: true, source: "aisConsent" },
+  { id: "manage-ais-bank", family: "MANAGE", title: "AIS bank access dashboard", subtitle: "Stop a provider's access at the ASPSP", type: "manage", service: "AIS", access: true, source: "aisAccess" },
+  { id: "manage-vrp", family: "MANAGE", title: "VRP consent dashboard & cancel", subtitle: "Payment rules, history and revocation", type: "manage", service: "VRP", source: "vrpConsent" },
+  { id: "manage-vrp-bank", family: "MANAGE", title: "VRP bank access dashboard", subtitle: "Stop payment access at the ASPSP", type: "manage", service: "VRP", access: true, source: "vrpAccess" },
+  { id: "manage-vrp-change", family: "MANAGE", title: "Change VRP payment rules", subtitle: "Cancel old consent and authenticate a new one", type: "manage", service: "VRP", change: true, source: "vrpConsent" },
+  { id: "manage-vrp-reauth", family: "MANAGE", title: "Restore VRP access", subtitle: "Bank SCA with unchanged consent parameters", type: "manage", service: "VRP", reauth: true, source: "vrpConsent" },
+  { id: "manage-cof", family: "MANAGE", title: "Card issuer consent dashboard", subtitle: "View and cancel per-account funds checks", type: "manage", service: "CoF", source: "cofConsent" },
+  { id: "manage-cof-bank", family: "MANAGE", title: "Card issuer bank access dashboard", subtitle: "Funds-check responses and revocation", type: "manage", service: "CoF", access: true, source: "cofAccess" },
+  { id: "manage-onward", family: "MANAGE", title: "Stop optional onward sharing", subtitle: "Keep the core service; lose partner insights", type: "lifecycle", action: "onward", source: "onward" },
+  { id: "manage-offboard", family: "MANAGE", title: "Close the example service", subtitle: "Revoke access and explain retained data", type: "lifecycle", action: "offboard", source: "introduction" },
+  { id: "manage-notifications", family: "MANAGE", title: "Connection notifications", subtitle: "Reminders, service messages and opt-out", type: "lifecycle", action: "notifications", source: "notifications" },
+  { id: "manage-setup", family: "MANAGE", title: "Service set-up & privacy", subtitle: "Explain terms, data use and customer help", type: "lifecycle", action: "setup", source: "introduction" },
+];
+
+export const CEGMoney = (value, currency = "GBP") => {
+  const cents = CEGCents(value);
+  return cents === null ? "Enter an amount" : currency + " " + (cents / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+export const CEGCents = (value) => {
+  const text = String(value);
+  if (!/^\d{1,7}(.\d{1,2})?$/.test(text)) return null;
+  const [whole, fraction = ""] = text.split(".");
+  return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+};
+
+export const CEGDefaults = (journey) => ({
+  bank: "", accounts: [], account: "", amount: journey.file ? "2460" : journey.international ? "200" : "42",
+  reference: journey.file ? "NOV-PAYROLL" : "MEADOW-1042", date: "2026-11-12",
+  frequency: "Monthly", count: "12", firstAmount: "42", finalAmount: "42",
+  priority: "Normal", charges: "SHA", refund: false, regular: true,
+  maxPayment: "100", maxMonth: "500", expiry: "2027-11-09", ongoing: true,
+  identifier: "", payerNumber: "", payerSort: "", fileLoaded: false, acceptedTerms: false,
+  paymentPayee: "Meadow Energy", notification: true, onward: true, usedCents: 12000,
+});
+
+export const CEGSteps = (j, channel = "app") => {
+  const steps = [];
+  const add = (id, title, owner, kind, rules, event, extra = {}) => steps.push({ id, title, owner, kind, rules, event, ...(kind === "authenticate" ? { channel: j.channel || channel } : {}), ...extra });
+  const handoff = () => {
+    const ch = j.channel || channel;
+    if (["qr", "modelA", "modelB", "modelC", "modelD"].includes(ch)) {
+      add("identify", ch === "qr" ? "Continue on your phone" : "Match the request", "TPP", "identifier", [ch === "qr" ? "qr" : "code", ...(ch === "modelD" ? ["hint"] : [])], "Authentication request matched using " + ch, { channel: ch });
+    } else {
+      add("handoff", "Continue to your bank", "TPP", "handoff", ["redirect"], "Hand-off to the bank " + (ch === "browser" ? "website" : "app"), { channel: ch });
+    }
+  };
+  const back = () => add("return", "Return to the provider", "Bank", "return", ["redirect"], "Bank session closed; returned to the provider");
+  const receipt = (title = "Request complete", rules = ["status"]) => add("receipt", title, "TPP", "receipt", rules, "Provider displays the simulated outcome");
+  if (j.type === "ais") {
+    add("welcome", "Bring your money together", "TPP", "welcome", ["benefit", "identity"], "AIS proposition opened");
+    add("bank", "Choose your bank", "TPP", "bank", ["bank"], "Bank selected before constructing data consent");
+    add("consent", "Choose what to share", "TPP", "aisConsent", ["aisConsent", "clusters", "optional", ...(j.once ? [] : ["reconfirmNotice"])], "Explicit AIS consent provided");
+    handoff();
+    add("authenticate", "Sign in to your bank", "Bank", "authenticate", ["sca", "noReplay", "identity"], "Customer authenticated at the bank");
+    add("accounts", "Choose accounts to share", "Bank", "accounts", ["accounts", "noReplay"], "Accounts selected; no second AIS consent requested");
+    back();
+    receipt(j.corporate ? "Request received" : "Accounts connected", j.corporate ? ["corporate"] : j.once ? ["benefit", "aisConsent"] : ["benefit", "reconfirmNotice"]);
+  } else if (j.type === "payment") {
+    add("payment", j.file ? "Review the payment file" : "Your payment", "TPP", "payment", [j.file ? "bulk" : "payment", ...(j.scheduled ? ["schedule"] : []), ...(j.standing ? ["standing"] : []), ...(j.international ? ["fx"] : []), ...(j.hint ? ["hint"] : [])], "Payment instruction prepared");
+    if (!j.file) add("bank", "Choose how to pay", "TPP", "payer", ["payer"], "Paying bank" + (j.bankSelect ? "" : " and saved account") + " selected");
+    add("consent", "Review and allow payment", "TPP", "paymentConsent", ["payment", "identity", ...(j.refund ? ["refund"] : []), ...(j.scheduled ? ["schedule"] : []), ...(j.standing ? ["standing"] : []), ...(j.international ? ["fx"] : [])], "Explicit payment initiation consent provided");
+    handoff();
+    add("authenticate", j.exemption ? "Bank assesses the request" : j.bankSelect || j.extra ? "Sign in to your bank" : "Authenticate to make payment", "Bank", j.exemption ? "exemption" : "authenticate", ["sca", "bankPayment", ...(j.exemption ? ["exemption"] : []), ...(!j.extra && !j.bankSelect ? ["noReturn"] : [])], j.exemption ? "Bank applied an available SCA exemption" : "Bank SCA completed");
+    if (j.bankSelect) add("accounts", "Choose an account to pay from", "Bank", "accounts", ["bankSelect"], "Missing debtor account selected without repeating SCA");
+    if (j.extra || j.bankSelect) add("review", "Check and make payment", "Bank", "bankReview", [j.extra ? "supplementary" : "bankSelect", "noReturn", ...(j.international ? ["fx"] : []), ...(j.multi ? ["multi"] : [])], j.multi ? "First authoriser approved; further approval is required" : "Bank payment order authorised");
+    back();
+    if (j.funds) add("funds", "Confirm funds availability", "TPP", "pisFunds", ["pisFunds"], "PISP received a Yes funds-availability snapshot after authentication");
+    add("processing", "Check the payment status", "TPP", "processing", ["status"], j.multi ? "Bank reports pending further authorisation" : "Existing payment status checked");
+    receipt(j.multi ? "Waiting for approval" : j.scheduled || j.standing || j.scheme === "Bacs" ? "Instruction accepted" : "Payment initiated", ["status", ...(j.multi ? ["multi"] : []), ...(j.refund ? ["refund"] : []), ...(j.scheduled || j.standing ? ["amendAtBank"] : [])]);
+  } else if (j.type === "vrpSetup") {
+    add("rules", "Set your payment rules", "TPP", "vrpRules", ["vrp", ...(j.sweep ? ["sweep"] : [])], "Customer selected VRP consent parameters");
+    add("bank", "Choose your paying account", "TPP", "payer", ["payer"], "Paying account selected for VRP consent");
+    add("consent", "Allow recurring payments", "TPP", "vrpConsent", ["vrp", "identity"], "Explicit consent to recurring payment parameters provided");
+    handoff();
+    add("authenticate", "Authenticate these payment rules", "Bank", "authenticate", ["sca", "vrpBank", ...(j.sweep ? ["sweep"] : j.delegated ? ["delegated"] : ["exemption"])], "Initial VRP consent authenticated at the bank");
+    back();
+    receipt("Payment rules are active", ["vrp", "dashboard"]);
+  } else if (j.type === "vrpPay") {
+    add("rules", "Your existing payment rules", "TPP", "existingRules", ["vrp", "limits", j.delegated ? "delegated" : "exemption"], "Existing active VRP consent inspected");
+    add("execute", j.delegated ? "Review this payment" : "A payment under your rules", "TPP", "vrpExecute", ["limits", j.delegated ? "delegated" : j.sweep ? "sweep" : "exemption"], j.delegated ? "Payment prepared for delegated SCA" : "Background VRP payment checked against consent limits");
+    if (j.delegated) add("authenticate", "Authenticate this payment", "TPP", "delegated", ["delegated"], "Delegated SCA dynamically linked to this amount and payee");
+    add("processing", "Check the payment status", "TPP", "processing", ["status", "limits"], "Existing VRP payment status checked");
+    receipt("VRP payment initiated", ["status"]);
+  } else if (j.type === "cofSetup") {
+    add("payer", j.reauth ? "Restore funds-check access" : "Link your funding account", "TPP", "cofPayer", ["cof", ...(j.reauth ? ["cofReauth"] : [])], "Funding account identified");
+    add("consent", "Allow funds checks", "TPP", "cofConsent", ["cof", "identity"], "Explicit funds-check consent provided to the card issuer");
+    handoff();
+    add("authenticate", "Sign in to your bank", "Bank", "authenticate", ["sca"], "Customer authenticated for funds-check access");
+    add("bank-consent", "Allow the bank to answer checks", "Bank", "cofBankConsent", ["cofBank", "cof"], "Separate explicit bank consent to this issuer and account provided");
+    back();
+    receipt("Funds-check access is active", ["cof", "dashboard"]);
+  } else if (j.type === "cofCheck") {
+    add("card", "A purchase with your card", "TPP", "cardPurchase", ["cofCheck"], "Customer initiated a fictional card transaction for GBP 42.00");
+    add("check", "Behind the scenes", "Bank", "backgroundFunds", ["cofCheck", "cof"], "Bank answered the issuer's funds-availability request");
+    receipt("Funds check returned Yes", ["cofCheck"]);
+  } else if (j.type === "manage") {
+    const owner = j.access ? "Bank" : "TPP";
+    add("dashboard", j.access ? "Open Banking connected services" : j.service === "VRP" ? "Open Banking payments" : "Open Banking connected accounts", owner, "dashboard", ["dashboard", "history"], "Connections dashboard opened");
+    add("detail", "Connection details", owner, "connection", ["dashboardDetail", ...(j.access && j.service === "AIS" ? ["reconfirmNotice"] : [])], "Selected connection details inspected");
+    if (j.reconfirm) {
+      add("reconfirm", "Keep sharing with Lumen?", "TPP", "reconfirm", ["reconfirm", "clusters"], "Unchanged AIS consent reconfirmed at the AISP");
+      receipt("Consent reconfirmed", ["reconfirmNotice"]);
+    } else if (j.reauth) {
+      add("summary", "Restore this connection", "TPP", "reauthSummary", [j.service === "AIS" ? "reauth" : "vrpReauth", j.service === "AIS" ? "clusters" : "vrp"], "Customer reviewed unchanged consent and permitted re-authentication reason");
+      handoff();
+      add("authenticate", "Restore access at your bank", "Bank", "authenticate", ["sca", j.service === "AIS" ? "reauth" : "vrpReauth", ...(j.service === "AIS" ? ["noReplay"] : [])], "Access re-authenticated at the bank; original consent unchanged");
+      back();
+      receipt("Access restored", ["dashboard"]);
+    } else {
+      add("disconnect", j.change ? "Replace these payment rules?" : "Disconnect this connection?", owner, "disconnect", ["disconnect", "consequences", ...(j.access ? ["contactTpp"] : j.service === "CoF" ? [] : ["retained"]), ...(j.change ? ["vrpChange"] : [])], j.change ? "Old VRP consent cancelled; bank notified by simulated DELETE" : j.access ? "Bank access revoked; status and reason updated" : "Consent revoked; bank notified by simulated DELETE");
+      if (j.change) {
+        add("rules", "Set replacement payment rules", "TPP", "vrpRules", ["vrpChange", "vrp"], "New VRP parameters chosen");
+        add("consent", "Allow the new payment rules", "TPP", "vrpConsent", ["vrp", "vrpChange"], "New explicit VRP consent provided");
+        handoff();
+        add("authenticate", "Authenticate the new rules", "Bank", "authenticate", ["sca", "vrpBank"], "Replacement VRP consent authenticated at the bank");
+        back();
+        receipt("New payment rules are active", ["vrpChange", "history"]);
+      } else {
+        add("receipt", "Connection disconnected", owner, "receipt", ["disconnect", "history", ...(j.access ? ["contactTpp"] : j.service === "CoF" ? ["cof"] : ["retained"])], "Cancellation confirmed; connection archived");
+      }
+    }
+  } else if (j.type === "lifecycle") {
+    if (j.action === "setup") {
+      add("setup", "Welcome to Lumen", "TPP", "serviceSetup", ["setup", "benefit", "identity"], "Fictional service terms accepted before connecting accounts");
+      receipt("Ready to connect a bank", ["aisConsent"]);
+    } else if (j.action === "notifications") {
+      add("notifications", "Your connection notifications", "TPP", "notifications", ["notification", "reconfirmNotice"], "Optional notification preference updated");
+      receipt("Notification preferences saved", ["notification"]);
+    } else {
+      add("data", "Your service and data", "TPP", "dataSettings", ["setup", j.action === "onward" ? "onward" : "retained"], "Service data settings opened");
+      add("stop", j.action === "onward" ? "Stop partner insights?" : "Close your Lumen service?", "TPP", "lifecycleStop", [j.action === "onward" ? "onward" : "disconnect", "consequences", "retained"], j.action === "onward" ? "Optional onward sharing stopped; core AIS consent unchanged" : "All example service consents revoked; bank notified; service closed");
+      receipt(j.action === "onward" ? "Partner sharing stopped" : "Your service is closed", ["retained"]);
+    }
+  } else {
+    throw new Error("Unknown journey type: " + j.type);
+  }
+  return steps;
+};
+
+export const CEGScenarios = (j) => {
+  if (j.type === "manage" || j.type === "lifecycle") return [{ id: "happy", title: "Standard journey" }];
+  const result = [{ id: "happy", title: "Standard journey" }];
+  if (["ais", "payment", "vrpSetup", "cofSetup"].includes(j.type)) result.push(
+    { id: "unavailable", title: "Bank unavailable" },
+    { id: "cancelled", title: "Customer cancels at the bank" },
+    { id: "timeout", title: "Bank authentication times out" },
+    { id: "malformed", title: "Malformed authorisation request" },
+  );
+  if (j.type === "payment" || j.type === "cofCheck") result.push({ id: "insufficient", title: "Insufficient funds" });
+  if (j.type === "payment" || j.type === "vrpPay") result.push({ id: "pending", title: "Payment status pending" });
+  if (j.type === "vrpPay") result.push({ id: "limit", title: "VRP per-payment limit exceeded" }, { id: "monthly", title: "VRP calendar-month limit exceeded" }, { id: "revoked", title: "VRP consent revoked" });
+  return result;
+};
+
+export const CEGValidate = (step, values, journey) => {
+  if (step.kind === "bank" && !values.bank) return "Choose a bank to continue.";
+  if (step.kind === "payer" && (!values.bank || (!journey.bankSelect && !values.account))) return "Choose your bank" + (journey.bankSelect ? "." : " and a saved paying account.");
+  if (step.kind === "accounts" && !(journey.type === "ais" ? values.accounts.length : values.account)) return "Select at least one eligible account.";
+  if (step.kind === "payment") {
+    if (journey.file && !values.fileLoaded) return "Load the fictional payment file to continue.";
+    const cents = CEGCents(values.amount);
+    if (cents === null || cents <= 0) return "Enter an amount greater than zero, with at most two decimal places.";
+    if (values.reference.length > 18) return "An optional payment reference must not exceed 18 characters.";
+    if ((journey.scheduled || journey.standing) && (!CEGIsDate(values.date) || values.date <= CEGMeta.sampleDate)) return "Choose a valid date after 9 November 2026, the example's current date.";
+    if (journey.standing && (!/^\d{1,3}$/.test(values.count) || Number(values.count) < 2 || Number(values.count) > 120)) return "Choose between 2 and 120 payments.";
+    if (journey.standing && [values.firstAmount, values.finalAmount].some(v => CEGCents(v) === null || CEGCents(v) <= 0)) return "First and final payment amounts must be positive and have at most two decimal places.";
+  }
+  if (step.kind === "vrpRules") {
+    const per = CEGCents(values.maxPayment);
+    const period = CEGCents(values.maxMonth);
+    if (per === null || period === null || per <= 0 || period < per) return "Set a positive per-payment maximum and a monthly maximum at least as large.";
+    if (!values.ongoing && (!CEGIsDate(values.expiry) || values.expiry <= CEGMeta.sampleDate)) return "Choose a valid consent expiry after 9 November 2026.";
+  }
+  if (step.kind === "identifier" && ["modelA", "modelB"].includes(step.channel) && !/^[A-Z0-9-]{4,20}$/i.test(values.identifier)) return "Enter an example identifier of 4 to 20 letters, digits or hyphens; do not enter credentials.";
+  if (step.kind === "cofPayer" && (!/^\d{8}$/.test(values.payerNumber) || !/^\d{2}-?\d{2}-?\d{2}$/.test(values.payerSort))) return "Enter an 8-digit example account number and 6-digit sort code.";
+  if (step.kind === "cofPayer" && (values.payerNumber !== "00001042" || values.payerSort.replaceAll("-", "") !== "123456")) return "Only the fictional account 00001042 / 12-34-56 is supported. Use the example funding account; do not enter real account details.";
+  if (step.kind === "serviceSetup" && !values.acceptedTerms) return "Accept the fictional service terms to continue.";
+  if (step.kind === "vrpExecute" && (CEGCents(values.amount) === null || CEGCents(values.amount) <= 0)) return "Enter a positive payment amount with at most two decimal places.";
+  return "";
+};
+
+export const CEGCheckVRP = (values, usedCents = 12000, revoked = false) => {
+  if (revoked) return "The consent has been revoked. No payment was initiated.";
+  const amount = CEGCents(values.amount);
+  const per = CEGCents(values.maxPayment);
+  const month = CEGCents(values.maxMonth);
+  if (amount === null || per === null || month === null || amount <= 0) return "Invalid payment or consent parameters. No payment was initiated.";
+  if (amount > per) return "The payment exceeds the per-payment maximum. No payment was initiated.";
+  if (usedCents + amount > month) return "The payment exceeds the remaining calendar-month limit. No payment was initiated.";
+  return "";
+};
+
+export const CEGIcon = ({ name = "arrow", size = 20, ...props }) => {
+  const paths = {
+    arrow: "M4 12h16m-6-6 6 6-6 6",
+    back: "M19 12H5m6-6-6 6 6 6",
+    check: "m5 12 4 4L19 6",
+    lock: "M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5zM12 14v3",
+    wallet: "M3 5h17v15H3zM3 5V3h14v2m-2 6h6v5h-6z",
+    card: "M3 5h18v14H3zM3 9h18M6 15h4",
+    repeat: "m17 2 4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4m14-1v3a2 2 0 0 1-2 2H3",
+    sliders: "M4 7h16M4 17h16M8 4v6m8 4v6",
+    bank: "m3 8 9-5 9 5H3m2 13h14M6 11v7m6-7v7m6-7v7",
+    info: "M12 11v6m0-10v1",
+    help: "M8 8a4 4 0 1 1 7 2c-2 1-3 2-3 4m0 3v1",
+    search: "M16 16l5 5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0",
+    close: "m6 6 12 12M6 18 18 6",
+    clock: "M12 6v6l4 2",
+    finger: "M8 10a4 4 0 0 1 8 0v3m-8-3v4a8 8 0 0 1-2 5m6-9v5a11 11 0 0 1-1 5m9-10a8 8 0 0 0-16 0v3m12 3a15 15 0 0 1-1 6",
+    document: "M6 2h8l4 4v16H6zM14 2v5h4M9 11h6m-6 4h6",
+    bell: "M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3m5 3h4",
+    external: "M14 3h7v7m0-7L10 14M10 3H3v18h18v-7",
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{["info", "help", "clock"].includes(name) && <circle cx="12" cy="12" r="10" />}<path d={paths[name] || paths.arrow} /></svg>;
+};
+
+export const CEGStyles = `
+.ceg-demo { --ceg-ink:#172a46; --ceg-muted:#53647e; --ceg-border:#dde5ef; --ceg-accent:#2456d6; --ceg-surface:#f3f6fb; --ceg-button-text:#fff; --ceg-radius:14px; --ceg-phone-font:14px; color:var(--ceg-ink); background:#fff; border:1px solid var(--ceg-border); border-radius:22px; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; container-type:inline-size; overflow:hidden; isolation:isolate; text-align:left; }
+.ceg-demo *, .ceg-demo *::before, .ceg-demo *::after { box-sizing:border-box; }
+.ceg-demo button, .ceg-demo input, .ceg-demo select { font:inherit; }
+.ceg-demo button { color:inherit; background:none; padding:0; border:0; border-radius:0; cursor:pointer; text-transform:none; letter-spacing:normal; line-height:1.4; box-shadow:none; }
+.ceg-demo button:disabled { opacity:.46; cursor:not-allowed; }
+.ceg-demo :is(button,a,input,select,summary):focus-visible { outline:3px solid #e47a24; outline-offset:3px; }
+.ceg-demo a { color:#164caa; text-decoration:underline; text-underline-offset:3px; }
+.ceg-demo p, .ceg-demo h2, .ceg-demo h3, .ceg-demo h4 { margin:0; color:inherit; font-family:inherit; line-height:1.4; }
+.ceg-demo p { line-height:1.6; }
+.ceg-demo h2::before, .ceg-demo h3::before, .ceg-demo h4::before { content:none; }
+.ceg-demo label { margin:0; }
+.ceg-demo svg { flex-shrink:0; vertical-align:middle; }
+.ceg-demo .ceg-masthead { padding:30px 32px 26px; color:#fff; background:#122744; position:relative; overflow:hidden; }
+.ceg-demo .ceg-masthead::after { content:""; position:absolute; width:280px; height:280px; border:1px solid #ffffff1f; border-radius:50%; right:-35px; top:-126px; pointer-events:none; box-shadow:0 0 0 40px #ffffff05,0 0 0 80px #ffffff04; }
+.ceg-demo .ceg-eyebrow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.7px; }
+.ceg-demo .ceg-masthead .ceg-eyebrow { color:#b6d0ff; margin-bottom:12px; }
+.ceg-demo .ceg-masthead h2 { color:#fff; font-size:30px; letter-spacing:-1px; font-weight:650; margin:0 0 10px; max-width:750px; border:0; padding:0; }
+.ceg-demo .ceg-masthead p { color:#d7e1ef; max-width:690px; font-size:14px; }
+.ceg-demo .ceg-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; position:relative; z-index:1; }
+.ceg-demo .ceg-meta span { background:#ffffff10; border:1px solid #ffffff25; border-radius:20px; font-size:11px; padding:5px 10px; color:#eaf2ff; }
+.ceg-demo .ceg-categories { display:flex; gap:5px; padding:14px 22px; border-bottom:1px solid var(--ceg-border); background:#fff; overflow:auto; scrollbar-width:thin; }
+.ceg-demo .ceg-category { display:flex; align-items:center; justify-content:center; gap:7px; padding:11px 12px; border-radius:9px; white-space:nowrap; font-size:12px; font-weight:600; flex:1; }
+.ceg-demo .ceg-category[aria-pressed=true] { background:#edf2ff; color:#214ab0; }
+.ceg-demo .ceg-category:hover { background:#f3f6fb; }
+.ceg-demo .ceg-workbench { display:grid; grid-template-columns:224px minmax(340px,1fr) 300px; gap:0; min-height:800px; }
+.ceg-demo .ceg-sidebar { border-right:1px solid var(--ceg-border); padding:20px 16px; background:#fcfdff; min-width:0; }
+.ceg-demo .ceg-switch { display:flex; padding:4px; border:1px solid var(--ceg-border); border-radius:10px; gap:4px; background:#f1f4f9; }
+.ceg-demo .ceg-switch button { padding:7px 8px; border-radius:7px; font-size:11px; font-weight:600; flex:1; }
+.ceg-demo .ceg-switch button[aria-pressed=true] { background:white; color:#172a46; box-shadow:0 1px 4px #182a4612; }
+.ceg-demo .ceg-search { position:relative; margin:17px 0; }
+.ceg-demo .ceg-search svg { position:absolute; top:12px; left:10px; color:#65768b; }
+.ceg-demo .ceg-search input { width:100%; background:#fff; border:1px solid var(--ceg-border); border-radius:8px; padding:10px 8px 10px 34px; font-size:12px; color:#172a46; }
+.ceg-demo .ceg-family-intro { display:flex; justify-content:space-between; align-items:center; margin:20px 2px 10px; color:var(--ceg-muted); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; }
+.ceg-demo .ceg-journeys { max-height:528px; overflow:auto; scrollbar-width:thin; padding:3px; margin:0 -3px; }
+.ceg-demo .ceg-journey { display:block; width:100%; text-align:left; padding:11px; margin-bottom:4px; border:1px solid transparent; border-radius:9px; }
+.ceg-demo .ceg-journey:hover { background:#eef3fb; }
+.ceg-demo .ceg-journey[aria-pressed=true] { background:#eaf0ff; border-color:#cedbfa; color:#1b439f; }
+.ceg-demo .ceg-journey strong { display:block; font-size:12px; font-weight:650; line-height:1.5; }
+.ceg-demo .ceg-journey small { display:block; font-size:10px; line-height:1.5; margin-top:4px; color:var(--ceg-muted); }
+.ceg-demo .ceg-side-note { display:flex; gap:9px; margin-top:22px; padding:12px 10px; border:1px solid var(--ceg-border); border-radius:10px; font-size:11px; color:#53647e; background:#fff; }
+.ceg-demo .ceg-appearance { display:grid; gap:17px; padding-top:18px; }
+.ceg-demo .ceg-appearance label { font-size:11px; font-weight:600; color:#53647e; display:block; }
+.ceg-demo .ceg-appearance input[type=color] { width:32px; height:30px; border:0; padding:0; background:none; cursor:pointer; }
+.ceg-demo .ceg-colour-control { display:flex; align-items:center; gap:10px; margin-top:6px; border:1px solid var(--ceg-border); border-radius:8px; padding:6px 8px; background:#fff; font-size:12px; }
+.ceg-demo .ceg-appearance select { width:100%; padding:9px 8px; border:1px solid var(--ceg-border); border-radius:8px; background:#fff; margin-top:6px; color:#172a46; }
+.ceg-demo input[type=range] { width:100%; accent-color:#2456d6; margin:10px 0 0; }
+.ceg-demo .ceg-presets { display:flex; gap:8px; }
+.ceg-demo .ceg-preset { width:34px; height:34px; border-radius:50%; border:3px solid white; box-shadow:0 0 0 1px #aebbd0; }
+.ceg-demo .ceg-stage { min-width:0; padding:22px 25px; color:var(--ceg-stage-text,#172a46); background:var(--ceg-surface); background-image:radial-gradient(#bdcbe044 .9px,transparent .9px); background-size:18px 18px; display:flex; flex-direction:column; align-items:center; }
+.ceg-demo .ceg-stage-head { align-self:stretch; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:17px; }
+.ceg-demo .ceg-stage-head h3 { font-size:16px; font-weight:650; letter-spacing:-.3px; }
+.ceg-demo .ceg-stage-head p { color:var(--ceg-stage-text,#53647e); font-size:11px; margin-top:3px; }
+.ceg-demo .ceg-icon-button { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #d6dfed; border-radius:8px; background:#fff; color:#172a46; flex-shrink:0; }
+.ceg-demo .ceg-context-controls { display:flex; flex-wrap:wrap; align-self:stretch; gap:8px; margin-bottom:16px; }
+.ceg-demo .ceg-control { flex:1; min-width:140px; }
+.ceg-demo .ceg-control label { display:block; font-size:10px; color:var(--ceg-stage-text,#53647e); font-weight:600; margin-bottom:4px; }
+.ceg-demo .ceg-control select { width:100%; color:#253d5e; background:#fff; border:1px solid #d2ddeb; border-radius:8px; padding:7px 8px; font-size:11px; }
+.ceg-demo .ceg-device-label { display:flex; gap:7px; align-items:center; margin:2px 0 10px; color:var(--ceg-stage-text,#53647e); font-size:10px; font-weight:600; letter-spacing:.3px; }
+.ceg-demo .ceg-device-label span { display:inline-block; width:6px; height:6px; border-radius:50%; background:#2d7656; }
+.ceg-demo .ceg-phone { width:min(100%,340px); height:648px; border:7px solid #fff; border-radius:38px; background:#fff; color:#172a46; box-shadow:0 16px 40px #17305519,0 2px 4px #1730550c; overflow:hidden; display:flex; flex-direction:column; font-size:var(--ceg-phone-font); font-family:var(--ceg-custom-font,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif); position:relative; }
+.ceg-demo .ceg-statusbar { height:31px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:8px 19px 0; color:#172a46; font-size:10px; font-weight:650; }
+.ceg-demo .ceg-island { width:73px; height:19px; background:#18283e; border-radius:15px; position:absolute; left:50%; transform:translateX(-50%); top:4px; }
+.ceg-demo .ceg-phone-brand { display:flex; align-items:center; gap:8px; padding:17px 19px 13px; border-bottom:1px solid var(--ceg-border); background:white; color:#172a46; min-height:66px; flex-shrink:0; }
+.ceg-demo .ceg-logo { width:29px; height:29px; border-radius:8px; background:#172a46; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:750; flex-shrink:0; }
+.ceg-demo .ceg-logo-bank { background:#21624f; }
+.ceg-demo .ceg-phone-brand strong { font-size:13px; display:block; line-height:1.4; }
+.ceg-demo .ceg-phone-brand small { display:block; color:var(--ceg-muted); font-size:9px; line-height:1.5; }
+.ceg-demo .ceg-domain { margin-left:auto; border:1px solid #dbe3ee; border-radius:5px; padding:3px 5px; font-size:8px; font-weight:650; color:#53647e; white-space:nowrap; }
+.ceg-demo .ceg-phone-progress { display:flex; gap:4px; padding:12px 19px 0; background:#fff; }
+.ceg-demo .ceg-phone-progress span { height:3px; flex:1; border-radius:3px; background:#e7edf5; }
+.ceg-demo .ceg-phone-progress .ceg-progress-done { background:var(--ceg-accent); }
+.ceg-demo .ceg-screen { flex:1; min-height:0; overflow:auto; padding:21px 19px 14px; background:#fff; scrollbar-width:thin; }
+.ceg-demo .ceg-screen h4 { font-size:calc(var(--ceg-phone-font) * 1.55); font-weight:700; line-height:1.2; letter-spacing:-.6px; margin:7px 0 10px; }
+.ceg-demo .ceg-screen p { font-size:.87em; color:var(--ceg-muted); line-height:1.65; }
+.ceg-demo .ceg-screen .ceg-lead { margin-bottom:17px; }
+.ceg-demo .ceg-hero-icon { width:61px; height:61px; background:#edf2ff; border:1px solid #dde6fc; color:#2456d6; border-radius:18px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+.ceg-demo .ceg-hero-icon.ceg-success { background:#ecf7f1; color:#1b6a45; border-color:#d2e8dd; }
+.ceg-demo .ceg-hero-icon.ceg-warning { background:#fff2e8; color:#975012; border-color:#eed9c6; }
+.ceg-demo .ceg-block { border:1px solid var(--ceg-border); border-radius:var(--ceg-radius); padding:12px; background:#f9fbfe; margin:12px 0; position:relative; }
+.ceg-demo .ceg-block.ceg-highlighted { border-color:#2456d6; box-shadow:0 0 0 2px #2456d626; }
+.ceg-demo .ceg-block.ceg-plain { border:0; padding:0; background:transparent; }
+.ceg-demo .ceg-block-title { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-bottom:7px; }
+.ceg-demo .ceg-block-title strong { font-size:.9em; font-weight:650; }
+.ceg-demo .ceg-marker { width:23px; height:23px; border-radius:50%; background:#e6edff; color:#204aa6; border:1px solid #cbdafa; font-size:10px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ceg-demo .ceg-marker[aria-pressed=true] { background:#2456d6; color:#fff; border-color:#2456d6; }
+.ceg-demo .ceg-stats { display:flex; flex-wrap:wrap; gap:7px; margin:13px 0; }
+.ceg-demo .ceg-stat { flex:1; padding:10px; border:1px solid var(--ceg-border); border-radius:10px; background:#fff; min-width:83px; }
+.ceg-demo .ceg-stat strong { display:block; font-size:14px; }
+.ceg-demo .ceg-stat small { font-size:9px; color:var(--ceg-muted); display:block; margin-top:3px; }
+.ceg-demo .ceg-check-line { display:flex; align-items:flex-start; gap:8px; margin-top:9px; font-size:.85em; color:#344c6c; line-height:1.5; cursor:pointer; }
+.ceg-demo .ceg-check-line input { margin:2px 0 0; accent-color:#2456d6; flex-shrink:0; width:15px; height:15px; }
+.ceg-demo .ceg-check-line small { display:block; font-size:10px; color:var(--ceg-muted); margin-top:3px; }
+.ceg-demo .ceg-banks { display:grid; gap:9px; }
+.ceg-demo .ceg-bank-choice { border:1px solid var(--ceg-border); border-radius:var(--ceg-radius); padding:12px; display:flex; gap:10px; align-items:center; background:#fff; cursor:pointer; }
+.ceg-demo .ceg-bank-choice:has(input:checked) { background:#f0f5ff; border-color:#93b0f2; }
+.ceg-demo .ceg-bank-choice input { width:15px; height:15px; accent-color:#2456d6; margin:0 0 0 auto; flex-shrink:0; }
+.ceg-demo .ceg-bank-choice strong { display:block; font-size:.86em; }
+.ceg-demo .ceg-bank-choice small { display:block; font-size:10px; color:var(--ceg-muted); margin-top:2px; }
+.ceg-demo .ceg-bank-logo { width:33px; height:33px; border-radius:9px; background:#edf5f1; color:#21624f; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; flex-shrink:0; }
+.ceg-demo .ceg-bank-disabled { opacity:.6; cursor:not-allowed; background:#f3f5f7; }
+.ceg-demo .ceg-field { margin:12px 0; }
+.ceg-demo .ceg-field > label { display:block; font-size:.8em; font-weight:600; margin-bottom:5px; color:#344c6c; }
+.ceg-demo .ceg-field :is(input,select) { width:100%; padding:10px; border:1px solid #c6d2e3; border-radius:calc(var(--ceg-radius) * .65); font-size:.88em; background:#fff; color:#172a46; min-width:0; }
+.ceg-demo .ceg-field input[aria-invalid=true] { border-color:#ad3d35; }
+.ceg-demo .ceg-field small { display:block; font-size:10px; color:var(--ceg-muted); margin-top:5px; line-height:1.5; }
+.ceg-demo .ceg-row { display:flex; gap:8px; }
+.ceg-demo .ceg-row > * { flex:1; min-width:0; }
+.ceg-demo .ceg-definition { margin:0; display:grid; grid-template-columns:minmax(80px,.8fr) minmax(0,1.2fr); gap:9px 10px; font-size:.81em; }
+.ceg-demo .ceg-definition dt { color:var(--ceg-muted); }
+.ceg-demo .ceg-definition dd { margin:0; color:#172a46; text-align:right; overflow-wrap:anywhere; font-weight:550; }
+.ceg-demo .ceg-definition .ceg-amount { font-size:1.35em; font-weight:700; }
+.ceg-demo details { margin:9px 0 0; font-size:.85em; border:0; padding:0; color:#344c6c; }
+.ceg-demo summary { cursor:pointer; font-size:inherit; font-weight:600; list-style:revert; background:none; padding:4px 0; }
+.ceg-demo details p { margin:6px 0; }
+.ceg-demo .ceg-permissions { padding-left:16px; margin:8px 0; font-size:11px; color:#53647e; }
+.ceg-demo .ceg-permissions li { margin:5px 0; padding:0; }
+.ceg-demo .ceg-info { display:flex; align-items:flex-start; gap:8px; border-radius:10px; border:1px solid #dbe7f4; background:#f1f6fd; padding:11px; margin:12px 0; font-size:.78em; line-height:1.65; color:#344c6c; }
+.ceg-demo .ceg-info svg { margin-top:3px; }
+.ceg-demo .ceg-warning-info { background:#fff5ec; border-color:#efd8c2; color:#7a481a; }
+.ceg-demo .ceg-screen-actions { padding:12px 19px 16px; border-top:1px solid #e4eaf3; background:#fff; flex-shrink:0; box-shadow:0 -5px 10px #ffffffc0; }
+.ceg-demo .ceg-primary, .ceg-demo .ceg-secondary { display:flex; align-items:center; justify-content:center; gap:9px; border-radius:calc(var(--ceg-radius) * .8); padding:12px 14px; width:100%; text-align:center; font-size:.87em; font-weight:650; min-height:44px; }
+.ceg-demo .ceg-primary { background:var(--ceg-accent); color:var(--ceg-button-text); border:1px solid var(--ceg-accent); }
+.ceg-demo .ceg-primary:hover:not(:disabled) { filter:brightness(.94); }
+.ceg-demo .ceg-secondary { border:1px solid #cbd7e8; color:#294667; background:#fff; }
+.ceg-demo .ceg-text-button { color:#37577c; font-size:11px; text-decoration:underline; text-underline-offset:3px; padding:9px 0; min-height:32px; }
+.ceg-demo .ceg-equal-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ceg-demo .ceg-equal-actions .ceg-primary { background:#fff; color:#294667; border:1px solid #cbd7e8; }
+.ceg-demo .ceg-cancel-action { display:block; text-align:center; width:100%; margin:3px 0 -7px; font-size:10px; }
+.ceg-demo .ceg-validation { font-size:10px; color:#99402c; margin-bottom:9px; line-height:1.6; }
+.ceg-demo .ceg-homebar { width:85px; height:4px; background:#172a46; border-radius:4px; margin:0 auto 5px; flex-shrink:0; }
+.ceg-demo .ceg-step-nav { display:flex; align-items:center; justify-content:space-between; gap:12px; width:min(100%,340px); margin-top:17px; }
+.ceg-demo .ceg-step-nav > span { font-size:11px; color:var(--ceg-stage-text,#53647e); }
+.ceg-demo .ceg-step-nav > button { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ceg-stage-text,#37577c); padding:5px 0; }
+.ceg-demo .ceg-timeline { display:flex; gap:5px; margin-top:12px; max-width:100%; flex-wrap:wrap; justify-content:center; }
+.ceg-demo .ceg-timeline button { width:22px; height:22px; border-radius:50%; background:#fff; color:#53647e; border:1px solid #d1dceb; font-size:9px; }
+.ceg-demo .ceg-timeline button[aria-current=step] { background:#172a46; color:#fff; border-color:#172a46; }
+.ceg-demo .ceg-inspector { border-left:1px solid var(--ceg-border); padding:20px 17px; background:#fff; min-width:0; }
+.ceg-demo .ceg-inspector-head { display:flex; align-items:center; justify-content:space-between; margin:17px 0 13px; gap:10px; }
+.ceg-demo .ceg-inspector-head h3 { font-size:14px; font-weight:650; }
+.ceg-demo .ceg-pill { display:inline-flex; align-items:center; gap:5px; border:1px solid #d6e1ef; color:#526783; background:#f8faff; padding:4px 7px; border-radius:6px; font-size:9px; font-weight:600; white-space:nowrap; }
+.ceg-demo .ceg-guidelines { max-height:648px; overflow:auto; scrollbar-width:thin; padding:3px; margin:0 -3px; }
+.ceg-demo .ceg-guide { padding:12px 11px; border:1px solid var(--ceg-border); border-radius:11px; margin-bottom:9px; background:#fff; scroll-margin:8px; }
+.ceg-demo .ceg-guide.ceg-guide-selected { background:#f6f8ff; border-color:#93acf1; box-shadow:0 0 0 2px #2456d618; }
+.ceg-demo .ceg-guide-heading { display:flex; align-items:flex-start; gap:8px; margin-bottom:9px; }
+.ceg-demo .ceg-guide-heading button { text-align:left; font-size:11px; font-weight:650; color:#253d5e; flex:1; }
+.ceg-demo .ceg-guide-heading .ceg-marker { flex:0 0 23px; text-align:center; }
+.ceg-demo .ceg-guide p { color:#53647e; font-size:11px; line-height:1.7; }
+.ceg-demo .ceg-guide-meta { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-top:12px; }
+.ceg-demo .ceg-level { padding:3px 6px; background:#eaf0ff; border-radius:5px; color:#2149aa; font-size:9px; font-weight:650; }
+.ceg-demo .ceg-level-recommended { color:#21604a; background:#edf7f1; }
+.ceg-demo .ceg-level-conditional { color:#875018; background:#fff2e1; }
+.ceg-demo .ceg-guide-meta a { display:inline-flex; align-items:center; gap:3px; font-size:9px; color:#53647e; text-decoration:none; }
+.ceg-demo .ceg-guide-meta a:hover { color:#164caa; text-decoration:underline; }
+.ceg-demo .ceg-guide-ref { color:#53647e; font-size:9px; margin-top:9px; }
+.ceg-demo .ceg-not-certification { color:#53647e; font-size:10px; line-height:1.7; margin-top:15px; border-top:1px solid var(--ceg-border); padding-top:13px; }
+.ceg-demo .ceg-events { list-style:none; margin:0; padding:0; }
+.ceg-demo .ceg-event { display:flex; align-items:flex-start; gap:10px; padding:0 0 20px; position:relative; font-size:11px; }
+.ceg-demo .ceg-event:not(:last-child)::after { content:""; position:absolute; width:1px; background:#dce5f0; left:10px; top:23px; bottom:3px; }
+.ceg-demo .ceg-event-number { display:flex; align-items:center; justify-content:center; border-radius:50%; width:21px; height:21px; border:1px solid #c9dbd0; background:#edf7f1; color:#21604a; font-size:9px; flex-shrink:0; }
+.ceg-demo .ceg-event strong { display:block; font-size:11px; font-weight:600; margin:0 0 5px; }
+.ceg-demo .ceg-event small { display:block; color:#53647e; font-size:9px; }
+.ceg-demo .ceg-sources { display:grid; gap:10px; max-height:648px; overflow:auto; padding:3px; margin:0 -3px; }
+.ceg-demo .ceg-source { padding:12px; border:1px solid var(--ceg-border); border-radius:10px; }
+.ceg-demo .ceg-source a { font-size:11px; font-weight:600; line-height:1.6; }
+.ceg-demo .ceg-source p { margin-top:6px; font-size:10px; color:#53647e; line-height:1.65; }
+.ceg-demo .ceg-tag { display:inline-block; font-size:9px; font-weight:650; border-radius:5px; padding:4px 6px; color:#21604a; background:#eaf6ef; margin:0 0 7px; }
+.ceg-demo .ceg-tag-pending { color:#7b4c17; background:#fff2df; }
+.ceg-demo .ceg-history-tabs { display:flex; gap:8px; border-bottom:1px solid var(--ceg-border); margin:15px 0; }
+.ceg-demo .ceg-history-tabs button { font-size:11px; padding:8px 4px; color:#53647e; border-bottom:2px solid transparent; }
+.ceg-demo .ceg-history-tabs button[aria-pressed=true] { color:#2456d6; border-bottom-color:#2456d6; }
+.ceg-demo .ceg-connection-card { padding:13px; border:1px solid var(--ceg-border); border-radius:var(--ceg-radius); margin:11px 0; background:#f9fbfe; }
+.ceg-demo .ceg-connection-card strong { font-size:.9em; }
+.ceg-demo .ceg-connection-card small { display:block; font-size:10px; color:#53647e; margin:4px 0; }
+.ceg-demo .ceg-connection-card button { width:100%; margin-top:10px; padding:8px; font-size:11px; border:1px solid #cbd7e8; border-radius:8px; background:#fff; }
+.ceg-demo .ceg-code { padding:20px 10px; background:#fff; border:1px dashed #bacbe3; border-radius:14px; text-align:center; margin:15px 0; }
+.ceg-demo .ceg-code strong { font:700 25px/1.5 ui-monospace,monospace; letter-spacing:3px; color:#172a46; display:block; }
+.ceg-demo .ceg-code small { font-size:10px; color:#53647e; display:block; margin-top:8px; }
+.ceg-demo .ceg-code-grid { display:grid; grid-template-columns:repeat(9,8px); gap:3px; justify-content:center; margin-bottom:10px; }
+.ceg-demo .ceg-code-grid span { width:8px; height:8px; background:#172a46; }
+.ceg-demo .ceg-code-grid span:nth-child(3n), .ceg-demo .ceg-code-grid span:nth-child(7n) { background:transparent; }
+.ceg-demo .ceg-footer { border-top:1px solid var(--ceg-border); padding:15px 24px; display:flex; gap:18px; justify-content:space-between; align-items:center; font-size:10px; color:#53647e; background:#fafcff; }
+.ceg-demo .ceg-footer a { color:#53647e; white-space:nowrap; }
+.ceg-demo .ceg-empty { padding:22px 10px; font-size:12px; color:#53647e; }
+.ceg-demo .ceg-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@container (max-width:1100px) {
+  .ceg-demo .ceg-workbench { grid-template-columns:210px minmax(0,1fr); }
+  .ceg-demo .ceg-stage { grid-column:2; grid-row:1; padding:20px; }
+  .ceg-demo .ceg-inspector { grid-column:1/-1; border-left:0; border-top:1px solid var(--ceg-border); padding:20px; }
+  .ceg-demo .ceg-guidelines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:none; }
+  .ceg-demo .ceg-guide { margin:0; }
+  .ceg-demo .ceg-sources { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:none; }
+  .ceg-demo .ceg-events { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 20px; }
+  .ceg-demo .ceg-event::after { display:none; }
+  .ceg-demo .ceg-category { padding:9px 11px; flex:none; }
+}
+@container (max-width:620px) {
+  .ceg-demo .ceg-masthead { padding:23px 20px; }
+  .ceg-demo .ceg-masthead h2 { font-size:25px; }
+  .ceg-demo .ceg-categories { padding:10px 14px; }
+  .ceg-demo .ceg-category { font-size:11px; }
+  .ceg-demo .ceg-workbench { display:flex; flex-direction:column; }
+  .ceg-demo .ceg-sidebar { padding:15px; border-right:0; border-bottom:1px solid var(--ceg-border); }
+  .ceg-demo .ceg-search { margin:12px 0; }
+  .ceg-demo .ceg-family-intro { margin-top:12px; }
+  .ceg-demo .ceg-journeys { max-height:173px; }
+  .ceg-demo .ceg-side-note { margin-top:12px; }
+  .ceg-demo .ceg-stage { padding:20px 14px; }
+  .ceg-demo .ceg-appearance { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ceg-demo .ceg-guidelines, .ceg-demo .ceg-sources, .ceg-demo .ceg-events { grid-template-columns:1fr; }
+  .ceg-demo .ceg-footer { flex-direction:column; align-items:flex-start; gap:8px; padding:15px 20px; }
+}
+@media (prefers-reduced-motion:reduce) { .ceg-demo * { scroll-behavior:auto !important; transition:none !important; } }
+`;
+
+export const CEGBankName = (id) => ({ birch: "Birch Bank", cedar: "Cedar Bank", pine: "Pine Bank" }[id] || "your bank");
+
+export const CEGAccount = (v) => ({
+  name: v.accountName || (v.account === "joint" ? "Joint household account" : "Current account"),
+  number: v.accountNumber || (v.account === "joint" ? "00002043" : "00001042"),
+  sort: v.accountSort || (v.bank === "cedar" ? "65-43-21" : "12-34-56"),
+});
+
+export const CEGDate = (date) => new Date(date + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+export const CEGIsDate = (value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value + "T12:00:00Z");
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+};
+
+export const CEGSchedule = (v) => {
+  const last = new Date(v.date + "T12:00:00Z");
+  const periods = Number(v.count) - 1;
+  if (v.frequency === "Weekly") last.setUTCDate(last.getUTCDate() + periods * 7);
+  else {
+    const day = last.getUTCDate();
+    last.setUTCDate(1);
+    last.setUTCMonth(last.getUTCMonth() + periods * (v.frequency === "Quarterly" ? 3 : 1));
+    const lastDay = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() + 1, 0)).getUTCDate();
+    last.setUTCDate(Math.min(day, lastDay));
+  }
+  return Number.isNaN(last.getTime()) ? "Choose a valid schedule" : CEGDate(last.toISOString().slice(0, 10));
+};
+
+export const CEGInitialValues = (j) => {
+  const v = CEGDefaults(j);
+  if (["vrpPay", "cofCheck", "manage"].includes(j.type)) Object.assign(v, { bank: "birch", account: "current" });
+  if (j.type === "cofSetup" && j.reauth) Object.assign(v, { bank: "birch", payerNumber: "00001042", payerSort: "12-34-56" });
+  if (j.file) Object.assign(v, { bank: "birch", account: "current" });
+  return v;
+};
+
+export const CEGConnections = (j) => [
+  { id: "connection-1", bank: "birch", provider: j.service === "CoF" ? "Orbit Card" : j.service === "VRP" ? "Lumen Pay" : "Lumen", account: "Current account", number: "00001042", sort: "12-34-56", status: j.reconfirm ? "Reconfirm" : "Active", granted: "2026-08-11", due: j.reconfirm ? "2026-11-09" : "2026-11-10", expires: "Ongoing until disconnected", synced: "9 Nov 2026, 09:41", purpose: j.service === "CoF" ? "Funds checks for card purchases" : j.service === "VRP" ? "Variable payments to Meadow Energy" : "Income and spending analysis", total: "120" },
+  { id: "connection-2", bank: j.access ? "birch" : "cedar", provider: j.access ? "Pocket Plan" : j.service === "CoF" ? "Orbit Card" : j.service === "VRP" ? "Lumen Pay" : "Lumen", account: "Household account", number: "00002043", sort: j.access ? "12-34-56" : "65-43-21", status: "Active", granted: "2026-10-01", due: "2026-12-30", expires: "2027-10-01", synced: "8 Nov 2026, 16:20", purpose: j.service === "CoF" ? "Funds checks for card purchases" : j.service === "VRP" ? "Variable payments to Meadow Energy" : "Income and spending analysis", total: "80" },
+  { id: "connection-old", bank: j.access ? "birch" : "cedar", provider: j.access ? "Acorn Finance" : j.service === "CoF" ? "Orbit Card" : j.service === "VRP" ? "Lumen Pay" : "Lumen", account: "Previous current account", number: "00003044", sort: "65-43-21", status: "Expired", granted: "2025-11-01", ended: "2026-11-01", expires: "2026-11-01", synced: "31 Oct 2026, 12:10", purpose: "Previous service arrangement", total: "420" },
+].map((r, i) => ({
+  ...r, regular: i === 0, maxPayment: i === 1 ? "80" : "100", maxMonth: i === 1 ? "300" : "500",
+  accessStatus: j.reauth && i === 0 ? "Re-authentication required" : "Active",
+  payments: i === 0 ? [{ date: "2026-11-07", amount: "40" }, { date: "2026-10-20", amount: "80" }] : i === 1 ? [{ date: "2026-11-07", amount: "60" }, { date: "2026-10-20", amount: "20" }] : [31, 24, 17, 10, 3].map((day, k) => ({ date: "2026-10-" + String(day).padStart(2, "0"), amount: k === 4 ? "20" : "100" })),
+}));
+
+export const CEGConnectionValues = (r) => ({
+  bank: r.bank, account: "current", accountName: r.account, accountNumber: r.number, accountSort: r.sort,
+  regular: r.regular, maxPayment: r.maxPayment, maxMonth: r.maxMonth,
+  ongoing: !r.expires.startsWith("20"), expiry: r.expires.startsWith("20") ? r.expires : "2027-11-09",
+});
+
+export const CEGContrastText = (hex) => {
+  const rgb = hex.slice(1).match(/.{2}/g).map(x => parseInt(x, 16) / 255).map(x => x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4);
+  const luminance = rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+  return (luminance + .05) / .05 > 1.05 / (luminance + .05) ? "#000000" : "#ffffff";
+};
+
+export const CEGDefinition = ({ rows }) => <dl className="ceg-definition">{rows.filter(Boolean).map(([label, value], i) => <CEGDefinitionPair key={label + i} label={label} value={value} />)}</dl>;
+
+export const CEGDefinitionPair = ({ label, value }) => <><dt>{label}</dt><dd>{value}</dd></>;
+
+export const CEGInfo = ({ children, warning = false }) => <div className={"ceg-info" + (warning ? " ceg-warning-info" : "")}><CEGIcon name="info" size={15} /><div>{children}</div></div>;
+
+export const CEGField = ({ label, name, v, set, type = "text", options, help, disabled = false, ...props }) => {
+  const id = useId();
+  return <div className="ceg-field"><label htmlFor={id}>{label}</label>{options
+    ? <select id={id} value={v[name]} onChange={e => set(name, e.target.value)} disabled={disabled} {...props}>{options.map(x => <option key={x} value={x}>{x}</option>)}</select>
+    : <input id={id} type={type} value={v[name]} onChange={e => set(name, e.target.value)} disabled={disabled} {...props} />}
+    {help && <small>{help}</small>}</div>;
+};
+
+export const CEGBlock = ({ title, rule, mark, selected, children, plain = false }) => <div className={"ceg-block" + (selected === rule ? " ceg-highlighted" : "") + (plain ? " ceg-plain" : "")}><div className="ceg-block-title"><strong>{title}</strong>{mark(rule)}</div>{children}</div>;
+
+export const CEGClusterList = ({ v, set, optional = false }) => <div>{CEGClusters.filter(c => c.required || v.regular || optional).map(c => <details key={c.id}><summary>{c.name}{!c.required ? " (optional)" : ""}</summary><p>{c.purpose}</p><ul className="ceg-permissions">{c.permissions.map(p => <li key={p}>{p}</li>)}</ul>{optional && !c.required && <label className="ceg-check-line"><input type="checkbox" checked={v.regular} onChange={e => set("regular", e.target.checked)} /><span>Include regular payments<small>Turn off to use spending analysis without a bills forecast.</small></span></label>}</details>)}</div>;
+
+export const CEGBanks = ({ v, set, payer = false, bankSelect = false, scope }) => {
+  const name = useId();
+  const banks = [{ id: "birch", name: "Birch Bank", sub: "Personal and business accounts", initial: "b" }, { id: "cedar", name: "Cedar Bank", sub: "Personal current accounts", initial: "c" }, { id: "pine", name: "Pine Bank", sub: "Unavailable in this sample", initial: "p", disabled: true }];
+  const available = banks.filter(b => !v.bankQuery || b.name.toLowerCase().includes(v.bankQuery.toLowerCase()));
+  return <>
+    <CEGField label="Search example banks" name="bankQuery" v={{ ...v, bankQuery: v.bankQuery || "" }} set={set} placeholder="Type a bank name" />
+    <div className="ceg-banks">{available.map(b => <label className={"ceg-bank-choice" + (b.disabled ? " ceg-bank-disabled" : "")} key={b.id}><span className="ceg-bank-logo">{b.initial}</span><span><strong>{b.name}</strong><small>{b.sub}</small></span><input type="radio" name={name} aria-label={b.name} value={b.id} checked={v.bank === b.id} disabled={b.disabled} onChange={() => { set("bank", b.id); set("account", ""); }} /></label>)}</div>
+    {!available.length && <p className="ceg-empty" role="status">No example banks match that search.</p>}
+    {payer && v.bank && !bankSelect && <CEGBlock title="Saved paying account" rule="payer" {...scope}><label className="ceg-bank-choice"><span><strong>Current account</strong><small>{CEGBankName(v.bank)} / **** 1042</small></span><input type="radio" name={name + "-account"} checked={v.account === "current"} onChange={() => set("account", "current")} aria-label="Saved current account" /></label><p style={{ marginTop: 8 }}>Example details saved with your agreement. The bank will not ask you to choose them again.</p></CEGBlock>}
+    {payer && bankSelect && <CEGInfo>You will choose the paying account securely inside your bank.</CEGInfo>}
+  </>;
+};
+
+export const CEGPaymentSummary = ({ j, v, bank = false }) => {
+  const currency = j.international ? "EUR" : "GBP";
+  const amount = CEGCents(v.amount);
+  const debit = amount === null ? "Enter an amount" : CEGMoney(String((Math.round(amount / 1.15) + 300) / 100));
+  return <>
+    <CEGDefinition rows={[
+      [j.standing ? "Recurring amount" : "Amount", CEGMoney(v.amount, currency)],
+      ["Payee", j.file ? "3 file-defined recipients" : j.international ? "Nordlicht Studio" : "Meadow Shop"],
+      ["Payee account", j.file ? "See payment file" : j.international ? "DE89 3704 0044 0532 0130 00" : "98-76-54 / 00004042"],
+      v.reference.trim() && ["Reference", v.reference],
+      ["Paying bank", CEGBankName(v.bank)],
+      j.file ? ["Paying account(s)", j.file === "bulk" ? "12-34-56 / 00001042" : "2 file-defined debtor accounts"] : v.account && ["Paying account", CEGAccount(v).name + " / " + CEGAccount(v).sort + " / **** " + CEGAccount(v).number.slice(-4)],
+      (j.scheme || j.file) && ["Payment scheme", j.scheme || "Faster Payments"],
+      (j.scheduled || j.standing || j.file) && ["First execution", CEGDate(v.date)],
+      j.standing && ["First payment", CEGMoney(v.firstAmount, currency)],
+      j.standing && ["Recurring payment", CEGMoney(v.amount, currency) + " / " + v.frequency.toLowerCase()],
+      j.standing && ["Final payment", CEGMoney(v.finalAmount, currency) + " on " + CEGSchedule(v)],
+      j.standing && ["Number of payments", v.count],
+      j.international && ["Country / priority", "Germany / " + v.priority],
+      j.international && ["Charges model", v.charges],
+      j.international && ["FX (indicative)", "GBP 1.00 = EUR 1.15"],
+      j.international && ["Bank fee", "GBP 3.00"],
+      j.international && ["Indicative debit", debit],
+      bank && j.scheme === "CHAPS" && ["Bank fee", "GBP 5.00"],
+      bank && j.scheme === "CHAPS" && ["Cut-off / expected execution", "15:00 / 9 Nov 2026"],
+      bank && j.scheme === "Bacs" && ["Expected execution", "12 Nov 2026 (Bacs cycle)"],
+      bank && j.extra && !j.international && !j.scheme && ["Bank fee", "GBP 0.00"],
+    ]} />
+    {j.international && <p style={{ marginTop: 12 }}>Indicative FX only; the final rate may differ. The bank fee is known; the beneficiary bank may apply additional charges. {v.charges === "SHA" ? "SHA: sender and recipient share charges." : v.charges === "OUR" ? "OUR: sender pays charges, subject to the bank's terms." : "BEN: recipient bears charges, subject to the bank's terms."}</p>}
+    {j.file && <details><summary>View the 3 payment instructions</summary>{["Harbour Studio", "Juniper Works", "Willow Services"].map((payee, i) => <div key={payee} className="ceg-block"><CEGDefinition rows={[["Payee", payee], ["Amount", CEGMoney(i === 1 ? "860" : "800")], ["From account", j.file === "batch" && i === 1 ? "00002043" : "00001042"], ["Execution / scheme", "12 Nov 2026 / Faster Payments"]]} /></div>)}</details>}
+  </>;
+};
+
+export const CEGVRPSummary = ({ j, v, existing = false }) => <CEGDefinition rows={[
+  ["Payee", j.delegated ? "Chosen and authenticated per payment" : j.sweep ? "Alex Morgan / own savings" : "Meadow Energy"],
+  !j.delegated && ["Payee account", j.sweep ? "65-43-21 / 00002043" : "98-76-54 / 00004042"],
+  ["From", CEGBankName(v.bank) + " / " + CEGAccount(v).name + " / **** " + CEGAccount(v).number.slice(-4)],
+  ["Per-payment maximum", CEGMoney(v.maxPayment)],
+  ["Calendar-month maximum", CEGMoney(v.maxMonth)],
+  ["Period alignment", "Calendar month, starting on the 1st"],
+  ["Currency", "GBP"],
+  ["Consent duration", v.ongoing ? "Ongoing until you cancel" : CEGDate(v.expiry)],
+  existing && ["Already paid this month", CEGMoney(String(v.usedCents / 100))],
+  existing && ["Remaining this month", CEGMoney(String(Math.max(0, (CEGCents(v.maxMonth) || 0) - v.usedCents) / 100))],
+]} />;
+
+export const CEGScreen = ({ step, j, v, set, scope, provider, selectedConnection, records, history, setHistory, manage, scenario, polls, message, failure, answer, mutationComplete }) => {
+  const accountGroup = useId();
+  const bankName = CEGBankName(v.bank);
+  const fundsDates = selectedConnection?.status === "Expired" ? ["31 Oct 2026", "30 Oct 2026"] : ["9 Nov 2026", "8 Nov 2026"];
+  const field = (label, name, props = {}) => <CEGField label={label} name={name} v={v} set={set} {...props} />;
+  const block = (title, rule, children) => <CEGBlock title={title} rule={rule} {...scope}>{children}</CEGBlock>;
+  const hero = (icon, title, lead, tone = "") => <><div className={"ceg-hero-icon " + tone}><CEGIcon name={icon} size={29} /></div><h4 tabIndex={-1} data-ceg-heading="true">{title}</h4>{lead && <p className="ceg-lead">{lead}</p>}</>;
+  const securityDetails = <details><summary>How is this secure?</summary><p>This is only a simulation. In a live journey, your bank authenticates you using its usual methods and does not share your login credentials with the provider.</p></details>;
+  if (failure) return <>{hero("close", failure.title, failure.text, "ceg-warning")}{block("What happened", failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors", <><p>{failure.detail}</p>{failure.code && <p style={{ marginTop: 8 }}><strong>Example reason:</strong> {failure.code}</p>}</>)}<CEGInfo warning>{failure.stayAtBank ? "The bank must stop here. There is no redirect to an untrusted callback. Restarting below restarts this teaching example only." : "You are back with the provider. No success has been inferred from this result. You can restart the example."}</CEGInfo></>;
+  switch (step.kind) {
+    case "welcome":
+      return <>{hero("wallet", j.once ? "A clearer financial snapshot" : j.corporate ? "Understand your business cash flow" : "Your money, in one place", j.once ? "Share a one-off snapshot of your accounts to see your income and spending." : j.corporate ? "Connect your business accounts so Lumen can analyse income and spending. Your bank checks your authority." : "See your balances and spending together, without switching between banking apps.")}<div className="ceg-stats"><div className="ceg-stat"><strong>Read only</strong><small>No payment permission</small></div><div className="ceg-stat"><strong>Your choice</strong><small>Pick accounts at your bank</small></div></div>{block("You stay in control", "benefit", <p>You decide which accounts to share. You can disconnect in Open Banking connected accounts whenever you want.</p>)}{block("Who provides the service?", "identity", <p>{provider} is a fictional account information provider. All names and data in this demo are examples.</p>)}{securityDetails}</>;
+    case "bank":
+      return <>{hero("bank", "Choose your bank", "We will build the data request around the information your bank supports.")}{block("Example bank catalogue", "bank", <CEGBanks v={v} set={set} />)}<CEGInfo>These are fictional banks, not a live directory. A live service must use its available eligible institutions and explain any unavailability.</CEGInfo></>;
+    case "payer":
+      return <>{hero("bank", "Choose how to pay", j.bankSelect ? "Choose your bank. You will select the account after signing in there." : "Choose a bank and a saved paying account.")}<CEGBanks v={v} set={set} payer bankSelect={j.bankSelect} scope={scope} />{j.hint && <CEGInfo>The account was saved after an earlier payment with your agreement. An example bank-issued identity hint accompanies the request; it is not a credential.</CEGInfo>}</>;
+    case "aisConsent":
+      return <>{hero("wallet", "Share your account information", "You are giving permission to " + provider + ", not granting permission to make payments.")}{block("Why share?", "aisConsent", <p>To provide a personal finance service, we analyse your income and spending. You get a consolidated view and, if you choose, a regular bills forecast.</p>)}{block("What will be shared?", "clusters", <CEGClusterList v={v} set={set} optional />)}{block("For how long?", j.once ? "aisConsent" : "reconfirmNotice", <CEGDefinition rows={[["Bank", bankName], ["Transaction history", "Previous 90 days"], ["Access", j.once ? "One retrieval, then access ends" : "Ongoing until disconnected"], !j.once && ["Reconfirm with Lumen", "At least every 90 days"]]} />)}<details><summary>Who else sees the data?</summary><p>No onward sharing is included in this account-sharing request. Optional partner insights are a separate example in Connections &amp; lifecycle. Read the fictional privacy notice below.</p></details><details><summary>Example privacy notice</summary><p>Lumen uses the account information to deliver the requested service under the example service contract. No advertising sale or onward sharing is part of this journey. Live providers must establish their actual processing basis, recipients, retention and customer rights.</p></details></>;
+    case "payment":
+      return <>{hero("arrow", j.file ? "Review your payment file" : j.international ? "Send an international payment" : j.standing ? "Set up a standing order" : j.scheduled ? "Schedule your payment" : "Pay Meadow Shop", j.file ? "A fictional file contains three supplier payments. No file is uploaded or sent." : "Lumen Pay will initiate the instruction only with your permission.")}{j.file
+        ? <>{block(j.file === "bulk" ? "Bulk: one paying account" : "Batch: file-defined accounts", "bulk", <><p>3 payments / GBP 2,460.00 / Faster Payments / 12 Nov 2026. {j.file === "bulk" ? "All use debtor account 00001042." : "Two use 00001042; one uses 00002043."}</p><button className="ceg-secondary" style={{ marginTop: 12 }} onClick={() => set("fileLoaded", true)}>{v.fileLoaded ? "Example file loaded" : "Load example payment file"}</button></>)}{v.fileLoaded && <CEGPaymentSummary j={j} v={v} />}</>
+        : <>{field("Amount (" + (j.international ? "EUR" : "GBP") + ")", "amount", { inputMode: "decimal", autoComplete: "off", help: "Example only. Use a positive amount with up to 2 decimal places." })}{field("Payment reference (optional)", "reference", { maxLength: 18, help: "If provided, shown throughout the journey. Maximum 18 characters." })}{(j.scheduled || j.standing) && field(j.standing ? "First payment date" : "Requested execution date", "date", { type: "date", min: "2026-11-10" })}{j.standing && <>{field("Frequency", "frequency", { options: ["Monthly", "Weekly", "Quarterly"] })}<div className="ceg-row">{field("First amount", "firstAmount", { inputMode: "decimal" })}{field("Final amount", "finalAmount", { inputMode: "decimal" })}</div>{field("Number of payments", "count", { type: "number", min: 2, max: 120, help: "Recurring payments use the main amount. The first and final amounts may differ. Month-end dates use the last valid day in this example; confirm bank scheduling conventions." })}</>}{j.international && <><CEGInfo>Payee: Nordlicht Studio, Germany. Beneficiary IBAN: DE89 3704 0044 0532 0130 00. These are example details, not a live recipient.</CEGInfo>{field("Instruction priority", "priority", { options: ["Normal", "Urgent"] })}{field("Charges model", "charges", { options: ["SHA", "OUR", "BEN"] })}{block("Illustrative exchange rate", "fx", <p>GBP 1.00 = EUR 1.15, indicative only. The rate may change. The bank will disclose its rate and fees before the instruction is committed.</p>)}</>}{j.scheme && block("Payment scheme", "payment", <p>{j.scheme} has been prepopulated in this payment instruction. {j.scheme === "CHAPS" ? "The bank will show its fee and cut-off time." : "The bank will explain its later execution cycle."}</p>)}</>}</>;
+    case "paymentConsent":
+      return <>{hero("document", "Review and allow your payment", "Check the instruction before allowing Lumen Pay to initiate it.")}{block("Your instruction", "payment", <CEGPaymentSummary j={j} v={v} />)}{j.refund && block("Account details for refunds", "refund", <><label className="ceg-check-line"><input type="checkbox" checked={v.refund} onChange={e => set("refund", e.target.checked)} /><span>Allow refund account information<small>Ask my bank for my sort code and account number. Use them or share them with Meadow Shop only if I request a refund.</small></span></label><p style={{ marginTop: 8 }}>Optional in this example. The payment can continue without it. Keep details only as long as necessary for refunds and applicable legal obligations.</p></>)}{block("Who initiates the payment?", "identity", <p>{provider} is the fictional payment initiator. You authenticate with your bank; Lumen Pay does not receive your login credentials.</p>)}<details><summary>Example service terms</summary><p>We send the payment instruction you authorise. Initiation is not settlement. Charges and cancellation rights depend on the payment type and your bank. Contact the merchant for refunds and Lumen Pay for initiation support. These are teaching terms only.</p></details></>;
+    case "handoff":
+      return <>{hero("lock", "Continue to " + bankName, "You are leaving " + provider + " to " + (step.channel === "browser" ? "sign in on your bank's website." : "authenticate in your bank's app."))}{block("What happens next?", "redirect", <><p>1. Authenticate using your usual bank method.</p><p>2. {j.bankSelect || j.type === "ais" ? "Select the account(s) there." : "Review the request within your bank journey."}</p><p>3. Return to {provider} for the result.</p></>)}<CEGInfo>No real redirection takes place. Use the button below to simulate the hand-off at your own pace.</CEGInfo>{j.type === "payment" && <details><summary>Payment being requested</summary><CEGPaymentSummary j={j} v={v} /></details>}</>;
+    case "identifier":
+      return <>{hero(step.channel === "qr" || step.channel === "modelC" ? "document" : "lock", step.channel === "qr" ? "Continue on your phone" : "Match the payment request", step.channel === "qr" ? "Use your phone camera to scan the desktop code and open your bank app." : step.channel === "modelA" ? "Give Lumen Pay an example bank-supported customer identifier so your bank can notify you." : step.channel === "modelB" ? "Generate the code in your bank app, then provide it to Lumen Pay." : step.channel === "modelC" ? "Open your bank app's scanner to use the code generated by Lumen Pay." : "A previously agreed bank-issued identifier connects this request to your bank app.")}{block("Identifier direction", step.channel === "qr" ? "qr" : "code", <>{["modelA", "modelB"].includes(step.channel) ? <>{field(step.channel === "modelB" ? "Example bank-generated code" : "Example customer identifier", "identifier", { placeholder: step.channel === "modelB" ? "BANK-1042" : "ALEX-1042", help: "Use only fictitious identifiers. Never enter your bank login or password." })}<button className="ceg-text-button" onClick={() => set("identifier", step.channel === "modelB" ? "BANK-1042" : "ALEX-1042")}>Use the example identifier</button></> : step.channel === "modelD" ? <CEGDefinition rows={[["Saved identifier", "PSU-EXAMPLE-1042"], ["Request", CEGMoney(v.amount) + " to Meadow Shop"], ["Next", "Bank app notification"]]} /> : <div className="ceg-code"><div className="ceg-code-grid" aria-hidden="true">{Array.from({ length: 81 }, (_, i) => <span key={i} />)}</div><strong>DEMO-1042</strong><small>Illustration only: not a scannable banking QR code</small></div>}</>)}{step.channel === "qr" && <CEGInfo>The browser authentication alternative is available below. A live QR journey should update the original desktop after mobile authentication.</CEGInfo>}{step.channel.startsWith("model") && <CEGInfo>The origin device waits while you authenticate on a separate device. The next screen represents the bank app, not an embedded TPP login form.</CEGInfo>}</>;
+    case "authenticate": {
+      const isAis = j.type === "ais" || (j.type === "manage" && j.service === "AIS");
+      const isRules = j.type === "vrpSetup" || j.change;
+      const isRestore = j.reauth;
+      const isCof = j.type === "cofSetup";
+      return <>{hero("finger", step.title, isRestore ? "Your bank requested re-authentication after a security-related access suspension. The original agreement is unchanged." : isAis ? provider + " is requesting access. Sign in using your normal bank method." : isRules ? "Read the payment rules before you authenticate them." : isCof ? "Orbit Card is requesting funds-check access for your example funding account, not permission to make a payment." : "Lumen Pay is requesting " + CEGMoney(v.amount, j.international ? "EUR" : "GBP") + " to " + (j.international ? "Nordlicht Studio" : j.file ? "the file-defined recipients" : "Meadow Shop") + ".")}{isRules && block("The rules you are authenticating", "vrpBank", <CEGVRPSummary j={j} v={v} />)}{j.type === "payment" && !j.bankSelect && !j.extra && block("Authenticate this instruction", "bankPayment", <CEGPaymentSummary j={j} v={v} bank />)}{block("Your bank's authentication", "sca", <><p>{step.channel === "browser" || j.channel === "browser" ? "Bank website: the customer's normal web sign-in and SCA method." : "Bank app: the customer's usual biometric or other supported SCA method."}</p><p style={{ marginTop: 8 }}>Authentication is simulated by a button. No password, passcode, device factor or biometric is collected.</p></>)}{isAis && <CEGInfo>The bank does not ask you to consent to AIS again. {isRestore ? "The reason for this bank SCA is a security-related suspension, not the 90-day AISP reconfirmation." : "After sign-in, choose the accounts to share."}</CEGInfo>}{isRestore && <details><summary>View unchanged agreement (optional)</summary>{isAis ? <CEGClusterList v={v} set={set} /> : isCof ? <CEGDefinition rows={[["Funding account", v.payerSort + " / " + v.payerNumber], ["Purpose", "Funds checks for card purchases"], ["Duration", "Ongoing until cancelled"]]} /> : <CEGVRPSummary j={j} v={v} />}</details>}{!isAis && !isRules && !j.extra && !j.bankSelect && j.type === "payment" && <CEGInfo>Authenticate to authorise this payment instruction. There is no additional consent confirmation at the bank.</CEGInfo>}{j.sweep && <CEGInfo>Subsequent own-account payments use the applicable transfer-to-self exemption. Initial SCA authenticates the rules here without duplicate consent confirmation.</CEGInfo>}{j.type === "vrpSetup" && !j.sweep && !j.delegated && <CEGInfo>The bank selects an available exemption for subsequent payments within these rules, for example trusted beneficiary. Initial SCA is still required here.</CEGInfo>}</>;
+    }
+    case "exemption":
+      return <>{hero("lock", "The bank assesses the payment", "This scenario models a bank deciding that an available SCA exemption applies.")}{block("A bank decision", "exemption", <p>The bank may apply an exemption based on its assessment. The PISP cannot promise it, and must remain able to support bank SCA if it is required.</p>)}<CEGPaymentSummary j={j} v={v} /><CEGInfo>The button below steps through the simulated bank response. It is not an extra customer authorisation screen in a live exempt flow.</CEGInfo></>;
+    case "accounts": {
+      const multi = j.type === "ais";
+      return <>{hero("wallet", multi ? "Choose accounts to share" : "Choose the paying account", multi ? "Select the accounts " + provider + " will be able to access. This is account selection, not a second consent request." : "Choose an eligible account. You have already authenticated; no second SCA is added.")}{["current", "joint"].map((account, i) => <label key={account} className="ceg-bank-choice" style={{ marginBottom: 10 }}><span><strong>{i ? "Joint household account" : "Current account"}</strong><small>{bankName} / **** {i ? "2043" : "1042"}</small><small>Available balance: {i ? "GBP 840.00" : "GBP 1,240.00"}</small></span><input type={multi ? "checkbox" : "radio"} name={accountGroup} aria-label={i ? "Joint household account" : "Current account"} checked={multi ? v.accounts.includes(account) : v.account === account} onChange={e => set(multi ? "accounts" : "account", multi ? e.target.checked ? [...v.accounts, account] : v.accounts.filter(x => x !== account) : account)} /></label>)}{multi && <><CEGInfo>Joint-account data can include information about other account holders. This example assumes your bank profile permits sharing.</CEGInfo><details><summary>View requested data (optional)</summary><CEGClusterList v={v} set={set} /></details></>}{!multi && <CEGInfo>The displayed balance is bank-side information, not account-data permission granted to the PISP.</CEGInfo>}</>;
+    }
+    case "bankReview":
+      return <>{hero("document", j.multi ? "This payment needs 2 authorisers" : "Check and make payment", j.multi ? "Your approval is one of two required by the business mandate. The bank cannot execute until both are complete." : "Check your account and the bank's execution information before proceeding.")}{block("Bank instruction details", j.extra ? "supplementary" : "bankSelect", <CEGPaymentSummary j={j} v={v} bank />)}{j.multi && block("Authorisation requirement", "multi", <CEGDefinition rows={[["Required", "2 authorisers"], ["First authoriser", "Alex Morgan (you)"], ["Remaining", "Sam Taylor"], ["Approval deadline", "12 Nov 2026, 17:00"]]} />)}{block("Your next action", "noReturn", <p>{j.multi ? "Proceed to provide your approval. The instruction still awaits the other authoriser." : j.scheduled || j.standing ? "Proceed to authorise the scheduled instruction. Manage or cancel it later in your bank's supported channel." : "Proceed to authorise the payment instruction. It will be submitted for execution."}</p>)}<CEGInfo>Proceed and cancel have equal prominence below. There is no additional SCA merely to review these details.</CEGInfo></>;
+    case "return":
+      return <>{hero("check", "Returning to " + provider, "Your session with " + bankName + " is closed.")}{block("Stay informed", "redirect", <p>{j.corporate ? "The bank received the corporate access request. Lumen will explain whether internal authorisation is still required." : "The provider will display the actual result of your request, not assume completion from the redirect alone."}</p>)}{j.channel && j.channel.startsWith("model") && <CEGInfo>Return to the originating app or device. In a live decoupled flow, it receives the result without a browser redirect from this bank app.</CEGInfo>}</>;
+    case "vrpRules":
+      return <>{hero("repeat", j.change ? "Set your new payment rules" : j.sweep ? "Let your savings grow" : "Set your recurring payment rules", j.change ? "The old consent has been cancelled. These new parameters require new consent and bank SCA." : j.sweep ? "Lumen Pay can move money from your current account to your own savings within your limits." : "You choose the maximums. The bank enforces them for every payment.")}{block("Your payment limits", "vrp", <>{field("Maximum per payment (GBP)", "maxPayment", { inputMode: "decimal" })}{field("Maximum per calendar month (GBP)", "maxMonth", { inputMode: "decimal" })}<p>Limits align to calendar months, starting on the 1st. A live calendar-aligned consent prorates its initial partial period where applicable.</p><label className="ceg-check-line"><input type="checkbox" checked={v.ongoing} onChange={e => set("ongoing", e.target.checked)} /><span>Ongoing until I cancel</span></label>{!v.ongoing && field("Consent end date", "expiry", { type: "date", min: "2026-11-10" })}</>)}{j.delegated ? <CEGInfo>You will authenticate each payment's amount and payee using delegated SCA. This is not an unattended payment mandate.</CEGInfo> : block("Fixed payee", j.sweep ? "sweep" : "vrp", <CEGDefinition rows={[["Payee", j.sweep ? "Alex Morgan / own savings" : "Meadow Energy"], ["Account", j.sweep ? "65-43-21 / 00002043" : "98-76-54 / 00004042"]]} />)}</>;
+    case "vrpConsent":
+      return <>{hero("repeat", "Allow recurring payments", provider + " can request variable payments only within the rules you agree.")}{block("Your agreement", "vrp", <CEGVRPSummary j={j} v={v} />)}<details><summary>Example recurring-payment terms</summary><p>Cancel future payment permission in Open Banking payments or at your bank. Cancelling this permission does not automatically close your contract with an energy supplier or other merchant. No recurring payments are real in this demo.</p></details><CEGInfo>Initial bank authentication covers these parameters. {j.delegated ? "Later payments each require delegated SCA while you are in session." : "Later payments may run without you in session only where the bank applies a permitted exemption."}</CEGInfo></>;
+    case "existingRules":
+      return <>{hero("repeat", "Your existing payment rules", "This fixture starts after consent was set up and authenticated. The month is November 2026.")}{block("Active consent / VRP-EXAMPLE-1042", "vrp", <CEGVRPSummary j={j} v={v} existing />)}<CEGInfo>{j.delegated ? "The customer must be in session and authenticate this payment using delegated SCA." : "The subsequent request is a background operation, not an extra screen that the customer must complete."}</CEGInfo></>;
+    case "vrpExecute":
+      return <>{hero("arrow", j.delegated ? "Review this VRP payment" : "Observe an automatic payment", j.delegated ? "Check the amount and payee before authenticating this payment." : "Observer controls: this illustrates a PISP initiating a payment under the existing mandate.")}{field("Payment amount (GBP)", "amount", { inputMode: "decimal" })}{j.delegated && field("Payment payee", "paymentPayee", { options: ["Meadow Energy", "Juniper Services"], help: "Delegated SCA links this payment to the selected payee." })}{block("Consent enforcement", "limits", <CEGDefinition rows={[["To", j.delegated ? v.paymentPayee : j.sweep ? "Alex Morgan / own savings" : "Meadow Energy"], ["Per-payment limit", CEGMoney(v.maxPayment)], ["Monthly amount already used", CEGMoney(String(v.usedCents / 100))], ["Monthly maximum", CEGMoney(v.maxMonth)], ["Access", scenario === "revoked" ? "Revoked" : "Active"]]} />)}<CEGInfo>The bank must reject any request outside these limits or after revocation. A limit failure is not a successful initiation.</CEGInfo></>;
+    case "delegated":
+      return <>{hero("finger", "Authenticate this payment", "Delegated SCA is performed by the PISP or an agreed delegate, not skipped.")}{block("Dynamically linked instruction", "delegated", <CEGDefinition rows={[["Amount", CEGMoney(v.amount)], ["Payee", v.paymentPayee], ["Payee account", v.paymentPayee === "Juniper Services" ? "98-76-54 / 00005043" : "98-76-54 / 00004042"], ["From", bankName + " / **** 1042"]]} />)}<CEGInfo>Both the amount and payee are linked to the authentication. This button is a simulation, not a working delegated-SCA implementation.</CEGInfo></>;
+    case "cofPayer":
+      return <>{hero("card", j.reauth ? "Restore your card's funds checks" : "Link an account for your Orbit Card", j.reauth ? "The bank invalidated access for a security reason. Restore funds checking using the original account; no routine 90-day renewal applies." : "Orbit Card checks if this funding account has enough money for a card purchase, without seeing its balance.")}{field("Example sort code", "payerSort", { placeholder: "12-34-56", maxLength: 8, disabled: j.reauth, help: "Use only fictional account details." })}{field("Example account number", "payerNumber", { placeholder: "00001042", inputMode: "numeric", maxLength: 8, disabled: j.reauth })}{!j.reauth && <button className="ceg-text-button" onClick={() => { set("payerSort", "12-34-56"); set("payerNumber", "00001042"); set("bank", "birch"); }}>Use the example funding account</button>}<CEGInfo>The example identifier resolves to Birch Bank. Live identifiers must match formats and institutions supported by the issuer and bank.</CEGInfo></>;
+    case "cofConsent":
+    case "cofBankConsent":
+      return <>{hero("card", step.kind === "cofBankConsent" ? "Allow Birch Bank to answer funds checks" : "Allow Orbit Card to check funds", step.kind === "cofBankConsent" ? "The bank requires its own explicit permission for this issuer and this account." : "Orbit Card receives only a yes or no about availability for the card-transaction amount.")}{block("The funds-check agreement", step.kind === "cofBankConsent" ? "cofBank" : "cof", <CEGDefinition rows={[["Card issuer", "Orbit Card"], ["Bank", "Birch Bank"], ["Account name", "Alex Morgan / current"], ["Account number", step.kind === "cofBankConsent" ? v.payerNumber : "**** " + v.payerNumber.slice(-4)], ["Sort code", v.payerSort], ["Duration", "Ongoing until cancelled"], ["Purpose", "Funds checks for your card purchases"]]} />)}<CEGInfo>No balance is shared. Funds are not reserved. Checks do not transfer money and do not guarantee settlement. The issuer must not store a Yes/No response or use it for another purpose.</CEGInfo><details><summary>How do I stop checks?</summary><p>Disconnect the funding account in Orbit Card's Open Banking connected accounts or revoke Orbit Card's access at Birch Bank. Card transactions may then be declined.</p></details></>;
+    case "cardPurchase":
+      return <>{hero("card", "A purchase with your Orbit Card", "The customer initiates this transaction using the card. Only then may the issuer request a funds check.")}{block("Example card transaction", "cofCheck", <CEGDefinition rows={[["Merchant", "Meadow Shop"], ["Transaction amount", "GBP 42.00"], ["Funding account", "Birch Bank / **** 1042"], ["Existing CoF consent", "COF-EXAMPLE-1042"]]} />)}<CEGInfo>This is not a PISP payment initiation and the CoF API does not settle this card transaction.</CEGInfo></>;
+    case "backgroundFunds":
+      return <>{hero("sliders", "A background funds check", "Observer view, not an extra step in the customer's card journey.")}{block("Issuer request to bank", "cofCheck", <CEGDefinition rows={[["Consent identifier", "COF-EXAMPLE-1042"], ["Amount / currency", "42.00 / GBP"], ["Transaction reference", "CARD-EXAMPLE-1042"], ["Bank response", scenario === "insufficient" ? "No" : "Yes"]]} />)}<CEGInfo>The response is a snapshot only. This teaching view and event trace are not a live issuer database. Live issuers must not store the Yes/No result.</CEGInfo></>;
+    case "pisFunds":
+      return <>{hero("wallet", "Check availability for this payment", "A PISP can check after bank authentication, before submitting this payment instruction.")}{block("Payment-specific funds check", "pisFunds", <CEGDefinition rows={[["Amount", CEGMoney(v.amount)], ["Account", bankName + " / **** 1042"], ["Authorisation", "Obtained at the bank"], ["Funds response", scenario === "insufficient" ? "No" : "Yes"]]} />)}<CEGInfo>A Yes is not a reservation or a completed payment. This example stops without initiation if the result is No.</CEGInfo></>;
+    case "processing":
+      return <>{hero("clock", "Checking the payment status", j.multi ? "Your approval was received; this business instruction still needs another authoriser." : scenario === "pending" ? "The bank has not supplied a final outcome. Check the existing instruction; do not submit it again." : "The provider displays the result received from the bank.", "ceg-warning")}{block("Current bank-reported status", "status", <CEGDefinition rows={[["Instruction", "PAY-EXAMPLE-1042"], ["Status", j.multi ? "PATC / awaiting remaining authorisation" : scenario === "pending" ? "PDNG / checks not yet complete" : j.scheduled || j.standing || j.scheme === "Bacs" ? "PDNG / scheduled instruction" : "RCVD / payment order received"], ["Last update", "9 Nov 2026, 09:41"], ["Amount", CEGMoney(v.amount, j.international ? "EUR" : "GBP")]]} />)}<CEGInfo>{message || (scenario === "pending" && polls ? "Still pending. Checking again polls the same fictional payment; it does not initiate a duplicate." : "The simulation has no timers or network requests. Use the button below to observe the next status response.")}</CEGInfo></>;
+    case "dashboard": {
+      const current = records.filter(r => ["Active", "Reconfirm"].includes(r.status));
+      const ended = records.filter(r => !["Active", "Reconfirm"].includes(r.status));
+      const shown = history ? ended : current;
+      return <>{hero("sliders", step.title, j.access ? "Manage the providers with access to your accounts at Birch Bank." : "Manage the accounts connected to your " + (j.service === "CoF" ? "Orbit Card" : j.service === "VRP" ? "Lumen Pay" : "Lumen") + " service.")}<div className="ceg-history-tabs" role="group" aria-label="Connection list"><button aria-pressed={!history} onClick={() => setHistory(false)}>Current ({current.length})</button><button aria-pressed={history} onClick={() => setHistory(true)}>History ({ended.length})</button></div>{shown.length ? shown.map(r => <div className="ceg-connection-card" key={r.id}><div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><strong>{j.access ? r.provider : CEGBankName(r.bank)}</strong><span className={"ceg-tag" + (r.status === "Reconfirm" || r.status === "Expired" ? " ceg-tag-pending" : "")}>{r.status}</span></div><small>{r.account} / {r.sort} / **** {r.number.slice(-4)}</small><small>Started {CEGDate(r.granted)} / {r.expires.startsWith("20") ? "Ends " + CEGDate(r.expires) : r.expires}</small>{j.service === "AIS" && <>{!j.access && !history && <small>Reconfirm with Lumen by {CEGDate(r.due)}</small>}<small>Last data shared: {r.synced}</small></>}{j.service === "VRP" && <><small>Total paid: {CEGMoney(r.total)}</small><small>{r.payments.length ? "Last payment: " + CEGDate(r.payments[0].date) : "No payments under this consent"}</small></>}{history && <small>Ended {CEGDate(r.ended)}</small>}<button onClick={() => manage(r.id)}>{history ? "View" : "Manage"} {j.access ? r.provider : CEGBankName(r.bank)}</button></div>) : <p className="ceg-empty" role="status">No connections in this list.</p>}{j.access && j.service === "AIS" && <CEGInfo>The bank cannot see whether you reconfirmed at your AISP. Contact that provider to check the current consent status.</CEGInfo>}</>;
+    }
+    case "connection":
+      return <>{hero("sliders", j.access ? selectedConnection.provider : CEGBankName(selectedConnection.bank), "Details of this specific " + (j.access ? "bank access" : "service consent") + " arrangement.")}{block("Connection agreement", "dashboardDetail", <CEGDefinition rows={[["Provider", selectedConnection.provider], ["Bank", CEGBankName(selectedConnection.bank)], ["Account type", selectedConnection.account], ["Sort code / number", selectedConnection.sort + " / " + selectedConnection.number], ["Status", selectedConnection.status], selectedConnection.accessStatus === "Re-authentication required" && ["Bank access", selectedConnection.accessStatus], ["Granted", CEGDate(selectedConnection.granted)], ["Consent end", selectedConnection.expires.startsWith("20") ? CEGDate(selectedConnection.expires) : selectedConnection.expires], ["Purpose", selectedConnection.purpose], j.service === "AIS" && !j.access && ["Active", "Reconfirm"].includes(selectedConnection.status) && ["Reconfirm by", CEGDate(selectedConnection.due)], j.service === "AIS" && ["Last data shared", selectedConnection.synced]]} />)}{j.service === "AIS" && <details><summary>{["Active", "Reconfirm"].includes(selectedConnection.status) ? "Data clusters being accessed" : "Former data permissions"}</summary><CEGClusterList v={v} set={set} /></details>}{j.service === "VRP" && <>{block("Agreed payment rules", "dashboardDetail", <CEGVRPSummary j={j} v={v} />)}<details><summary>Payment history</summary>{selectedConnection.payments.length ? <CEGDefinition rows={[...selectedConnection.payments.map(p => [CEGDate(p.date), CEGMoney(p.amount) + " / Meadow Energy"]), ["Total paid under this consent", CEGMoney(selectedConnection.total)]]} /> : <p>No payments under this consent.</p>}</details></>}{j.service === "CoF" && <><CEGInfo>{selectedConnection.provider} can request a Yes/No check, not your balance or transaction history, only while access remains active.</CEGInfo><details><summary>Funds-check history</summary><CEGDefinition rows={j.access ? [[fundsDates[0] + " / GBP 42.00", selectedConnection.provider + " / Yes"], [fundsDates[1] + " / GBP 17.50", selectedConnection.provider + " / No"]] : [[fundsDates[0], "GBP 42.00 / request reference 1042"], [fundsDates[1], "GBP 17.50 / request reference 1041"]]} /><p>{j.access ? "The bank makes the issuer identity and Yes/No responses available to the customer." : "Issuer view shows request information only. No Yes/No response is stored by the issuer."}</p></details></>}{!["Active", "Reconfirm"].includes(selectedConnection.status) && <CEGInfo>This ended arrangement is read-only. It cannot be reconfirmed, revoked twice or silently reinstated.</CEGInfo>}</>;
+    case "disconnect":
+      return <>{hero("close", step.title, j.change ? "Changing a maximum creates a new consent, not an edit to the existing mandate." : "You can stop this specific connection. Read what changes before you confirm.", "ceg-warning")}{block("What will stop?", "consequences", <p>{j.service === "AIS" ? "No more account information will be retrieved through this connection. Income and spending analysis will no longer update from it." : j.service === "VRP" ? "No further payments can use this permission. Your merchant contract and other payment mandates are separate and are not automatically cancelled." : "The issuer can no longer check funds on this account. Some Orbit Card transactions may be declined."}</p>)}{block("This connection only", "disconnect", <CEGDefinition rows={[["Provider", selectedConnection.provider], ["Account", CEGBankName(selectedConnection.bank) + " / **** " + selectedConnection.number.slice(-4)], ["Action", j.access ? "Revoke bank access" : "Cancel provider consent"]]} />)}{j.access ? <CEGInfo>Contact {selectedConnection.provider} about the cancellation and its consequences, including any data already held. Bank revocation does not close that service or erase its records.</CEGInfo> : j.service !== "CoF" && block("What happens to existing data?", "retained", <p>Example policy: data no longer required for the service will be deleted. Records needed to meet legal obligations are retained for the applicable period. A live privacy notice must identify the actual retention terms and your rights.</p>)}</>;
+    case "reconfirm":
+      return <>{hero("wallet", "Keep sharing with Lumen?", "Reconfirm the same consent at Lumen. You do not need to sign in to " + bankName + " for routine reconfirmation.")}{block("Nothing else changes", "reconfirm", <CEGDefinition rows={[["Purpose", selectedConnection.purpose], ["Bank / account", CEGBankName(selectedConnection.bank) + " / **** " + selectedConnection.number.slice(-4)], ["History requested", "Previous 90 days"], ["Consent duration", selectedConnection.expires.startsWith("20") ? CEGDate(selectedConnection.expires) : selectedConnection.expires], ["Next reconfirmation", "7 Feb 2027"]]} />)}{block("Your unchanged data permissions", "clusters", <CEGClusterList v={v} set={set} />)}<CEGInfo>Continuing and discontinuing are equally prominent. If you do not reconfirm, Lumen stops retrieving data; this does not silently change the original consent terms.</CEGInfo></>;
+    case "reauthSummary":
+      return <>{hero("lock", "Restore this bank connection", bankName + " suspended access for a proportionate, objective security reason. It has allowed re-authentication to restore the connection.")}{block("The agreement stays the same", j.service === "AIS" ? "reauth" : "vrpReauth", <><CEGDefinition rows={[["Purpose", selectedConnection.purpose], ["Account", "**** " + selectedConnection.number.slice(-4)], ["Consent duration", selectedConnection.expires], ["Bank reason", "U028 / re-authentication requested"]]} />{j.service === "AIS" ? <CEGClusterList v={v} set={set} /> : <CEGVRPSummary j={j} v={v} />}</>)}<CEGInfo>This is not automatic 90-day bank SCA. Review the summary before proceeding to your bank.</CEGInfo></>;
+    case "serviceSetup":
+      return <>{hero("wallet", "Welcome to Lumen", "A fictional service that helps you understand your money.")}{block("Key terms at a glance", "setup", <CEGDefinition rows={[["Outcome", "Income and spending analysis"], ["How we use data", "Deliver the example service"], ["Processing basis", "Example: service contract"], ["Onward recipients", "None in the core service"], ["Example pricing", "GBP 3.00 per month"], ["Control", "Disconnect or close the service"], ["Support", "Example in-app support"]]} />)}<details><summary>Read the example service terms</summary><p>We analyse the accounts you choose, only after obtaining your account-information consent. We do not initiate payments under the AIS service. You can disconnect accounts and close the service. The sample pricing is fictional and nothing is billed.</p></details><details><summary>Read the example privacy notice</summary><p>The core service has no onward-sharing recipients. An optional partner-insights proposition is a separate illustration. Live providers must explain actual legal bases, recipients, purposes, retention, rights, complaints and regulatory accountability before processing personal data. Data no longer required is deleted; records legally required may be retained.</p></details><label className="ceg-check-line"><input type="checkbox" checked={v.acceptedTerms} onChange={e => set("acceptedTerms", e.target.checked)} /><span>I accept these fictional service terms<small>This is set-up, not AIS account-access consent. That comes in the connect-account journey.</small></span></label></>;
+    case "notifications":
+      return <>{hero("bell", "Connection notifications", "Choose optional reminders. Important service information remains visible in your dashboard.")}{block("Consent reminder", "reconfirmNotice", <p>Your Birch Bank connection is due for reconfirmation at Lumen. Reconfirm at Lumen, not through a routine bank redirect.</p>)}{block("Optional messages", "notification", <label className="ceg-check-line"><input type="checkbox" checked={v.notification} onChange={e => set("notification", e.target.checked)} /><span>Send me optional reminders and connection tips<small>You can turn these off without hiding the required reconfirmation status in your dashboard.</small></span></label>)}<details><summary>What if access is revoked at the bank?</summary><p>A live TPP should update its consent dashboard using bank events or polling and explain service implications. This demonstration sends no notifications and does not poll banks.</p></details></>;
+    case "dataSettings":
+      return <>{hero("sliders", "Your service and data", j.action === "onward" ? "This separate fixture includes optional partner insights beyond the core AIS service." : "Control your account connections and your relationship with Lumen.")}{block("Your current arrangements", "setup", <CEGDefinition rows={[["Core service", "Lumen / income and spending"], ["Bank connections", "Birch Bank and Cedar Bank"], ["Optional partner", "City Insights (fictional)"], ["Partner use", "Personalised financial insights"], ["Legal basis", "Illustrative; determined by the live provider"]]} />)}<CEGInfo>Stopping optional onward sharing and withdrawing AIS permission are different actions. Closing a service may involve both PSD2 and GDPR obligations.</CEGInfo></>;
+    case "lifecycleStop":
+      return <>{hero("close", step.title, j.action === "onward" ? "The core income and spending service stays available, but no more optional information is shared with City Insights." : "All example bank connections will be disconnected, then your Lumen service will close.", "ceg-warning")}{block("What changes?", j.action === "onward" ? "onward" : "disconnect", <p>{j.action === "onward" ? "Partner insights stop. The underlying AIS consent is unchanged. Any previously shared data is handled under the disclosed processing basis and applicable rights." : "Account updates stop and Lumen notifies the banks of consent revocation. Any separate merchant payment contract is unaffected."}</p>)}{block("Existing data and your rights", "retained", <p>Data no longer needed will be deleted where appropriate. Legally required records may be retained. A live provider must explain retention and support applicable access, erasure and objection rights; consent revocation is not a blanket guarantee of erasure.</p>)}</>;
+    case "receipt": {
+      const isPayment = j.type === "payment" || j.type === "vrpPay";
+      const scheduled = j.scheduled || j.standing || j.scheme === "Bacs";
+      const title = j.type === "cofCheck" ? "Funds check returned " + answer : step.title;
+      return <>{hero(j.multi || j.corporate || (j.type === "cofCheck" && answer === "No") ? "clock" : "check", title, j.corporate ? "The bank received the request but further internal authorisation is required. No account data has been retrieved." : j.multi ? "One approval out of two is complete. The payment has not executed." : isPayment ? scheduled ? "The bank accepted the instruction for later execution. No completed transfer is claimed." : "The instruction was initiated. Settlement is still in process; this is not confirmation the payee received funds." : "", j.multi || j.corporate ? "ceg-warning" : "ceg-success")}
+        {isPayment && <>{block("Bank-reported result", "status", <CEGDefinition rows={[["Instruction identifier", "PAY-EXAMPLE-1042"], ["Status", j.multi ? "PATC / partially accepted technically" : scheduled ? "PDNG / scheduled instruction" : "ACSP / settlement in process"], ["Amount", CEGMoney(v.amount, j.international ? "EUR" : "GBP")], ["Payee", j.type === "vrpPay" ? j.delegated ? v.paymentPayee : j.sweep ? "Alex Morgan / own savings" : "Meadow Energy" : j.file ? "3 file-defined recipients" : j.international ? "Nordlicht Studio" : "Meadow Shop"], ["Paying account", j.file ? "File-defined debtor account(s)" : bankName + " / **** " + CEGAccount(v).number.slice(-4)], v.reference.trim() && ["Reference", v.reference], ["Last update", "9 Nov 2026, 09:41"], j.multi && ["Authorisation count", "1 of 2"], j.multi && ["Deadline", "12 Nov 2026, 17:00"], scheduled && ["Execution", CEGDate(v.date)]]} />)}{j.standing && <details><summary>View accepted standing-order schedule</summary><CEGPaymentSummary j={j} v={v} bank /></details>}{j.refund && <CEGInfo>{v.refund ? "With your explicit permission, debit-account details were returned to Lumen Pay for refunds. No refund payment has been made." : "You did not allow refund-account information. No debit-account details were requested for that purpose."}</CEGInfo>}{scheduled && block("To amend or cancel", "amendAtBank", <p>Use your bank's supported online channel within its applicable cancellation time limits. The PISP cannot amend this scheduled order through an invented endpoint.</p>)}</>}
+        {j.type === "ais" && <>{!j.corporate && <CEGDefinition rows={[["Bank", bankName], ["Accounts", v.accounts.map(x => x === "joint" ? "Joint household account" : "Current account").join(", ")], ["Access", j.once ? "Single retrieval complete; no ongoing access" : "Ongoing until disconnected"], !j.once && ["Reconfirm at Lumen by", "7 Feb 2027"]]} />}<CEGInfo>{j.corporate ? "Further authorisation is handled through the bank's corporate process. This receipt is deliberately not an Active connection." : j.once ? "One-off sharing does not create ongoing access. Live retention must match the purpose and privacy notice." : "Find and disconnect accounts in Lumen's Open Banking connected accounts. A new bank login is not automatically required every 90 days."}</CEGInfo></>}
+        {(j.type === "vrpSetup" || j.change) && <>{block("Active payment rules", "vrp", <CEGVRPSummary j={j} v={v} />)}<CEGInfo>{j.change ? "The old consent remains Cancelled in history. The new consent was authenticated separately." : "No payment has been initiated by this setup. Review or cancel the permission in Open Banking payments."}</CEGInfo></>}
+        {j.type === "cofSetup" && <><CEGDefinition rows={[["Card issuer", "Orbit Card"], ["Funding account", "Birch Bank / **** " + v.payerNumber.slice(-4)], ["Duration", "Ongoing until cancelled"], ["Permissions", "Yes/No funds checks only"]]} /><CEGInfo>Both issuer and bank permissions were obtained. No account balance was shared and no payment was made.</CEGInfo></>}
+        {j.type === "cofCheck" && <>{block("What the response means", "cofCheck", <p>{answer === "No" ? "The bank reported insufficient funds for the example card transaction. The customer can fund the account or use an alternative; no payment outcome is assumed." : "The bank reported sufficient funds at the time of the check. This neither reserves funds nor guarantees that a card payment will settle."}</p>)}<CEGInfo>No bank balance or account transactions were disclosed. The issuer must not retain the Yes/No result in a live implementation.</CEGInfo></>}
+        {j.type === "manage" && !j.change && <><CEGDefinition rows={[["Connection", (j.access ? selectedConnection.provider : CEGBankName(selectedConnection.bank)) + " / **** " + selectedConnection.number.slice(-4)], ["Status", j.reconfirm || j.reauth ? "Active" : "Cancelled"], ["Action date", "9 Nov 2026"], j.reconfirm && ["Next reconfirmation", "7 Feb 2027"]]} /><CEGInfo>{j.reconfirm ? "Only the AISP reconfirmation date changed. Purpose, permissions, transaction-history period and original consent duration remain unchanged." : j.reauth ? "Bank access was restored under the original agreement. This was not routine 90-day reconfirmation." : j.access ? "No further access is allowed. Contact the associated provider to inform it of cancellation and understand the effects on its service and previously held data." : j.service === "CoF" ? "The card issuer can no longer request checks for this account. No further funds-check responses will be provided under this consent." : "No further data retrieval or payments are allowed under this consent. Data no longer required is deleted where appropriate; legally required records may be retained under the disclosed policy."}</CEGInfo></>}
+        {j.type === "lifecycle" && <CEGInfo>{j.action === "setup" ? "Set-up terms are complete in this example. Account sharing still requires separate explicit AIS consent and bank authentication." : j.action === "notifications" ? "Optional reminders are " + (v.notification ? "on" : "off") + ". Required reconfirmation status remains available in the dashboard." : j.action === "onward" ? "Optional partner sharing stopped. The core AIS agreement stays unchanged; previously shared data remains subject to disclosed processing and customer rights." : "All example consents are revoked and no more service data is retrieved. Data no longer needed is deleted where appropriate, while legally required records may be retained."}</CEGInfo>}
+        {mutationComplete && j.type === "manage" && <p style={{ marginTop: 12 }}>The example connection state is updated. Return to the dashboard to see the current list and history.</p>}
+      </>;
+    }
+    default:
+      throw new Error("Unknown screen kind: " + step.kind);
+  }
+};
+
+export const CustomerExperience = ({ initialJourney = "ais-connect", initialChannel = "app", showAnnotations = true }) => {
+  const starting = CEGJourneys.find(x => x.id === initialJourney);
+  if (!starting) throw new Error("Unknown initialJourney: " + initialJourney);
+  if (!["app", "browser"].includes(initialChannel)) throw new Error("initialChannel must be app or browser");
+  const [journeyId, setJourneyId] = useState(starting.id);
+  const [family, setFamily] = useState(starting.family);
+  const [query, setQuery] = useState("");
+  const [sidebar, setSidebar] = useState("journeys");
+  const [inspector, setInspector] = useState("guidelines");
+  const [channel, setChannel] = useState(initialChannel);
+  const [qrBrowser, setQrBrowser] = useState(false);
+  const [scenario, setScenario] = useState("happy");
+  const [stepIndex, setStepIndex] = useState(0);
+  const [furthest, setFurthest] = useState(0);
+  const [values, setValues] = useState(() => CEGInitialValues(starting));
+  const [selectedRule, setSelectedRule] = useState("");
+  const [annotations, setAnnotations] = useState(showAnnotations);
+  const [failure, setFailure] = useState(null);
+  const [message, setMessage] = useState("");
+  const [polls, setPolls] = useState(0);
+  const [answer, setAnswer] = useState("Yes");
+  const [committed, setCommitted] = useState(false);
+  const [records, setRecords] = useState(() => CEGConnections(starting));
+  const [selectedId, setSelectedId] = useState("connection-1");
+  const [history, setHistory] = useState(false);
+  const [mutationComplete, setMutationComplete] = useState(false);
+  const [events, setEvents] = useState([{ text: "Example journey opened", owner: "TPP" }]);
+  const [theme, setTheme] = useState({ accent: "#2456d6", surface: "#f3f6fb", font: "System sans", size: 14, radius: 14 });
+  const root = useRef(null);
+  const screenRef = useRef(null);
+  const lastScreen = useRef("");
+  const id = useId();
+  const selectedJourney = CEGJourneys.find(x => x.id === journeyId);
+  const j = qrBrowser && selectedJourney.channel === "qr" ? { ...selectedJourney, channel: "browser" } : selectedJourney;
+  const steps = CEGSteps(j, channel);
+  const baseStep = steps[stepIndex];
+  const step = failure ? { ...baseStep, owner: failure.stayAtBank ? "Bank" : "TPP", rules: [failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors"], title: failure.title } : baseStep;
+  const selectedConnection = records.find(r => r.id === selectedId);
+  const provider = j.type.startsWith("cof") || j.service === "CoF" ? "Orbit Card" : j.type === "ais" || j.service === "AIS" || j.type === "lifecycle" ? "Lumen" : "Lumen Pay";
+  const invalid = failure ? "" : CEGValidate(step, values, j);
+  const ended = j.type === "manage" && step.kind === "connection" && !["Active", "Reconfirm"].includes(selectedConnection.status);
+  const terminal = step.kind === "receipt" || !!failure;
+  const sourceIds = [...new Set([j.source, ...step.rules.map(r => CEGRules[r].source || j.source), "principles", "checklist", "changes", ...((j.type === "ais" || j.type === "payment") ? [j.type === "ais" ? (j.channel || channel) === "browser" ? "browserAis" : "appAis" : (j.channel || channel) === "browser" ? "browserPis" : "appPis", "deepLink"] : [])])];
+  const screenKey = j.id + ":" + stepIndex + ":" + (failure ? failure.title : "");
+  useEffect(() => {
+    if (lastScreen.current && lastScreen.current !== screenKey) {
+      if (screenRef.current) {
+        screenRef.current.scrollTop = 0;
+        const heading = screenRef.current.querySelector("[data-ceg-heading]");
+        if (heading) heading.focus({ preventScroll: true });
+      }
+    }
+    lastScreen.current = screenKey;
+  }, [screenKey]);
+  const set = (name, value) => setValues(prev => ({ ...prev, [name]: value }));
+  const append = (text, owner = step.owner) => setEvents(prev => [...prev, { text, owner }]);
+  const move = (index) => {
+    setStepIndex(index);
+    setFurthest(prev => Math.max(prev, index));
+    setSelectedRule("");
+    setMessage("");
+  };
+  const reset = (next, nextScenario = "happy", nextChannel = channel) => {
+    setJourneyId(next.id);
+    setFamily(next.family);
+    setScenario(nextScenario);
+    setChannel(nextChannel);
+    setQrBrowser(false);
+    setStepIndex(0);
+    setFurthest(0);
+    setFailure(null);
+    setSelectedRule("");
+    setValues({ ...CEGInitialValues(next), ...(nextScenario === "limit" ? { amount: "101" } : nextScenario === "monthly" ? { amount: "51", usedCents: 45000 } : {}) });
+    setRecords(CEGConnections(next));
+    setSelectedId("connection-1");
+    setHistory(false);
+    setCommitted(false);
+    setMutationComplete(false);
+    setPolls(0);
+    setAnswer("Yes");
+    setMessage("");
+    setEvents([{ text: next.title + " example opened" + (nextScenario !== "happy" ? " / " + nextScenario : ""), owner: next.access ? "Bank" : "TPP" }]);
+  };
+  const fail = (data) => {
+    setFailure(data);
+    setSelectedRule("");
+    setCommitted(true);
+    append(data.title + (data.code ? " / " + data.code : ""), data.stayAtBank ? "Bank" : "TPP");
+  };
+  const cancelled = (atBank = step.owner === "Bank") => fail({
+    title: "Request cancelled",
+    text: "You chose not to continue. No new payment or data retrieval was initiated.",
+    detail: atBank ? "The bank returns the user-interaction error to the provider. This is not a successful authorisation." : "The provider stops this request before completion. Existing independent service agreements are unchanged.",
+    code: atBank ? "access_denied (user cancellation)" : "",
+  });
+  const applyRecord = (update) => {
+    setRecords(prev => prev.map(r => r.id === selectedId ? { ...r, ...update } : r));
+    setMutationComplete(true);
+  };
+  const advance = () => {
+    if (terminal || ended || step.kind === "dashboard") return;
+    if (invalid) { setMessage(invalid); return; }
+    if (["handoff", "identifier"].includes(step.kind) && scenario === "unavailable") return fail({ title: "The bank is unavailable", text: "The request cannot continue to " + CEGBankName(values.bank) + ".", detail: "No authorisation or payment initiation took place. Try again later or restart and choose another eligible bank." });
+    if (["authenticate", "exemption"].includes(step.kind) && ["cancelled", "timeout", "malformed"].includes(scenario)) {
+      if (scenario === "cancelled") return cancelled(true);
+      if (scenario === "malformed") return fail({ title: "The bank stopped this request", text: "The authorisation request was malformed. The bank cannot trust its return URL.", detail: "The bank displays the error and does not redirect back. The example ends in the bank domain.", code: "invalid_request", stayAtBank: true });
+      return fail({ title: "Authentication was not completed", text: "The bank authentication session timed out. No new payment was submitted or data retrieved.", detail: "The bank returns an appropriate user-interaction error. The provider explains how to restart safely.", code: "U036 / authorisation not completed" });
+    }
+    if (step.kind === "pisFunds" && scenario === "insufficient") return fail({ title: "Not enough funds", text: "The funds check returned No. This example does not submit the payment.", detail: "The customer can add funds or choose another account. A funds check does not reserve money.", code: "No / availability snapshot", funds: true });
+    if (step.kind === "vrpExecute") {
+      const reason = CEGCheckVRP(values, values.usedCents, scenario === "revoked");
+      if (reason) return fail({ title: "VRP payment rejected", text: reason, detail: "The bank enforces the consent on every request. Change the amount or set up a new valid consent before another payment.", limit: true });
+    }
+    if (step.kind === "backgroundFunds") setAnswer(scenario === "insufficient" ? "No" : "Yes");
+    if (step.kind === "processing") {
+      setCommitted(true);
+      if (scenario === "insufficient") return fail({ title: "Payment rejected", text: "The bank rejected the payment for insufficient funds. No successful initiation or settlement is claimed.", detail: "The provider displays the bank's reason instead of a success receipt. Check the account or use another payment method.", code: "RJCT / AM04 (InsufficientFunds)", funds: true });
+      if (scenario === "pending" && polls === 0) {
+        setPolls(1);
+        append("Existing instruction still pending; bank reports PDNG / U031", "Bank");
+        setMessage("Still pending. The next check queries this same example instruction; it does not create a new payment.");
+        return;
+      }
+      append(scenario === "pending" ? "Existing payment status checked; bank reports " + (j.multi ? "PATC" : j.scheduled || j.standing || j.scheme === "Bacs" ? "PDNG" : "ACSP") : step.event, "Bank");
+    } else {
+      append(step.event);
+    }
+    if (step.kind === "cofPayer") set("bank", "birch");
+    if (step.kind === "disconnect") {
+      applyRecord({ status: "Cancelled", accessStatus: "Revoked", ended: CEGMeta.sampleDate });
+      setCommitted(true);
+    }
+    if (step.kind === "reconfirm") {
+      applyRecord({ status: "Active", due: "2027-02-07" });
+      setCommitted(true);
+    }
+    if (j.reauth && step.kind === "return") {
+      if (j.type === "manage") applyRecord({ status: "Active", accessStatus: "Active" });
+      setCommitted(true);
+    }
+    if (j.change && step.kind === "return") {
+      const newId = "connection-" + (records.length + 1);
+      setRecords(prev => [...prev, { ...selectedConnection, id: newId, status: "Active", accessStatus: "Active", granted: CEGMeta.sampleDate, ended: undefined, expires: values.ongoing ? "Ongoing until disconnected" : values.expiry, maxPayment: values.maxPayment, maxMonth: values.maxMonth, total: "0", payments: [] }]);
+      setSelectedId(newId);
+    }
+    if (step.kind === "lifecycleStop") setCommitted(true);
+    if (steps[stepIndex + 1]?.kind === "processing") {
+      setCommitted(true);
+      append("Payment instruction submitted once; awaiting bank status", "TPP");
+    }
+    move(stepIndex + 1);
+  };
+  const manage = (recordId) => {
+    setSelectedId(recordId);
+    const r = records.find(x => x.id === recordId);
+    setValues(prev => ({ ...prev, ...CEGConnectionValues(r) }));
+    append("Viewed connection for " + (j.access ? r.provider : CEGBankName(r.bank)));
+    move(1);
+  };
+  const backToDashboard = () => {
+    setCommitted(false);
+    setFurthest(0);
+    setHistory(false);
+    move(0);
+  };
+  const cancel = () => {
+    if (j.type === "manage") {
+      if (j.reconfirm && step.kind === "reconfirm") {
+        setJourneyId("manage-ais");
+        setSelectedRule("");
+        move(2);
+      } else backToDashboard();
+    } else if (j.type === "lifecycle") reset(j);
+    else cancelled();
+  };
+  const explain = (ruleId) => {
+    setSelectedRule(ruleId);
+    setInspector("guidelines");
+    requestAnimationFrame(() => {
+      const element = root.current?.querySelector('[data-ceg-rule="' + ruleId + '"]');
+      if (element) element.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
+    });
+  };
+  const mark = (ruleId) => {
+    const index = step.rules.indexOf(ruleId);
+    return annotations && index !== -1 ? <button type="button" className="ceg-marker" aria-label={(index + 1) + ": Explain: " + CEGRules[ruleId].title} aria-pressed={selectedRule === ruleId} onClick={() => explain(ruleId)}>{index + 1}</button> : null;
+  };
+  const scope = { mark, selected: selectedRule };
+  const actionLabel = failure ? "Restart example" : ended ? "Back to connections" : terminal ? j.type === "manage" ? "Back to connections" : "Restart journey" : ({
+    welcome: "Connect a bank",
+    bank: "Continue",
+    payer: "Continue",
+    aisConsent: "Allow data sharing",
+    payment: "Continue",
+    paymentConsent: "Allow payment",
+    handoff: "Continue to " + CEGBankName(values.bank),
+    identifier: step.channel === "qr" ? "Simulate camera scan" : step.channel === "modelC" ? "Simulate scan in bank app" : "Continue with example identifier",
+    authenticate: scenario === "cancelled" ? "Simulate bank cancellation" : scenario === "malformed" ? "Simulate malformed request" : scenario === "timeout" ? "Simulate bank timeout" : j.type === "payment" && !j.extra && !j.bankSelect ? "Simulate authenticate & pay" : "Simulate bank authentication",
+    exemption: "Observe bank exemption decision",
+    accounts: j.type === "ais" ? "Continue with selected accounts" : "Continue with paying account",
+    bankReview: j.multi ? "Provide my approval" : "Proceed with payment",
+    return: "Return to " + provider,
+    vrpRules: "Continue",
+    vrpConsent: "Allow recurring payments",
+    existingRules: j.delegated ? "Review next payment" : "Observe next payment",
+    vrpExecute: j.delegated ? "Continue to delegated SCA" : "Simulate background request",
+    delegated: "Simulate delegated SCA",
+    cofPayer: "Continue",
+    cofConsent: "Allow issuer funds checks",
+    cofBankConsent: "Allow bank funds checks",
+    cardPurchase: "Simulate card transaction",
+    backgroundFunds: "Observe yes/no response",
+    pisFunds: "Observe funds-check response",
+    processing: polls ? "Check status again" : "Check status",
+    connection: j.reconfirm ? "Review reconfirmation" : j.reauth ? "Review restoration" : j.change ? "Change payment rules" : "Disconnect",
+    disconnect: j.change ? "Cancel old consent & replace" : "Confirm disconnect",
+    reconfirm: "Keep sharing",
+    reauthSummary: "Continue to your bank",
+    serviceSetup: "Continue with example service",
+    notifications: "Save example preferences",
+    dataSettings: j.action === "onward" ? "Stop optional partner sharing" : "Close the example service",
+    lifecycleStop: j.action === "onward" ? "Confirm stop sharing" : "Confirm service closure",
+  }[step.kind]);
+  const showCancel = !terminal && !ended && ["aisConsent", "paymentConsent", "handoff", "identifier", "authenticate", "bankReview", "vrpConsent", "cofConsent", "cofBankConsent", "disconnect", "reconfirm", "reauthSummary", "lifecycleStop", "delegated"].includes(step.kind);
+  const equal = ["bankReview", "cofBankConsent", "disconnect", "reconfirm", "lifecycleStop"].includes(step.kind);
+  const fonts = { "System sans": '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', "Serif": 'Georgia,"Times New Roman",serif', "Monospace": 'ui-monospace,SFMono-Regular,Menlo,monospace' };
+  const filtered = CEGJourneys.filter(x => x.family === family && (!query || (x.title + " " + x.subtitle).toLowerCase().includes(query.toLowerCase())));
+  const hasChannel = !j.channel && ["ais", "payment", "vrpSetup", "cofSetup"].includes(j.type) || j.type === "manage" && (j.reauth || j.change);
+  return <section className="ceg-demo" ref={root} aria-label="Interactive Open Banking customer experience" style={{ "--ceg-accent": theme.accent, "--ceg-button-text": CEGContrastText(theme.accent), "--ceg-surface": theme.surface, "--ceg-stage-text": CEGContrastText(theme.surface), "--ceg-radius": theme.radius + "px", "--ceg-phone-font": theme.size + "px", "--ceg-custom-font": fonts[theme.font] }}>
+    <style>{CEGStyles}</style>
+    <header className="ceg-masthead">
+      <div className="ceg-eyebrow">Customer experience / interactive guidelines</div>
+      <h2>Open Banking, from the customer's side.</h2>
+      <p>Explore the moments that make sharing data and paying by bank feel clear, secure and in your control. Real guidance. Fictional journeys.</p>
+      <div className="ceg-meta"><span>UK Open Banking</span><span>CEG {CEGMeta.version}</span><span>{CEGJourneys.length} journeys</span><span>Reviewed {CEGMeta.reviewed}</span><span>Simulation only</span></div>
+    </header>
+    <nav className="ceg-categories" aria-label="Journey families">{CEGFamilies.map(f => <button className="ceg-category" type="button" key={f.id} aria-pressed={family === f.id} onClick={() => { setFamily(f.id); setQuery(""); setSidebar("journeys"); reset(CEGJourneys.find(x => x.family === f.id)); }}><CEGIcon name={f.icon} size={16} />{f.short === "Auth" ? "Authentication" : f.short === "Manage" ? "Connections" : f.short === "CoF" ? "Funds checks" : f.short}</button>)}</nav>
+    <div className="ceg-workbench">
+      <aside className="ceg-sidebar" aria-label="Journey library and appearance">
+        <div className="ceg-switch" role="group" aria-label="Sidebar view"><button aria-pressed={sidebar === "journeys"} onClick={() => setSidebar("journeys")}>Journey library</button><button aria-pressed={sidebar === "appearance"} onClick={() => setSidebar("appearance")}>Appearance</button></div>
+        {sidebar === "journeys" ? <><div className="ceg-search"><CEGIcon name="search" size={16} /><label className="ceg-sr-only" htmlFor={id + "-search"}>Search journeys in this family</label><input id={id + "-search"} placeholder="Find a journey..." value={query} onChange={e => setQuery(e.target.value)} /></div><div className="ceg-family-intro"><span>{CEGFamilies.find(f => f.id === family).title}</span><span>{filtered.length}</span></div><div className="ceg-journeys">{filtered.length ? filtered.map(x => <button type="button" className="ceg-journey" key={x.id} data-journey={x.id} aria-pressed={j.id === x.id} onClick={() => reset(x)}><strong>{x.title}</strong><small>{x.subtitle}</small></button>) : <p className="ceg-empty" role="status">No journeys match. Try another search.</p>}</div><div className="ceg-side-note"><CEGIcon name="help" size={16} /><span>Interact with the app. Select a numbered marker to understand the guidance behind that moment.</span></div></> : <div className="ceg-appearance">
+          <div><label>Colour presets</label><div className="ceg-presets" style={{ marginTop: 10 }}>{[{ name: "Ocean", accent: "#2456d6", surface: "#f3f6fb" }, { name: "Forest", accent: "#21624f", surface: "#f1f7f3" }, { name: "Plum", accent: "#754091", surface: "#f7f3f9" }].map(p => <button key={p.name} title={p.name} aria-label={p.name + " colour preset"} className="ceg-preset" style={{ background: p.accent }} onClick={() => setTheme(prev => ({ ...prev, accent: p.accent, surface: p.surface }))} />)}</div></div>
+          {[["Primary colour", "accent"], ["Canvas background", "surface"]].map(([label, name]) => <div key={name}><label htmlFor={id + "-" + name}>{label}</label><div className="ceg-colour-control"><input id={id + "-" + name} type="color" value={theme[name]} onChange={e => setTheme(prev => ({ ...prev, [name]: e.target.value }))} /><span>{theme[name]}</span></div></div>)}
+          <div><label htmlFor={id + "-font"}>Phone typeface</label><select id={id + "-font"} value={theme.font} onChange={e => setTheme(prev => ({ ...prev, font: e.target.value }))}>{Object.keys(fonts).map(f => <option key={f}>{f}</option>)}</select></div>
+          <div><label htmlFor={id + "-size"}>Phone font size / {theme.size}px</label><input id={id + "-size"} type="range" min={13} max={18} value={theme.size} onChange={e => setTheme(prev => ({ ...prev, size: Number(e.target.value) }))} /></div>
+          <div><label htmlFor={id + "-radius"}>Field and card radius / {theme.radius}px</label><input id={id + "-radius"} type="range" min={6} max={24} value={theme.radius} onChange={e => setTheme(prev => ({ ...prev, radius: Number(e.target.value) }))} /></div>
+          <label className="ceg-check-line"><input type="checkbox" checked={annotations} onChange={e => setAnnotations(e.target.checked)} /><span>Show numbered annotations</span></label><button className="ceg-secondary" onClick={() => setTheme({ accent: "#2456d6", surface: "#f3f6fb", font: "System sans", size: 14, radius: 14 })}>Reset appearance</button><p style={{ fontSize: 10, color: "#53647e" }}>Styles are scoped to this component. Button text automatically uses the stronger black/white contrast.</p>
+        </div>}
+      </aside>
+      <section className="ceg-stage" aria-label="Journey simulator">
+        <div className="ceg-stage-head"><div><h3>{j.title}</h3><p>{j.subtitle}</p></div><button type="button" className="ceg-icon-button" aria-label="Restart selected journey" title="Restart selected journey" onClick={() => reset(j, scenario)}><CEGIcon name="repeat" size={16} /></button></div>
+        <div className="ceg-context-controls">{hasChannel && <div className="ceg-control"><label htmlFor={id + "-channel"}>Bank authentication channel</label><select id={id + "-channel"} value={channel} onChange={e => reset(j, scenario, e.target.value)}><option value="app">Bank app (same device)</option><option value="browser">Bank website / app not used</option></select></div>}<div className="ceg-control"><label htmlFor={id + "-scenario"}>Example scenario</label><select id={id + "-scenario"} value={scenario} onChange={e => reset(j, e.target.value)}>{CEGScenarios(j).map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></div></div>
+        {j.historical && <CEGInfo warning>Historical Model B example: the linked latest page returned 404. This uses version 3.1.11, not verified current guidance.</CEGInfo>}
+        <div className="ceg-device-label"><span />{step.owner === "Bank" ? "BANK DOMAIN" : step.kind === "delegated" ? "TPP / DELEGATED SCA" : "PROVIDER DOMAIN"} / {j.channel === "qr" && step.kind === "identifier" ? "ORIGIN DESKTOP" : j.channel && j.channel.startsWith("model") && step.owner === "Bank" ? "SECOND DEVICE" : "ILLUSTRATIVE SCREEN"}</div>
+        <div className="ceg-phone" data-ceg-phone="true">
+          <div className="ceg-statusbar"><span>9:41</span><span className="ceg-island" /><span aria-hidden="true">5G ▪▪▪</span></div>
+          <div className="ceg-phone-brand"><span className={"ceg-logo" + (step.owner === "Bank" ? " ceg-logo-bank" : "")}>{step.owner === "Bank" ? CEGBankName(values.bank).charAt(0).toLowerCase() : provider === "Orbit Card" ? "o" : "L"}</span><div><strong>{step.owner === "Bank" ? CEGBankName(values.bank) : provider}</strong><small>{step.owner === "Bank" ? (j.channel || channel) === "browser" ? "Bank website / example" : "Bank app / example" : provider === "Orbit Card" ? "Card issuer / example" : "Open Banking service / example"}</small></div><span className="ceg-domain">{step.owner === "Bank" ? "ASPSP" : provider === "Orbit Card" ? "CBPII" : j.type === "ais" || j.service === "AIS" ? "AISP" : "TPP"}</span></div>
+          <div className="ceg-phone-progress" aria-hidden="true">{steps.map((s, i) => <span key={s.id} className={i <= stepIndex ? "ceg-progress-done" : ""} />)}</div>
+          <div className="ceg-screen" ref={screenRef} data-step={baseStep.id}><CEGScreen step={step} j={j} v={values} set={set} scope={scope} provider={provider} selectedConnection={selectedConnection} records={records} history={history} setHistory={setHistory} manage={manage} scenario={scenario} polls={polls} message={message} failure={failure} answer={answer} mutationComplete={mutationComplete} /></div>
+          <div className="ceg-screen-actions">
+            {(invalid || message) && step.kind !== "processing" && <div className="ceg-validation" role="status">{message || invalid}</div>}
+            {step.kind === "dashboard" ? <p style={{ margin: 0, fontSize: 10, color: "#53647e" }}>Choose Manage on a connection. Ended arrangements are in History.</p> : <div className={equal && showCancel ? "ceg-equal-actions" : ""}><button type="button" className="ceg-primary" data-ceg-primary="true" disabled={!!invalid} onClick={() => failure ? reset(j, scenario) : ended || terminal && j.type === "manage" ? backToDashboard() : terminal ? reset(j, scenario) : advance()}>{actionLabel}{!equal && <CEGIcon name={terminal ? "repeat" : "arrow"} size={15} />}</button>{showCancel && <button type="button" className={equal ? "ceg-secondary" : "ceg-text-button ceg-cancel-action"} data-ceg-cancel="true" onClick={cancel}>{step.kind === "reconfirm" ? "Disconnect instead" : j.type === "manage" ? "Keep current connection" : "Cancel request"}</button>}</div>}
+            {j.channel === "qr" && step.kind === "identifier" && !failure && <button className="ceg-text-button ceg-cancel-action" onClick={() => { append("Customer chose desktop-browser alternative", "TPP"); setQrBrowser(true); setChannel("browser"); const index = CEGSteps({ ...j, channel: "browser" }).findIndex(s => s.id === "authenticate"); move(index); }}>Use the browser instead</button>}
+          </div><div className="ceg-homebar" />
+        </div>
+        <div className="ceg-step-nav"><button type="button" disabled={stepIndex === 0 || committed || !!failure} onClick={() => move(stepIndex - 1)}><CEGIcon name="back" size={14} />Previous screen</button><span>{String(stepIndex + 1).padStart(2, "0")} / {String(steps.length).padStart(2, "0")}</span><button type="button" onClick={() => setInspector(inspector === "events" ? "guidelines" : "events")}><CEGIcon name="document" size={14} />Event trail</button></div>
+        <nav className="ceg-timeline" aria-label="Visited journey screens">{steps.map((s, i) => <button type="button" key={s.id} aria-label={"Screen " + (i + 1) + ": " + s.title} aria-current={i === stepIndex ? "step" : undefined} title={s.title} disabled={i > furthest || committed && i !== stepIndex || !!failure} onClick={() => move(i)}>{i + 1}</button>)}</nav>
+        <p style={{ color: "var(--ceg-stage-text)", fontSize: 9, marginTop: 11, textAlign: "center" }}>Navigation reviews example screens; it never reverses a payment or consent action.</p>
+      </section>
+      <aside className="ceg-inspector" aria-label="Guidance, event trail and sources">
+        <div className="ceg-switch" role="group" aria-label="Inspector view">{[["guidelines", "Guidance"], ["events", "Event trail"], ["sources", "Sources"]].map(([value, title]) => <button key={value} type="button" aria-pressed={inspector === value} onClick={() => setInspector(value)}>{title}</button>)}</div>
+        <div className="ceg-inspector-head"><h3>{inspector === "guidelines" ? "Behind this screen" : inspector === "events" ? "Simulated event trail" : "Source guidance"}</h3><span className="ceg-pill">{inspector === "guidelines" ? step.owner === "Bank" ? "ASPSP" : "TPP" : inspector === "events" ? events.length + " events" : "Reviewed"}</span></div>
+        {inspector === "guidelines" ? <><div className="ceg-guidelines">{step.rules.map((ruleId, index) => { const r = CEGRules[ruleId]; const source = CEGSources[r.source || j.source]; return <article className={"ceg-guide" + (selectedRule === ruleId ? " ceg-guide-selected" : "")} key={ruleId} data-ceg-rule={ruleId}><div className="ceg-guide-heading"><button className="ceg-marker" aria-label={(index + 1) + ": Highlight guidance: " + r.title} aria-pressed={selectedRule === ruleId} onClick={() => setSelectedRule(ruleId)}>{index + 1}</button><button type="button" onClick={() => setSelectedRule(ruleId)}>{r.title}</button></div><p>{r.text}</p><div className="ceg-guide-meta"><span className={"ceg-level ceg-level-" + r.level.toLowerCase()}>{r.level}</span><a href={CEGMeta.base + source.path} target="_blank" rel="noopener noreferrer" aria-label={"CEG source: " + source.title}>CEG source<CEGIcon name="external" size={11} /></a></div>{r.ref && <div className="ceg-guide-ref">CEG checklist reference: {r.ref}</div>}</article>; })}</div><div className="ceg-not-certification">Annotations are summaries of source guidance, not a compliance score. "Required", "Recommended" and "Conditional" reflect the cited guidance; confirm applicability for your service.</div></>
+          : inspector === "events" ? <><ol className="ceg-events">{events.map((e, i) => <li className="ceg-event" key={i}><span className="ceg-event-number">{i + 1}</span><div><strong>{e.text}</strong><small>{e.owner === "Bank" ? "Bank / ASPSP" : "Provider / TPP"} / simulated</small></div></li>)}</ol><div className="ceg-not-certification">A teaching trace of actions taken in this component. No API calls, credentials, tokens, biometric data or real payment identifiers are recorded or sent.</div></>
+          : <><div className="ceg-sources">{sourceIds.map(sourceId => { const source = CEGSources[sourceId]; return <article key={sourceId} className="ceg-source"><a href={CEGMeta.base + source.path} target="_blank" rel="noopener noreferrer">{source.title}</a><p>Source version: {source.version || CEGMeta.version}. Reviewed {CEGMeta.reviewed}.</p>{source.note && <p>{source.note}</p>}</article>; })}</div><div className="ceg-not-certification">These latest URLs can change after the review date. This component contains a reviewed snapshot; it does not fetch guidance at runtime. All screen copy and visual assets are original fictional examples.</div></>}
+      </aside>
+    </div>
+    <footer className="ceg-footer"><span>Educational simulation / no bank connection, money movement or external storage. Examples dated 9 Nov 2026.</span><a href={CEGMeta.base + "introduction/latest/"} target="_blank" rel="noopener noreferrer">Open Banking CEG <CEGIcon name="external" size={11} /></a></footer>
+    <span className="ceg-sr-only" role="status" aria-live="polite">{j.title + ". Screen " + (stepIndex + 1) + " of " + steps.length + ". " + step.title + ". " + (step.owner === "Bank" ? "Bank domain." : "Provider domain.")}</span>
+  </section>;
+};
+
+<CustomerExperience />
