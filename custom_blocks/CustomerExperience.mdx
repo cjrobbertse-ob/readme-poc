@@ -398,6 +398,7 @@ export const CEGIcon = ({ name = "arrow", size = 20, ...props }) => {
 };
 
 export const CEGStyles = `
+.rm-Guides .rm-Article:has(.ceg-demo[data-ceg-wide="true"]) { --hub-main-max-width:100%; max-width:none; }
 .ceg-demo { --ceg-ink:#172a46; --ceg-muted:#53647e; --ceg-border:#dde5ef; --ceg-accent:#2456d6; --ceg-surface:#f3f6fb; --ceg-button-text:#fff; --ceg-radius:14px; --ceg-phone-font:14px; color:var(--ceg-ink); background:#fff; border:1px solid var(--ceg-border); border-radius:22px; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; container-type:inline-size; overflow:hidden; isolation:isolate; text-align:left; }
 .ceg-demo *, .ceg-demo *::before, .ceg-demo *::after { box-sizing:border-box; }
 .ceg-demo button, .ceg-demo input, .ceg-demo select { font:inherit; }
@@ -422,11 +423,13 @@ export const CEGStyles = `
 .ceg-demo .ceg-category { display:flex; align-items:center; justify-content:center; gap:7px; padding:11px 12px; border-radius:9px; white-space:nowrap; font-size:12px; font-weight:600; flex:1; }
 .ceg-demo .ceg-category[aria-pressed=true] { background:#edf2ff; color:#214ab0; }
 .ceg-demo .ceg-category:hover { background:#f3f6fb; }
-.ceg-demo .ceg-workbench { display:grid; grid-template-columns:224px minmax(340px,1fr) 300px; gap:0; min-height:800px; }
+.ceg-demo .ceg-workbench { display:grid; grid-template-columns:240px minmax(340px,1fr) 300px; gap:0; min-height:800px; }
 .ceg-demo .ceg-sidebar { border-right:1px solid var(--ceg-border); padding:20px 16px; background:#fcfdff; min-width:0; }
 .ceg-demo .ceg-switch { display:flex; padding:4px; border:1px solid var(--ceg-border); border-radius:10px; gap:4px; background:#f1f4f9; }
 .ceg-demo .ceg-switch button { padding:7px 8px; border-radius:7px; font-size:11px; font-weight:600; flex:1; }
 .ceg-demo .ceg-switch button[aria-pressed=true] { background:white; color:#172a46; box-shadow:0 1px 4px #182a4612; }
+.ceg-demo .ceg-sidebar .ceg-switch { flex-wrap:wrap; }
+.ceg-demo .ceg-sidebar .ceg-switch button { flex:1 1 auto; min-width:max-content; white-space:nowrap; }
 .ceg-demo .ceg-search { position:relative; margin:17px 0; }
 .ceg-demo .ceg-search svg { position:absolute; top:12px; left:10px; color:#65768b; }
 .ceg-demo .ceg-search input { width:100%; background:#fff; border:1px solid var(--ceg-border); border-radius:8px; padding:10px 8px 10px 34px; font-size:12px; color:#172a46; }
@@ -583,7 +586,7 @@ export const CEGStyles = `
 .ceg-demo .ceg-empty { padding:22px 10px; font-size:12px; color:#53647e; }
 .ceg-demo .ceg-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 @container (max-width:1100px) {
-  .ceg-demo .ceg-workbench { grid-template-columns:210px minmax(0,1fr); }
+  .ceg-demo .ceg-workbench { grid-template-columns:240px minmax(0,1fr); }
   .ceg-demo .ceg-stage { grid-column:2; grid-row:1; padding:20px; }
   .ceg-demo .ceg-inspector { grid-column:1/-1; border-left:0; border-top:1px solid var(--ceg-border); padding:20px; }
   .ceg-demo .ceg-guidelines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:none; }
@@ -755,7 +758,7 @@ export const CEGScreen = ({ step, j, v, set, scope, provider, selectedConnection
   const block = (title, rule, children) => <CEGBlock title={title} rule={rule} {...scope}>{children}</CEGBlock>;
   const hero = (icon, title, lead, tone = "") => <><div className={"ceg-hero-icon " + tone}><CEGIcon name={icon} size={29} /></div><h4 tabIndex={-1} data-ceg-heading="true">{title}</h4>{lead && <p className="ceg-lead">{lead}</p>}</>;
   const securityDetails = <details><summary>How is this secure?</summary><p>This is only a simulation. In a live journey, your bank authenticates you using its usual methods and does not share your login credentials with the provider.</p></details>;
-  if (failure) return <>{hero("close", failure.title, failure.text, "ceg-warning")}{block("What happened", failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors", <><p>{failure.detail}</p>{failure.code && <p style={{ marginTop: 8 }}><strong>Example reason:</strong> {failure.code}</p>}</>)}<CEGInfo warning>{failure.stayAtBank ? "The bank must stop here. There is no redirect to an untrusted callback. Restarting below restarts this teaching example only." : "You are back with the provider. No success has been inferred from this result. You can restart the example."}</CEGInfo></>;
+  if (failure) return <>{hero("close", failure.title, failure.text, "ceg-warning")}{block("What happened", failure.guidance || (failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors"), <><p>{failure.detail}</p>{failure.code && <p style={{ marginTop: 8 }}><strong>Example reason:</strong> {failure.code}</p>}</>)}<CEGInfo warning>{failure.stayAtBank ? "The bank must stop here. There is no redirect to an untrusted callback. Restarting below restarts this teaching example only." : "You are back with the provider. No success has been inferred from this result. You can restart the example."}</CEGInfo></>;
   switch (step.kind) {
     case "welcome":
       return <>{hero("wallet", j.once ? "A clearer financial snapshot" : j.corporate ? "Understand your business cash flow" : "Your money, in one place", j.once ? "Share a one-off snapshot of your accounts to see your income and spending." : j.corporate ? "Connect your business accounts so Lumen can analyse income and spending. Your bank checks your authority." : "See your balances and spending together, without switching between banking apps.")}<div className="ceg-stats"><div className="ceg-stat"><strong>Read only</strong><small>No payment permission</small></div><div className="ceg-stat"><strong>Your choice</strong><small>Pick accounts at your bank</small></div></div>{block("You stay in control", "benefit", <p>You decide which accounts to share. You can disconnect in Open Banking connected accounts whenever you want.</p>)}{block("Who provides the service?", "identity", <p>{provider} is a fictional account information provider. All names and data in this demo are examples.</p>)}{securityDetails}</>;
@@ -840,7 +843,7 @@ export const CEGScreen = ({ step, j, v, set, scope, provider, selectedConnection
     case "receipt": {
       const isPayment = j.type === "payment" || j.type === "vrpPay";
       const scheduled = j.scheduled || j.standing || j.scheme === "Bacs";
-      const title = j.type === "cofCheck" ? "Funds check returned " + answer : step.title;
+      const title = step.title;
       return <>{hero(j.multi || j.corporate || (j.type === "cofCheck" && answer === "No") ? "clock" : "check", title, j.corporate ? "The bank received the request but further internal authorisation is required. No account data has been retrieved." : j.multi ? "One approval out of two is complete. The payment has not executed." : isPayment ? scheduled ? "The bank accepted the instruction for later execution. No completed transfer is claimed." : "The instruction was initiated. Settlement is still in process; this is not confirmation the payee received funds." : "", j.multi || j.corporate ? "ceg-warning" : "ceg-success")}
         {isPayment && <>{block("Bank-reported result", "status", <CEGDefinition rows={[["Instruction identifier", "PAY-EXAMPLE-1042"], ["Status", j.multi ? "PATC / partially accepted technically" : scheduled ? "PDNG / scheduled instruction" : "ACSP / settlement in process"], ["Amount", CEGMoney(v.amount, j.international ? "EUR" : "GBP")], ["Payee", j.type === "vrpPay" ? j.delegated ? v.paymentPayee : j.sweep ? "Alex Morgan / own savings" : "Meadow Energy" : j.file ? "3 file-defined recipients" : j.international ? "Nordlicht Studio" : "Meadow Shop"], ["Paying account", j.file ? "File-defined debtor account(s)" : bankName + " / **** " + CEGAccount(v).number.slice(-4)], v.reference.trim() && ["Reference", v.reference], ["Last update", "9 Nov 2026, 09:41"], j.multi && ["Authorisation count", "1 of 2"], j.multi && ["Deadline", "12 Nov 2026, 17:00"], scheduled && ["Execution", CEGDate(v.date)]]} />)}{j.standing && <details><summary>View accepted standing-order schedule</summary><CEGPaymentSummary j={j} v={v} bank /></details>}{j.refund && <CEGInfo>{v.refund ? "With your explicit permission, debit-account details were returned to Lumen Pay for refunds. No refund payment has been made." : "You did not allow refund-account information. No debit-account details were requested for that purpose."}</CEGInfo>}{scheduled && block("To amend or cancel", "amendAtBank", <p>Use your bank's supported online channel within its applicable cancellation time limits. The PISP cannot amend this scheduled order through an invented endpoint.</p>)}</>}
         {j.type === "ais" && <>{!j.corporate && <CEGDefinition rows={[["Bank", bankName], ["Accounts", v.accounts.map(x => x === "joint" ? "Joint household account" : "Current account").join(", ")], ["Access", j.once ? "Single retrieval complete; no ongoing access" : "Ongoing until disconnected"], !j.once && ["Reconfirm at Lumen by", "7 Feb 2027"]]} />}<CEGInfo>{j.corporate ? "Further authorisation is handled through the bank's corporate process. This receipt is deliberately not an Active connection." : j.once ? "One-off sharing does not create ongoing access. Live retention must match the purpose and privacy notice." : "Find and disconnect accounts in Lumen's Open Banking connected accounts. A new bank login is not automatically required every 90 days."}</CEGInfo></>}
@@ -857,7 +860,7 @@ export const CEGScreen = ({ step, j, v, set, scope, provider, selectedConnection
   }
 };
 
-export const CustomerExperience = ({ initialJourney = "ais-connect", initialChannel = "app", showAnnotations = true }) => {
+export const CustomerExperience = ({ initialJourney = "ais-connect", initialChannel = "app", showAnnotations = true, wide = false }) => {
   const starting = CEGJourneys.find(x => x.id === initialJourney);
   if (!starting) throw new Error("Unknown initialJourney: " + initialJourney);
   if (!["app", "browser"].includes(initialChannel)) throw new Error("initialChannel must be app or browser");
@@ -891,13 +894,15 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
   const id = useId();
   const selectedJourney = CEGJourneys.find(x => x.id === journeyId);
   const j = qrBrowser && selectedJourney.channel === "qr" ? { ...selectedJourney, channel: "browser" } : selectedJourney;
-  const steps = CEGSteps(j, channel);
+  const steps = CEGSteps(j, channel).map(s => j.type === "cofCheck" && s.kind === "receipt" ? { ...s, title: "Funds check returned " + answer } : s);
   const baseStep = steps[stepIndex];
-  const step = failure ? { ...baseStep, owner: failure.stayAtBank ? "Bank" : "TPP", rules: [failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors"], title: failure.title } : baseStep;
+  const step = failure ? { ...baseStep, owner: failure.stayAtBank ? "Bank" : "TPP", rules: [failure.guidance || (failure.limit ? "limits" : failure.funds ? "pisFunds" : "errors")], title: failure.title } : baseStep;
   const selectedConnection = records.find(r => r.id === selectedId);
   const provider = j.type.startsWith("cof") || j.service === "CoF" ? "Orbit Card" : j.type === "ais" || j.service === "AIS" || j.type === "lifecycle" ? "Lumen" : "Lumen Pay";
   const invalid = failure ? "" : CEGValidate(step, values, j);
   const ended = j.type === "manage" && step.kind === "connection" && !["Active", "Reconfirm"].includes(selectedConnection.status);
+  const restorationNotRequired = j.type === "manage" && j.reauth && step.kind === "connection" && !ended && selectedConnection.accessStatus !== "Re-authentication required";
+  const viewOnly = ended || restorationNotRequired;
   const terminal = step.kind === "receipt" || !!failure;
   const sourceIds = [...new Set([j.source, ...step.rules.map(r => CEGRules[r].source || j.source), "principles", "checklist", "changes", ...((j.type === "ais" || j.type === "payment") ? [j.type === "ais" ? (j.channel || channel) === "browser" ? "browserAis" : "appAis" : (j.channel || channel) === "browser" ? "browserPis" : "appPis", "deepLink"] : [])])];
   const screenKey = j.id + ":" + stepIndex + ":" + (failure ? failure.title : "");
@@ -911,7 +916,10 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     }
     lastScreen.current = screenKey;
   }, [screenKey]);
-  const set = (name, value) => setValues(prev => ({ ...prev, [name]: value }));
+  const set = (name, value) => {
+    setFurthest(stepIndex);
+    setValues(prev => ({ ...prev, ...(name === "bank" && value !== prev.bank ? { accounts: [], account: "" } : {}), [name]: value }));
+  };
   const append = (text, owner = step.owner) => setEvents(prev => [...prev, { text, owner }]);
   const move = (index) => {
     setStepIndex(index);
@@ -946,6 +954,11 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     setCommitted(true);
     append(data.title + (data.code ? " / " + data.code : ""), data.stayAtBank ? "Bank" : "TPP");
   };
+  const stopIfBankUnavailable = () => {
+    if (scenario !== "unavailable") return false;
+    fail({ title: "The bank is unavailable", text: "The request cannot continue to " + CEGBankName(values.bank) + ".", detail: "No authorisation or payment initiation took place. Try again later or restart and choose another eligible bank." });
+    return true;
+  };
   const cancelled = (atBank = step.owner === "Bank") => fail({
     title: "Request cancelled",
     text: "You chose not to continue. No new payment or data retrieval was initiated.",
@@ -957,9 +970,9 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     setMutationComplete(true);
   };
   const advance = () => {
-    if (terminal || ended || step.kind === "dashboard") return;
+    if (terminal || viewOnly || step.kind === "dashboard") return;
     if (invalid) { setMessage(invalid); return; }
-    if (["handoff", "identifier"].includes(step.kind) && scenario === "unavailable") return fail({ title: "The bank is unavailable", text: "The request cannot continue to " + CEGBankName(values.bank) + ".", detail: "No authorisation or payment initiation took place. Try again later or restart and choose another eligible bank." });
+    if (["handoff", "identifier"].includes(step.kind) && stopIfBankUnavailable()) return;
     if (["authenticate", "exemption"].includes(step.kind) && ["cancelled", "timeout", "malformed"].includes(scenario)) {
       if (scenario === "cancelled") return cancelled(true);
       if (scenario === "malformed") return fail({ title: "The bank stopped this request", text: "The authorisation request was malformed. The bank cannot trust its return URL.", detail: "The bank displays the error and does not redirect back. The example ends in the bank domain.", code: "invalid_request", stayAtBank: true });
@@ -973,7 +986,7 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     if (step.kind === "backgroundFunds") setAnswer(scenario === "insufficient" ? "No" : "Yes");
     if (step.kind === "processing") {
       setCommitted(true);
-      if (scenario === "insufficient") return fail({ title: "Payment rejected", text: "The bank rejected the payment for insufficient funds. No successful initiation or settlement is claimed.", detail: "The provider displays the bank's reason instead of a success receipt. Check the account or use another payment method.", code: "RJCT / AM04 (InsufficientFunds)", funds: true });
+      if (scenario === "insufficient") return fail({ title: "Payment rejected", text: "The bank rejected the submitted payment for insufficient funds. No successful initiation or settlement is claimed.", detail: "This rejection was reported after submission; it is not a pre-initiation funds-check result. The provider displays the bank's reason instead of a success receipt. Check the account or use another payment method.", code: "RJCT / AM04 (InsufficientFunds)", guidance: "status", funds: true });
       if (scenario === "pending" && polls === 0) {
         setPolls(1);
         append("Existing instruction still pending; bank reports PDNG / U031", "Bank");
@@ -1009,7 +1022,17 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     }
     move(stepIndex + 1);
   };
+  const chooseBrowser = () => {
+    if (stopIfBankUnavailable()) return;
+    append("Customer chose desktop-browser alternative", "TPP");
+    setQrBrowser(true);
+    setChannel("browser");
+    const index = CEGSteps({ ...j, channel: "browser" }).findIndex(s => s.id === "authenticate");
+    move(index);
+  };
   const manage = (recordId) => {
+    setFurthest(1);
+    setMutationComplete(false);
     setSelectedId(recordId);
     const r = records.find(x => x.id === recordId);
     setValues(prev => ({ ...prev, ...CEGConnectionValues(r) }));
@@ -1045,7 +1068,7 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     return annotations && index !== -1 ? <button type="button" className="ceg-marker" aria-label={(index + 1) + ": Explain: " + CEGRules[ruleId].title} aria-pressed={selectedRule === ruleId} onClick={() => explain(ruleId)}>{index + 1}</button> : null;
   };
   const scope = { mark, selected: selectedRule };
-  const actionLabel = failure ? "Restart example" : ended ? "Back to connections" : terminal ? j.type === "manage" ? "Back to connections" : "Restart journey" : ({
+  const actionLabel = failure ? "Restart example" : viewOnly ? "Back to connections" : terminal ? j.type === "manage" ? "Back to connections" : "Restart journey" : ({
     welcome: "Connect a bank",
     bank: "Continue",
     payer: "Continue",
@@ -1080,12 +1103,12 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
     dataSettings: j.action === "onward" ? "Stop optional partner sharing" : "Close the example service",
     lifecycleStop: j.action === "onward" ? "Confirm stop sharing" : "Confirm service closure",
   }[step.kind]);
-  const showCancel = !terminal && !ended && ["aisConsent", "paymentConsent", "handoff", "identifier", "authenticate", "bankReview", "vrpConsent", "cofConsent", "cofBankConsent", "disconnect", "reconfirm", "reauthSummary", "lifecycleStop", "delegated"].includes(step.kind);
+  const showCancel = !terminal && !viewOnly && ["aisConsent", "paymentConsent", "handoff", "identifier", "authenticate", "bankReview", "vrpConsent", "cofConsent", "cofBankConsent", "disconnect", "reconfirm", "reauthSummary", "lifecycleStop", "delegated"].includes(step.kind);
   const equal = ["bankReview", "cofBankConsent", "disconnect", "reconfirm", "lifecycleStop"].includes(step.kind);
   const fonts = { "System sans": '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', "Serif": 'Georgia,"Times New Roman",serif', "Monospace": 'ui-monospace,SFMono-Regular,Menlo,monospace' };
   const filtered = CEGJourneys.filter(x => x.family === family && (!query || (x.title + " " + x.subtitle).toLowerCase().includes(query.toLowerCase())));
   const hasChannel = !j.channel && ["ais", "payment", "vrpSetup", "cofSetup"].includes(j.type) || j.type === "manage" && (j.reauth || j.change);
-  return <section className="ceg-demo" ref={root} aria-label="Interactive Open Banking customer experience" style={{ "--ceg-accent": theme.accent, "--ceg-button-text": CEGContrastText(theme.accent), "--ceg-surface": theme.surface, "--ceg-stage-text": CEGContrastText(theme.surface), "--ceg-radius": theme.radius + "px", "--ceg-phone-font": theme.size + "px", "--ceg-custom-font": fonts[theme.font] }}>
+  return <section className="ceg-demo" ref={root} data-ceg-wide={wide ? "true" : undefined} aria-label="Interactive Open Banking customer experience" style={{ "--ceg-accent": theme.accent, "--ceg-button-text": CEGContrastText(theme.accent), "--ceg-surface": theme.surface, "--ceg-stage-text": CEGContrastText(theme.surface), "--ceg-radius": theme.radius + "px", "--ceg-phone-font": theme.size + "px", "--ceg-custom-font": fonts[theme.font] }}>
     <style>{CEGStyles}</style>
     <header className="ceg-masthead">
       <div className="ceg-eyebrow">Customer experience / interactive guidelines</div>
@@ -1115,11 +1138,11 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
           <div className="ceg-statusbar"><span>9:41</span><span className="ceg-island" /><span aria-hidden="true">5G ▪▪▪</span></div>
           <div className="ceg-phone-brand"><span className={"ceg-logo" + (step.owner === "Bank" ? " ceg-logo-bank" : "")}>{step.owner === "Bank" ? CEGBankName(values.bank).charAt(0).toLowerCase() : provider === "Orbit Card" ? "o" : "L"}</span><div><strong>{step.owner === "Bank" ? CEGBankName(values.bank) : provider}</strong><small>{step.owner === "Bank" ? (j.channel || channel) === "browser" ? "Bank website / example" : "Bank app / example" : provider === "Orbit Card" ? "Card issuer / example" : "Open Banking service / example"}</small></div><span className="ceg-domain">{step.owner === "Bank" ? "ASPSP" : provider === "Orbit Card" ? "CBPII" : j.type === "ais" || j.service === "AIS" ? "AISP" : "TPP"}</span></div>
           <div className="ceg-phone-progress" aria-hidden="true">{steps.map((s, i) => <span key={s.id} className={i <= stepIndex ? "ceg-progress-done" : ""} />)}</div>
-          <div className="ceg-screen" ref={screenRef} data-step={baseStep.id}><CEGScreen step={step} j={j} v={values} set={set} scope={scope} provider={provider} selectedConnection={selectedConnection} records={records} history={history} setHistory={setHistory} manage={manage} scenario={scenario} polls={polls} message={message} failure={failure} answer={answer} mutationComplete={mutationComplete} /></div>
+          <div className="ceg-screen" ref={screenRef} data-step={baseStep.id}><CEGScreen step={step} j={j} v={values} set={set} scope={scope} provider={provider} selectedConnection={selectedConnection} records={records} history={history} setHistory={setHistory} manage={manage} scenario={scenario} polls={polls} message={message} failure={failure} answer={answer} mutationComplete={mutationComplete} />{restorationNotRequired && <CEGInfo>Bank access is already active. No restoration or additional bank authentication is required for this connection.</CEGInfo>}</div>
           <div className="ceg-screen-actions">
             {(invalid || message) && step.kind !== "processing" && <div className="ceg-validation" role="status">{message || invalid}</div>}
-            {step.kind === "dashboard" ? <p style={{ margin: 0, fontSize: 10, color: "#53647e" }}>Choose Manage on a connection. Ended arrangements are in History.</p> : <div className={equal && showCancel ? "ceg-equal-actions" : ""}><button type="button" className="ceg-primary" data-ceg-primary="true" disabled={!!invalid} onClick={() => failure ? reset(j, scenario) : ended || terminal && j.type === "manage" ? backToDashboard() : terminal ? reset(j, scenario) : advance()}>{actionLabel}{!equal && <CEGIcon name={terminal ? "repeat" : "arrow"} size={15} />}</button>{showCancel && <button type="button" className={equal ? "ceg-secondary" : "ceg-text-button ceg-cancel-action"} data-ceg-cancel="true" onClick={cancel}>{step.kind === "reconfirm" ? "Disconnect instead" : j.type === "manage" ? "Keep current connection" : "Cancel request"}</button>}</div>}
-            {j.channel === "qr" && step.kind === "identifier" && !failure && <button className="ceg-text-button ceg-cancel-action" onClick={() => { append("Customer chose desktop-browser alternative", "TPP"); setQrBrowser(true); setChannel("browser"); const index = CEGSteps({ ...j, channel: "browser" }).findIndex(s => s.id === "authenticate"); move(index); }}>Use the browser instead</button>}
+            {step.kind === "dashboard" ? <p style={{ margin: 0, fontSize: 10, color: "#53647e" }}>Choose Manage on a connection. Ended arrangements are in History.</p> : <div className={equal && showCancel ? "ceg-equal-actions" : ""}><button type="button" className="ceg-primary" data-ceg-primary="true" disabled={!!invalid} onClick={() => failure ? reset(j, scenario) : viewOnly || terminal && j.type === "manage" ? backToDashboard() : terminal ? reset(j, scenario) : advance()}>{actionLabel}{!equal && <CEGIcon name={terminal ? "repeat" : "arrow"} size={15} />}</button>{showCancel && <button type="button" className={equal ? "ceg-secondary" : "ceg-text-button ceg-cancel-action"} data-ceg-cancel="true" onClick={cancel}>{step.kind === "reconfirm" ? "Disconnect instead" : j.change && mutationComplete ? "Abandon replacement setup" : j.type === "manage" ? "Keep current connection" : "Cancel request"}</button>}</div>}
+            {j.channel === "qr" && step.kind === "identifier" && !failure && <button className="ceg-text-button ceg-cancel-action" onClick={chooseBrowser}>Use the browser instead</button>}
           </div><div className="ceg-homebar" />
         </div>
         <div className="ceg-step-nav"><button type="button" disabled={stepIndex === 0 || committed || !!failure} onClick={() => move(stepIndex - 1)}><CEGIcon name="back" size={14} />Previous screen</button><span>{String(stepIndex + 1).padStart(2, "0")} / {String(steps.length).padStart(2, "0")}</span><button type="button" onClick={() => setInspector(inspector === "events" ? "guidelines" : "events")}><CEGIcon name="document" size={14} />Event trail</button></div>
@@ -1135,7 +1158,7 @@ export const CustomerExperience = ({ initialJourney = "ais-connect", initialChan
       </aside>
     </div>
     <footer className="ceg-footer"><span>Educational simulation / no bank connection, money movement or external storage. Examples dated 9 Nov 2026.</span><a href={CEGMeta.base + "introduction/latest/"} target="_blank" rel="noopener noreferrer">Open Banking CEG <CEGIcon name="external" size={11} /></a></footer>
-    <span className="ceg-sr-only" role="status" aria-live="polite">{j.title + ". Screen " + (stepIndex + 1) + " of " + steps.length + ". " + step.title + ". " + (step.owner === "Bank" ? "Bank domain." : "Provider domain.")}</span>
+    <span className="ceg-sr-only" role="status" aria-live="polite">{failure ? [failure.title, failure.text, failure.code].filter(Boolean).join(". ") : j.title + ". Screen " + (stepIndex + 1) + " of " + steps.length + ". " + step.title + ". " + (step.owner === "Bank" ? "Bank domain." : "Provider domain.")}</span>
   </section>;
 };
 
