@@ -1,12 +1,12 @@
 ---
-title: AIS only
+title: PIS lander
 deprecated: false
 hidden: false
 metadata:
   robots: index
 ---
 <CustomerExperience
-  initialJourney="ais-connect"
+  initialJourney="pis-connect"
   initialChannel="browser"
   showAnnotations={true}
 />
