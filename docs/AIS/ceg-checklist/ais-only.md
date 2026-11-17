@@ -6,7 +6,7 @@ metadata:
   robots: index
 ---
 <CustomerExperience
-  initialJourney="pis-connect"
+  initialJourney="pis-bank"
   initialChannel="browser"
   showAnnotations={true}
 />
