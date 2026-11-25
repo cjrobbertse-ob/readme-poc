@@ -1,5 +1,5 @@
 ---
-title: CEG test
+title: CEG Demo
 deprecated: false
 hidden: false
 metadata:
